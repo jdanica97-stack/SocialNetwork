@@ -1,0 +1,53 @@
+/* ============================================================
+   public/assets/css/style.css
+   Mini Social Network — Custom Styles
+   Bootstrap handles the heavy lifting. This file only adds
+   small project-specific tweaks.
+   ============================================================ */
+
+/* ── Global ───────────────────────────────────────────────── */
+body {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+main.container {
+    flex: 1; /* pushes footer to the bottom on short pages */
+}
+
+/* ── Navbar ───────────────────────────────────────────────── */
+.navbar-brand {
+    font-size: 1.25rem;
+    letter-spacing: 0.3px;
+}
+
+/* ── Cards (used later for posts / profiles) ──────────────── */
+.card {
+    border: none;
+    border-radius: 0.75rem;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+    margin-bottom: 1.25rem;
+}
+
+.card-header {
+    background-color: #fff;
+    border-bottom: 1px solid #f0f0f0;
+    font-weight: 600;
+}
+
+/* ── Buttons ──────────────────────────────────────────────── */
+.btn {
+    border-radius: 0.5rem;
+}
+
+/* ── Footer ───────────────────────────────────────────────── */
+footer {
+    font-size: 0.875rem;
+}
+
+/* ── Utility ──────────────────────────────────────────────── */
+.text-muted-sm {
+    font-size: 0.8rem;
+    color: #6c757d;
+}

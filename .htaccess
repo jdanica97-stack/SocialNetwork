@@ -1,0 +1,13 @@
+Options -Indexes
+
+RewriteEngine On
+
+# Redirect the project root to public/
+RewriteRule ^$ public/index.php [L]
+
+# If the request is exactly for a real file or directory, serve it directly
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+
+# Everything else goes through the front controller
+RewriteRule ^(.*)$ public/index.php?url=$1 [QSA,L]
