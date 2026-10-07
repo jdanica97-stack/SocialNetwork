@@ -13,13 +13,18 @@
  *   4. Dispatches to the correct controller method.
  *   5. Falls back to a 404 page for unknown routes.
  *
- * Supported routes (Step 5):
+ * Supported routes (Step 5 — Authentication):
  *   (empty)          → home page
  *   auth/register    → AuthController::showRegister()  [GET]
  *   auth/register    → AuthController::register()      [POST]
  *   auth/login       → AuthController::showLogin()     [GET]
  *   auth/login       → AuthController::login()         [POST]
  *   auth/logout      → AuthController::logout()        [GET]
+ *
+ * Supported routes (Step 6 — Profile):
+ *   profile          → ProfileController::showProfile() [GET]
+ *   profile/edit     → ProfileController::showEdit()    [GET]
+ *   profile/update   → ProfileController::update()      [POST]
  */
 
 // ─── Bootstrap ────────────────────────────────────────────────────────────────
@@ -134,6 +139,36 @@ if ($url === 'auth/register' || $url === 'auth/login' || $url === 'auth/logout')
 
     if ($url === 'auth/logout') {
         $authController->logout();
+        exit;
+    }
+}
+
+// ── Profile Routes ────────────────────────────────────────────────────────────
+if ($url === 'profile' || $url === 'profile/edit' || $url === 'profile/update') {
+
+    require_once BASE_PATH . '/app/controllers/ProfileController.php';
+    $profileController = new ProfileController();
+
+    // GET  /profile          → display the profile page
+    if ($url === 'profile') {
+        $profileController->showProfile();
+        exit;
+    }
+
+    // GET  /profile/edit     → display the edit form
+    if ($url === 'profile/edit') {
+        $profileController->showEdit();
+        exit;
+    }
+
+    // POST /profile/update   → process the edit form
+    if ($url === 'profile/update') {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $profileController->update();
+        } else {
+            // Someone navigated to this URL directly — send them to the edit form
+            header('Location: /SocialNetwork/public/?url=profile/edit');
+        }
         exit;
     }
 }

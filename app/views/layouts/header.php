@@ -79,12 +79,17 @@ if (session_status() === PHP_SESSION_NONE) {
             <!-- Right side links — change based on login state -->
             <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
                 <?php if (isset($_SESSION['user_id'])): ?>
-                    <!-- Logged-in user: show display name and Logout -->
+                    <!-- Logged-in user: show display name, Profile link, and Logout -->
                     <li class="nav-item">
                         <span class="nav-link text-white">
                             <i class="bi bi-person-circle me-1"></i>
                             <?= htmlspecialchars($_SESSION['user_full_name'], ENT_QUOTES, 'UTF-8') ?>
                         </span>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/SocialNetwork/public/?url=profile">
+                            <i class="bi bi-person-badge me-1"></i>My Profile
+                        </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="/SocialNetwork/public/?url=auth/logout">

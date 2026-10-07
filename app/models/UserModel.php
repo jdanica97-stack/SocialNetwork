@@ -5,10 +5,15 @@
  *
  * Handles ALL database operations related to the `users` table.
  *
- * Responsibilities:
+ * Responsibilities (Step 5 — Authentication):
  *   - Find a user by username
  *   - Check if a username already exists
  *   - Insert (register) a new user
+ *
+ * Responsibilities (Step 6 — Profile):
+ *   - Find a user by their primary-key ID
+ *   - Update a user's full name and bio
+ *   - Update a user's profile image path
  *
  * Rules:
  *   - No HTML output here — this is a Model, not a View.
@@ -99,6 +104,83 @@ class UserModel
             ':username'  => $username,
             ':password'  => $passwordHash,
             ':full_name' => $fullName,
+        ]);
+    }
+
+    // ─── Step 6: Profile Operations ───────────────────────────────────────────
+
+    /**
+     * Find and return a single user row by their primary-key ID.
+     *
+     * Used by ProfileController to load the logged-in user's data
+     * without exposing the password to the View.
+     *
+     * @param  int         $id  The user's primary-key ID.
+     * @return array|false      Associative array of the user row,
+     *                          or false if not found.
+     */
+    public function findById(int $id): array|false
+    {
+        // Deliberately exclude `password` — it must never appear in profile views.
+        $sql = 'SELECT id, username, full_name, bio, profile_image, created_at
+                FROM users
+                WHERE id = :id
+                LIMIT 1';
+
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([':id' => $id]);
+
+        return $stmt->fetch();
+    }
+
+    /**
+     * Update the user's editable profile fields (full name and bio).
+     *
+     * Called by ProfileController after successful validation.
+     * The username and password are intentionally NOT updatable here.
+     *
+     * @param  int    $id        The user's primary-key ID (from session).
+     * @param  string $fullName  Validated, trimmed full name.
+     * @param  string $bio       Validated, trimmed bio (may be empty string).
+     * @return bool              true on success, false on DB failure.
+     */
+    public function updateProfile(int $id, string $fullName, string $bio): bool
+    {
+        $sql = 'UPDATE users
+                SET full_name = :full_name,
+                    bio       = :bio
+                WHERE id = :id';
+
+        $stmt = $this->db->prepare($sql);
+
+        return $stmt->execute([
+            ':full_name' => $fullName,
+            ':bio'       => $bio,
+            ':id'        => $id,
+        ]);
+    }
+
+    /**
+     * Update only the profile_image column for a given user.
+     *
+     * Kept separate from updateProfile() so an image upload failure
+     * does not roll back text-field changes.
+     *
+     * @param  int    $id        The user's primary-key ID (from session).
+     * @param  string $filename  The stored filename (e.g. "abc123.jpg").
+     * @return bool              true on success, false on DB failure.
+     */
+    public function updateProfileImage(int $id, string $filename): bool
+    {
+        $sql = 'UPDATE users
+                SET profile_image = :profile_image
+                WHERE id = :id';
+
+        $stmt = $this->db->prepare($sql);
+
+        return $stmt->execute([
+            ':profile_image' => $filename,
+            ':id'            => $id,
         ]);
     }
 }
