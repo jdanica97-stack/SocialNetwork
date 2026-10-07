@@ -5,9 +5,11 @@ RewriteEngine On
 # Redirect the project root to public/
 RewriteRule ^$ public/index.php [L]
 
-# If the request is exactly for a real file or directory, serve it directly
+# Serve real files and directories directly (CSS, JS, images, etc.)
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
+# Also skip the public/assets directory explicitly
+RewriteCond %{REQUEST_URI} !^/SocialNetwork/public/assets/
 
 # Everything else goes through the front controller
 RewriteRule ^(.*)$ public/index.php?url=$1 [QSA,L]
