@@ -183,4 +183,47 @@ class UserModel
             ':id'            => $id,
         ]);
     }
+
+    // ─── Step 11: Search Operations ───────────────────────────────────────────
+
+    /**
+     * Search users by username or full name.
+     * Uses PDO prepared statements with SQL LIKE for partial matching.
+     * Excludes password from results.
+     *
+     * @param string $keyword Search keyword
+     * @param int|null $limit Optional max results
+     * @return array Matching user rows
+     */
+    public function searchUsers(string $keyword, ?int $limit = 50): array
+    {
+        $keyword = trim($keyword);
+        if ($keyword === '') {
+            return [];
+        }
+
+        $sql = 'SELECT id, username, full_name, bio, profile_image, created_at
+                FROM users
+                WHERE username LIKE :kw_username
+                   OR full_name LIKE :kw_name
+                ORDER BY full_name ASC, username ASC';
+
+        if ($limit !== null) {
+            $sql .= ' LIMIT :limit';
+            $stmt = $this->db->prepare($sql);
+            $stmt->bindValue(':kw_username', '%' . $keyword . '%', PDO::PARAM_STR);
+            $stmt->bindValue(':kw_name', '%' . $keyword . '%', PDO::PARAM_STR);
+            $stmt->bindValue(':limit', (int) $limit, PDO::PARAM_INT);
+            $stmt->execute();
+        } else {
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute([
+                ':kw_username' => '%' . $keyword . '%',
+                ':kw_name'     => '%' . $keyword . '%',
+            ]);
+        }
+
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
 }
+

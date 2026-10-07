@@ -1,53 +1,978 @@
 /* ============================================================
    public/assets/css/style.css
-   Mini Social Network — Custom Styles
-   Bootstrap handles the heavy lifting. This file only adds
-   small project-specific tweaks.
+   Mini Social Network — Design System
+   ============================================================
+
+   TABLE OF CONTENTS
+   1.  Design Tokens (CSS Custom Properties)
+   2.  Reset & Base
+   3.  Background Blobs
+   4.  Glass Utility
+   5.  Layout & Container
+   6.  Navigation
+   7.  Buttons
+   8.  Form Elements
+   9.  Alert / Flash Messages
+   10. Cards
+   11. Auth Pages
+   12. Home Page
+   13. Profile Page
+   14. Edit Profile Page
+   15. Footer
+   16. Animations & Transitions
+   17. Accessibility
+   18. Responsive
    ============================================================ */
 
-/* ── Global ───────────────────────────────────────────────── */
+
+/* ── 1. Design Tokens ──────────────────────────────────────── */
+:root {
+  --bg:              #E9E9EB;
+  --bg-alt:          #DDDDE0;
+  --surface:         rgba(255,255,255,0.55);
+  --surface-hover:   rgba(255,255,255,0.74);
+  --surface-input:   rgba(255,255,255,0.60);
+  --border:          rgba(0,0,0,0.08);
+  --border-strong:   rgba(0,0,0,0.13);
+  --fg:              #111113;
+  --fg-muted:        #5B5B60;
+  --fg-faint:        #8A8A92;
+  --btn-primary-bg:  #111113;
+  --btn-primary-fg:  #F5F5F7;
+  --btn-ghost-bd:    rgba(0,0,0,0.18);
+  --shadow-sm:  0 1px 4px rgba(0,0,0,0.07), 0 4px 16px rgba(0,0,0,0.05);
+  --shadow-md:  0 2px 12px rgba(0,0,0,0.08), 0 12px 40px rgba(0,0,0,0.07);
+  --shadow-lg:  0 4px 24px rgba(0,0,0,0.10), 0 20px 60px rgba(0,0,0,0.08);
+  --blob-op:    0.42;
+  --radius-pill: 999px;
+  --radius-card: 28px;
+  --radius-form: 22px;
+  --radius-input:16px;
+  --transition: 0.28s cubic-bezier(0.4,0,0.2,1);
+}
+
+[data-theme="dark"] {
+  --bg:              #0B0B0D;
+  --bg-alt:          #111114;
+  --surface:         rgba(28,28,32,0.52);
+  --surface-hover:   rgba(38,38,44,0.70);
+  --surface-input:   rgba(38,38,44,0.58);
+  --border:          rgba(255,255,255,0.07);
+  --border-strong:   rgba(255,255,255,0.12);
+  --fg:              #F5F5F7;
+  --fg-muted:        #9A9AA0;
+  --fg-faint:        #62626A;
+  --btn-primary-bg:  #F5F5F7;
+  --btn-primary-fg:  #111113;
+  --btn-ghost-bd:    rgba(255,255,255,0.20);
+  --shadow-sm:  0 1px 4px rgba(0,0,0,0.30), 0 4px 16px rgba(0,0,0,0.22);
+  --shadow-md:  0 2px 12px rgba(0,0,0,0.34), 0 12px 40px rgba(0,0,0,0.26);
+  --shadow-lg:  0 4px 24px rgba(0,0,0,0.40), 0 20px 60px rgba(0,0,0,0.32);
+  --blob-op:    0.16;
+}
+
+
+/* ── 2. Reset & Base ───────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html {
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
 body {
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text",
+               Inter, "Helvetica Neue", Arial, sans-serif;
+  background-color: var(--bg);
+  color: var(--fg);
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  transition: background-color var(--transition), color var(--transition);
+  overflow-x: hidden;
 }
 
+*:focus { outline: none; }
+*:focus-visible {
+  outline: 2px solid var(--fg);
+  outline-offset: 3px;
+  border-radius: 6px;
+}
+
+a {
+  color: var(--fg);
+  text-decoration: none;
+  transition: opacity var(--transition);
+}
+a:hover { opacity: 0.7; }
+
+img, svg { display: block; }
+
+.bg-light   { background-color: var(--bg) !important; }
+.text-muted { color: var(--fg-muted) !important; }
+
+
+/* ── 3. Background Blobs ───────────────────────────────────── */
+.bg-blobs {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+.blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(100px);
+  opacity: var(--blob-op);
+  transition: opacity var(--transition);
+}
+.blob-1 {
+  width: 680px; height: 680px;
+  background: radial-gradient(circle, #c8c8d0 0%, transparent 65%);
+  top: -200px; left: -180px;
+}
+.blob-2 {
+  width: 520px; height: 520px;
+  background: radial-gradient(circle, #b8b8c4 0%, transparent 65%);
+  top: 42%; right: -140px;
+}
+.blob-3 {
+  width: 600px; height: 600px;
+  background: radial-gradient(circle, #adadbc 0%, transparent 65%);
+  bottom: -180px; left: 28%;
+}
+
+
+/* ── 4. Glass Utility ──────────────────────────────────────── */
+.glass {
+  background: var(--surface);
+  backdrop-filter: blur(28px) saturate(160%);
+  -webkit-backdrop-filter: blur(28px) saturate(160%);
+  border: 1px solid var(--border);
+  transition:
+    background var(--transition),
+    border-color var(--transition),
+    box-shadow var(--transition);
+}
+.glass:hover { background: var(--surface-hover); }
+
+
+/* ── 5. Layout & Container ─────────────────────────────────── */
 main.container {
-    flex: 1; /* pushes footer to the bottom on short pages */
+  flex: 1;
+  position: relative;
+  z-index: 1;
+  max-width: 720px;
+  padding-top: 108px;
+  padding-bottom: 60px;
 }
 
-/* ── Navbar ───────────────────────────────────────────────── */
-.navbar-brand {
-    font-size: 1.25rem;
-    letter-spacing: 0.3px;
+.row.justify-content-center { position: relative; z-index: 1; }
+
+
+/* ── 6. Navigation ─────────────────────────────────────────── */
+.halo-nav-wrapper {
+  position: fixed;
+  top: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 200;
+  width: calc(100% - 32px);
+  max-width: 700px;
 }
 
-/* ── Cards (used later for posts / profiles) ──────────────── */
+.halo-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 11px 18px;
+  border-radius: var(--radius-pill);
+  box-shadow: var(--shadow-md);
+  gap: 8px;
+}
+
+.halo-nav-brand {
+  font-size: 0.95rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--fg);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.halo-nav-links {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  list-style: none;
+  margin: 0; padding: 0;
+  flex-wrap: nowrap;
+}
+
+.halo-nav-links a,
+.halo-nav-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.82rem;
+  font-weight: 450;
+  color: var(--fg-muted);
+  padding: 6px 11px;
+  border-radius: var(--radius-pill);
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-family: inherit;
+  transition: color var(--transition), background var(--transition);
+  white-space: nowrap;
+  text-decoration: none;
+}
+.halo-nav-links a:hover,
+.halo-nav-btn:hover {
+  color: var(--fg);
+  background: var(--surface-hover);
+  opacity: 1;
+}
+
+/* Theme toggle icons */
+.icon-sun  { display: none; }
+.icon-moon { display: inline; }
+[data-theme="dark"] .icon-sun  { display: inline; }
+[data-theme="dark"] .icon-moon { display: none; }
+
+/* Hide the Bootstrap navbar — we use halo-nav instead */
+nav.navbar { display: none !important; }
+
+
+/* ── 7. Buttons ────────────────────────────────────────────── */
+.btn, button[type="submit"], .halo-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 11px 22px;
+  border-radius: var(--radius-pill) !important;
+  font-size: 0.875rem;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  transition:
+    transform var(--transition),
+    box-shadow var(--transition),
+    opacity var(--transition),
+    background var(--transition);
+  text-decoration: none;
+}
+.btn:active, button[type="submit"]:active { transform: scale(0.97); }
+
+.btn-primary,
+button[type="submit"].btn-primary,
+.btn.btn-primary {
+  background: var(--btn-primary-bg) !important;
+  color: var(--btn-primary-fg) !important;
+  border: none !important;
+  box-shadow: var(--shadow-sm);
+}
+.btn-primary:hover {
+  opacity: 0.86;
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+.btn-outline-primary,
+.btn-outline-secondary,
+.btn-ghost {
+  background: transparent !important;
+  color: var(--fg) !important;
+  border: 1px solid var(--btn-ghost-bd) !important;
+  box-shadow: none;
+}
+.btn-outline-primary:hover,
+.btn-outline-secondary:hover,
+.btn-ghost:hover {
+  background: var(--surface-hover) !important;
+  opacity: 1;
+  transform: translateY(-1px);
+}
+
+.btn-outline-danger, .btn-danger {
+  background: transparent !important;
+  color: var(--fg-muted) !important;
+  border: 1px solid var(--border-strong) !important;
+}
+.btn-outline-danger:hover, .btn-danger:hover {
+  background: var(--surface-hover) !important;
+  color: var(--fg) !important;
+}
+
+.btn-sm { padding: 7px 15px; font-size: 0.8rem; }
+.btn-lg { padding: 13px 28px; font-size: 0.925rem; }
+.d-grid .btn { width: 100%; }
+
+
+/* ── 8. Form Elements ──────────────────────────────────────── */
+.card.shadow-sm,
 .card {
-    border: none;
-    border-radius: 0.75rem;
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
-    margin-bottom: 1.25rem;
+  background: var(--surface) !important;
+  backdrop-filter: blur(28px) saturate(160%);
+  -webkit-backdrop-filter: blur(28px) saturate(160%);
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius-form) !important;
+  box-shadow: var(--shadow-md) !important;
+  margin-bottom: 20px;
 }
 
 .card-header {
-    background-color: #fff;
-    border-bottom: 1px solid #f0f0f0;
-    font-weight: 600;
+  background: transparent !important;
+  border-bottom: 1px solid var(--border) !important;
+  font-weight: 600;
+  font-size: 0.875rem;
+  letter-spacing: -0.01em;
+  color: var(--fg) !important;
+  padding: 16px 24px;
 }
 
-/* ── Buttons ──────────────────────────────────────────────── */
-.btn {
-    border-radius: 0.5rem;
+.card-body {
+  padding: 24px !important;
+  color: var(--fg);
 }
 
-/* ── Footer ───────────────────────────────────────────────── */
-footer {
-    font-size: 0.875rem;
+.form-control, .form-select {
+  background: var(--surface-input) !important;
+  border: 1px solid var(--border-strong) !important;
+  border-radius: var(--radius-input) !important;
+  color: var(--fg) !important;
+  font-size: 0.9rem;
+  padding: 10px 14px;
+  transition: border-color var(--transition), box-shadow var(--transition);
+}
+.form-control::placeholder { color: var(--fg-faint) !important; }
+.form-control:focus, .form-select:focus {
+  border-color: var(--fg-muted) !important;
+  box-shadow: 0 0 0 3px rgba(0,0,0,0.07) !important;
+  background: var(--surface-hover) !important;
+  outline: none;
+}
+[data-theme="dark"] .form-control:focus,
+[data-theme="dark"] .form-select:focus {
+  box-shadow: 0 0 0 3px rgba(255,255,255,0.06) !important;
 }
 
-/* ── Utility ──────────────────────────────────────────────── */
-.text-muted-sm {
-    font-size: 0.8rem;
-    color: #6c757d;
+.input-group-text {
+  background: var(--surface-input) !important;
+  border: 1px solid var(--border-strong) !important;
+  border-radius: var(--radius-input) !important;
+  color: var(--fg-muted) !important;
 }
+.input-group .form-control { border-radius: 0 var(--radius-input) var(--radius-input) 0 !important; }
+.input-group .input-group-text { border-radius: var(--radius-input) 0 0 var(--radius-input) !important; }
+
+.form-label {
+  font-size: 0.825rem;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  color: var(--fg-muted);
+  margin-bottom: 6px;
+}
+
+.form-text { font-size: 0.775rem; color: var(--fg-faint); margin-top: 5px; }
+
+textarea.form-control { resize: vertical; min-height: 100px; }
+
+input[type="file"].form-control {
+  padding: 8px 12px;
+  cursor: pointer;
+}
+
+
+/* ── 9. Alert / Flash Messages ─────────────────────────────── */
+.alert {
+  border-radius: 16px !important;
+  border: 1px solid var(--border-strong) !important;
+  font-size: 0.875rem;
+  padding: 14px 18px;
+  margin-bottom: 16px;
+}
+.alert-success {
+  background: var(--surface) !important;
+  color: var(--fg) !important;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+.alert-danger {
+  background: var(--surface) !important;
+  color: var(--fg) !important;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+[data-theme="dark"] .alert .btn-close { filter: invert(1); }
+
+
+/* ── 10. Cards ─────────────────────────────────────────────── */
+.post-card {
+  border-radius: var(--radius-card) !important;
+  margin-bottom: 16px;
+}
+
+
+/* ── 11. Auth Pages ────────────────────────────────────────── */
+.auth-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: calc(100dvh - 80px);
+  padding: 108px 20px 60px;
+}
+
+.auth-logo {
+  font-size: 1.25rem;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  color: var(--fg);
+  margin-bottom: 8px;
+  text-align: center;
+}
+
+.auth-title {
+  font-size: 2rem;
+  font-weight: 600;
+  letter-spacing: -0.04em;
+  color: var(--fg);
+  margin-bottom: 6px;
+  text-align: center;
+}
+
+.auth-sub {
+  font-size: 0.9rem;
+  color: var(--fg-muted);
+  text-align: center;
+  margin-bottom: 28px;
+  font-weight: 300;
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 420px;
+  border-radius: var(--radius-form) !important;
+  box-shadow: var(--shadow-lg) !important;
+}
+
+.auth-footer-text {
+  text-align: center;
+  font-size: 0.85rem;
+  color: var(--fg-muted);
+  margin-top: 20px;
+}
+
+.auth-footer-text a {
+  color: var(--fg);
+  font-weight: 500;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+
+/* ── 12. Home Page ─────────────────────────────────────────── */
+.home-greeting {
+  font-size: 2rem;
+  font-weight: 600;
+  letter-spacing: -0.04em;
+  color: var(--fg);
+  margin-bottom: 4px;
+}
+
+.home-sub {
+  font-size: 0.95rem;
+  color: var(--fg-muted);
+  font-weight: 300;
+  margin-bottom: 28px;
+}
+
+.compose-card {
+  border-radius: var(--radius-card) !important;
+  margin-bottom: 24px;
+  cursor: text;
+}
+
+.compose-placeholder {
+  font-size: 0.9rem;
+  color: var(--fg-faint);
+  padding: 4px 0;
+}
+
+.hero-home {
+  text-align: center;
+  padding: 60px 0 40px;
+}
+
+.hero-home h1 {
+  font-size: clamp(2.4rem, 6vw, 3.8rem);
+  font-weight: 600;
+  letter-spacing: -0.04em;
+  line-height: 1.1;
+  color: var(--fg);
+  margin-bottom: 20px;
+}
+
+.hero-home p {
+  font-size: 1rem;
+  color: var(--fg-muted);
+  font-weight: 300;
+  max-width: 440px;
+  margin-inline: auto;
+  margin-bottom: 36px;
+  line-height: 1.65;
+}
+
+.btn-group-hero {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+
+/* ── 13. Profile Page ──────────────────────────────────────── */
+.profile-banner {
+  height: 80px;
+  background: var(--surface-hover);
+  border-radius: var(--radius-card) var(--radius-card) 0 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.profile-card {
+  border-radius: var(--radius-card) !important;
+  overflow: visible;
+}
+
+.profile-avatar-wrap {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-top: -48px;
+  padding: 0 24px;
+  margin-bottom: 16px;
+}
+
+.profile-avatar {
+  width: 90px; height: 90px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid var(--bg);
+  box-shadow: var(--shadow-sm);
+}
+
+.profile-name {
+  font-size: 1.3rem;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  color: var(--fg);
+  margin-bottom: 2px;
+}
+
+.profile-username {
+  font-size: 0.875rem;
+  color: var(--fg-muted);
+  margin-bottom: 12px;
+}
+
+.profile-bio {
+  font-size: 0.9rem;
+  color: var(--fg-muted);
+  line-height: 1.6;
+  font-weight: 300;
+  margin-bottom: 16px;
+}
+
+.profile-meta {
+  font-size: 0.8rem;
+  color: var(--fg-faint);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.profile-section-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--fg-faint);
+  padding: 16px 24px 12px;
+  border-top: 1px solid var(--border);
+}
+
+
+/* ── 14. Edit Profile Page ─────────────────────────────────── */
+.edit-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 28px;
+}
+
+.edit-header-avatar {
+  width: 56px; height: 56px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid var(--border);
+}
+
+.edit-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  color: var(--fg);
+  margin-bottom: 2px;
+}
+
+.edit-username {
+  font-size: 0.85rem;
+  color: var(--fg-muted);
+}
+
+.edit-info-note {
+  text-align: center;
+  font-size: 0.78rem;
+  color: var(--fg-faint);
+  margin-top: 16px;
+}
+
+
+/* ── 15. Footer ────────────────────────────────────────────── */
+footer.footer.bg-primary { display: none !important; }
+
+.halo-footer {
+  position: relative;
+  z-index: 1;
+  border-top: 1px solid var(--border);
+  text-align: center;
+  padding: 28px 20px;
+  font-size: 0.78rem;
+  color: var(--fg-faint);
+}
+
+
+/* ── 16. Animations & Transitions ──────────────────────────── */
+.fade-up {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.55s cubic-bezier(0.4,0,0.2,1),
+              transform 0.55s cubic-bezier(0.4,0,0.2,1);
+}
+.fade-up.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.card:hover,
+.post-card:hover {
+  box-shadow: var(--shadow-lg) !important;
+  transform: translateY(-2px);
+  transition: transform var(--transition), box-shadow var(--transition);
+}
+
+*, *::before, *::after {
+  transition-property: background-color, border-color, color, opacity;
+  transition-duration: 0.25s;
+  transition-timing-function: cubic-bezier(0.4,0,0.2,1);
+}
+.btn, .card, .halo-nav, .fade-up {
+  transition: transform var(--transition), box-shadow var(--transition),
+              background var(--transition), border-color var(--transition),
+              color var(--transition), opacity var(--transition) !important;
+}
+
+
+/* ── 17. Accessibility ─────────────────────────────────────── */
+.skip-link {
+  position: absolute;
+  top: -100%;
+  left: 16px;
+  z-index: 9999;
+  background: var(--fg);
+  color: var(--bg);
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+.skip-link:focus { top: 16px; }
+
+
+/* ── 18. Responsive ────────────────────────────────────────── */
+@media (max-width: 600px) {
+  main.container {
+    padding-top: 88px;
+    padding-inline: 14px;
+  }
+
+  .halo-nav-wrapper {
+    top: 10px;
+    width: calc(100% - 20px);
+  }
+
+  .halo-nav { padding: 9px 14px; }
+  .halo-nav-brand { font-size: 0.875rem; }
+  .halo-nav-links .nav-label { display: none; }
+
+  .auth-title { font-size: 1.6rem; }
+  .auth-card  { max-width: 100%; }
+
+  .hero-home h1 { font-size: 2.2rem; }
+
+  .profile-avatar-wrap { padding: 0 16px; }
+  .profile-avatar { width: 72px; height: 72px; margin-top: -36px; }
+  .profile-banner { height: 64px; }
+
+  .card-body { padding: 18px !important; }
+
+  .btn-group-hero { gap: 8px; }
+  .btn-group-hero .btn { font-size: 0.82rem; padding: 10px 18px; }
+}
+
+@media (max-width: 380px) {
+  .halo-nav-links a span,
+  .halo-nav-links button span { display: none; }
+}
+
+
+/* ── 19. Comments (Step 8) ─────────────────────────────────── */
+.comments-section {
+  border-top: 1px solid var(--border);
+  padding: 16px 20px 20px;
+  background: rgba(0, 0, 0, 0.015);
+  border-radius: 0 0 var(--radius-card) var(--radius-card);
+}
+
+[data-theme="dark"] .comments-section {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.comment-item {
+  padding: 12px 14px;
+  border-radius: 16px;
+  background: var(--surface-input);
+  border: 1px solid var(--border);
+  margin-bottom: 10px;
+  transition: background var(--transition), border-color var(--transition);
+}
+
+.comment-item:hover {
+  background: var(--surface-hover);
+}
+
+.comment-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+  border: 1px solid var(--border);
+}
+
+.comment-author {
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: var(--fg);
+}
+
+.comment-username {
+  font-size: 0.75rem;
+  color: var(--fg-faint);
+}
+
+.comment-time {
+  font-size: 0.75rem;
+  color: var(--fg-faint);
+}
+
+.comment-content {
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: var(--fg);
+  word-break: break-word;
+}
+
+.comment-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.comment-action-link {
+  font-size: 0.75rem;
+  color: var(--fg-muted);
+  text-decoration: none;
+  padding: 2px 6px;
+  border-radius: 6px;
+  transition: color var(--transition), background var(--transition);
+}
+
+.comment-action-link:hover {
+  color: var(--fg);
+  background: var(--surface-hover);
+}
+
+.comment-action-link.delete-link:hover {
+  color: #d9534f;
+}
+
+.comment-form-wrap {
+  margin-top: 14px;
+}
+
+.comment-input {
+  border-radius: 14px !important;
+  font-size: 0.85rem !important;
+  min-height: 40px;
+  resize: vertical;
+}
+
+
+/* ── 20. Likes (Step 9) ────────────────────────────────────── */
+.post-interactions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+  font-size: 0.85rem;
+}
+
+.like-form {
+  display: inline-block;
+  margin: 0;
+}
+
+.like-btn,
+.like-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: var(--radius-pill);
+  font-size: 0.82rem;
+  font-weight: 500;
+  border: 1px solid var(--border);
+  background: var(--surface-input);
+  color: var(--fg-muted);
+  cursor: pointer;
+  transition: all var(--transition);
+  user-select: none;
+  text-decoration: none;
+}
+
+.like-btn:hover,
+.like-button:hover {
+  background: var(--surface-hover);
+  color: var(--fg);
+  border-color: var(--border-strong);
+  transform: translateY(-1px);
+}
+
+.like-btn.liked,
+.like-button.liked {
+  color: #ef4444;
+  border-color: rgba(239, 68, 68, 0.25);
+  background: rgba(239, 68, 68, 0.08);
+}
+
+.like-btn.liked:hover,
+.like-button.liked:hover {
+  background: rgba(239, 68, 68, 0.14);
+  color: #dc2626;
+}
+
+.like-btn svg,
+.like-button svg {
+  transition: transform var(--transition);
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.like-icon {
+  display: inline-flex;
+  align-items: center;
+}
+
+.like-btn:active svg {
+  transform: scale(1.25);
+}
+
+.like-count {
+  font-weight: 600;
+  font-size: 0.82rem;
+}
+
+
+/* ── 21. Newsfeed Responsive Enhancements (Step 10) ────────── */
+.posts-stream {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.post-card {
+  transition: transform var(--transition), box-shadow var(--transition);
+}
+
+.post-card:hover {
+  box-shadow: var(--shadow-md);
+}
+
+.post-content-body {
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
+
+.post-image-container {
+  overflow: hidden;
+  border-radius: var(--radius-sm);
+  background: var(--surface-input);
+}
+
+.post-image-container img {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 480px;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+@media (max-width: 576px) {
+  .post-card .card-body {
+    padding: 16px !important;
+  }
+
+  .comments-section {
+    padding: 14px 16px !important;
+  }
+
+  .comment-item {
+    padding: 10px 12px;
+  }
+
+  .post-interactions {
+    gap: 10px;
+  }
+
+  .like-btn,
+  .like-button {
+    padding: 5px 10px;
+    font-size: 0.78rem;
+  }
+
+  .home-greeting {
+    font-size: 1.4rem;
+  }
+}
+
+
