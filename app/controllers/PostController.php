@@ -68,37 +68,45 @@ class PostController
     // ─── Newsfeed (GET) ───────────────────────────────────────────────────────
 
     /**
-     * Display the main newsfeed.
-     * Retrieves posts from ALL users ordered from newest to oldest.
-     * Loads associated comments, like counts, and user like states.
+     * Display the main Home page.
+     * If user is logged in: retrieves posts, comments, and likes for the newsfeed.
+     * If user is logged out: does NOT fetch posts from database (server-side protection);
+     * displays the guest welcome and about platform section.
      */
     public function index(): void
     {
-        $pageTitle = 'Mini Social Network — Home';
-
         // Flash messages
         $flashSuccess = $_SESSION['flash_success'] ?? null;
         $flashError   = $_SESSION['flash_error']   ?? null;
         unset($_SESSION['flash_success'], $_SESSION['flash_error']);
 
-        // 1. Get all posts from all users (newest first)
-        $posts = $this->postModel->getAllPosts();
-
-        // 2. Load comments, likes count, and user like states for each post
         $currentUserId = isset($_SESSION['user_id']) ? (int) $_SESSION['user_id'] : null;
 
+        $posts           = [];
         $commentsByPost  = [];
         $likeCountByPost = [];
         $hasLikedByPost  = [];
 
-        foreach ($posts as $p) {
-            $pId = (int) $p['id'];
-            $commentsByPost[$pId]  = $this->commentModel->getByPostId($pId);
-            $likeCountByPost[$pId] = $this->likeModel->countLikes($pId);
-            $hasLikedByPost[$pId]  = $currentUserId ? $this->likeModel->hasLiked($pId, $currentUserId) : false;
+        // ── Server-Side Authentication Check ──────────────────────────────────────
+        // Only fetch posts from database if the user is actively logged in
+        if ($currentUserId !== null) {
+            $pageTitle = 'Mini Social Network — Home';
+
+            // 1. Get all posts from all users (newest first)
+            $posts = $this->postModel->getAllPosts();
+
+            // 2. Load comments, likes count, and user like states for each post
+            foreach ($posts as $p) {
+                $pId = (int) $p['id'];
+                $commentsByPost[$pId]  = $this->commentModel->getByPostId($pId);
+                $likeCountByPost[$pId] = $this->likeModel->countLikes($pId);
+                $hasLikedByPost[$pId]  = $this->likeModel->hasLiked($pId, $currentUserId);
+            }
+        } else {
+            $pageTitle = 'Welcome — Mini Social Network';
         }
 
-        // 3. Render newsfeed view
+        // 3. Render view (newsfeed for logged-in users, guest landing for visitors)
         require_once BASE_PATH . '/app/views/layouts/header.php';
         require_once BASE_PATH . '/app/views/posts/feed.php';
         require_once BASE_PATH . '/app/views/layouts/footer.php';

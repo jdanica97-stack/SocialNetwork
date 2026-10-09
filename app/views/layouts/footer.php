@@ -79,5 +79,12 @@
 <!-- ── AJAX Likes Script (Step 9) ─────────────────────────────────── -->
 <script src="/SocialNetwork/public/assets/js/likes.js"></script>
 
+<!-- ── Post Options Dropdown Menu Script ────────────────────────────── -->
+<script src="/SocialNetwork/public/assets/js/dropdown.js"></script>
+
+<!-- ── Left-Side Navigation Panel Script ───────────────────────────── -->
+<script src="/SocialNetwork/public/assets/js/side-panel.js"></script>
+
 </body>
 </html>
+

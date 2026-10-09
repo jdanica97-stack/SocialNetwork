@@ -200,12 +200,207 @@ class PostModel
         return (int) $stmt->fetchColumn();
     }
 
-    // ─── Step 11: Search Operations ───────────────────────────────────────────
+    // ─── Step 11 & Step 12: Search, Filtering & Reporting Operations ──────────
 
     /**
-     * Search posts by content keyword.
-     * Joined with users table to include author details.
-     * Ordered by created_at DESC (newest matching posts first).
+     * Retrieve all distinct authors who have created at least one post.
+     * Used to populate the Author filter dropdown.
+     *
+     * @return array Array of associative arrays with id, username, full_name
+     */
+    public function getDistinctAuthors(): array
+    {
+        $sql = '
+            SELECT DISTINCT u.id, u.username, u.full_name
+            FROM users u
+            INNER JOIN posts p ON u.id = p.user_id
+            ORDER BY u.full_name ASC, u.username ASC
+        ';
+
+        $stmt = $this->db->query($sql);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    /**
+     * Search and filter posts with exact comment and like counts.
+     *
+     * Combines Step 11 (Search & Filters) and Step 12 (Detailed Reporting):
+     *   - Filters by keyword (posts.content LIKE)
+     *   - Filters by author (posts.user_id = :author_id)
+     *   - Filters by date range (created_at >= :date_from, created_at <= :date_to)
+     *   - Sorts by newest, oldest, most_liked, or most_commented
+     *
+     * SQL Cartesian Prevention:
+     *   Uses derived table subqueries for comments and likes grouped by post_id
+     *   before joining to posts. This guarantees comment_count and like_count
+     *   are exact and never multiplied.
+     *
+     * @param array $filters Associative array: ['keyword', 'author_id', 'date_from', 'date_to', 'sort']
+     * @param int|null $limit Optional max results
+     * @param int $offset Offset
+     * @return array Array of matching posts with author info and counts
+     */
+    public function searchPostsAdvanced(array $filters = [], ?int $limit = 100, int $offset = 0): array
+    {
+        $where  = [];
+        $params = [];
+
+        $keyword  = trim($filters['keyword'] ?? '');
+        $authorId = isset($filters['author_id']) && $filters['author_id'] !== '' ? (int) $filters['author_id'] : null;
+        $dateFrom = trim($filters['date_from'] ?? '');
+        $dateTo   = trim($filters['date_to'] ?? '');
+        $sort     = strtolower(trim($filters['sort'] ?? 'newest'));
+
+        if ($keyword !== '') {
+            $where[] = 'p.content LIKE :keyword';
+            $params[':keyword'] = '%' . $keyword . '%';
+        }
+
+        if ($authorId !== null && $authorId > 0) {
+            $where[] = 'p.user_id = :author_id';
+            $params[':author_id'] = $authorId;
+        }
+
+        if ($dateFrom !== '') {
+            $where[] = 'p.created_at >= :date_from';
+            $params[':date_from'] = $dateFrom . ' 00:00:00';
+        }
+
+        if ($dateTo !== '') {
+            $where[] = 'p.created_at <= :date_to';
+            $params[':date_to'] = $dateTo . ' 23:59:59';
+        }
+
+        $whereClause = !empty($where) ? 'WHERE ' . implode(' AND ', $where) : '';
+
+        // Safe sort mapping
+        $orderBy = match ($sort) {
+            'oldest'         => 'ORDER BY p.created_at ASC, p.id ASC',
+            'most_liked'     => 'ORDER BY like_count DESC, p.created_at DESC, p.id DESC',
+            'most_commented' => 'ORDER BY comment_count DESC, p.created_at DESC, p.id DESC',
+            default          => 'ORDER BY p.created_at DESC, p.id DESC',
+        };
+
+        $sql = "
+            SELECT p.id, p.user_id, p.content, p.image, p.created_at,
+                   u.username, u.full_name, u.profile_image,
+                   COALESCE(c.comment_count, 0) AS comment_count,
+                   COALESCE(l.like_count, 0) AS like_count
+            FROM posts p
+            INNER JOIN users u ON p.user_id = u.id
+            LEFT JOIN (
+                SELECT post_id, COUNT(*) AS comment_count
+                FROM comments
+                GROUP BY post_id
+            ) c ON p.id = c.post_id
+            LEFT JOIN (
+                SELECT post_id, COUNT(*) AS like_count
+                FROM likes
+                GROUP BY post_id
+            ) l ON p.id = l.post_id
+            {$whereClause}
+            {$orderBy}
+        ";
+
+        if ($limit !== null) {
+            $sql .= ' LIMIT :limit OFFSET :offset';
+            $stmt = $this->db->prepare($sql);
+            foreach ($params as $k => $v) {
+                $stmt->bindValue($k, $v);
+            }
+            $stmt->bindValue(':limit', (int) $limit, PDO::PARAM_INT);
+            $stmt->bindValue(':offset', (int) $offset, PDO::PARAM_INT);
+            $stmt->execute();
+        } else {
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute($params);
+        }
+
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    /**
+     * Compute summary statistics for posts matching the given search and filter criteria.
+     *
+     * Responsibilities (Step 12 — Summary Statistics):
+     *   - Total matching posts
+     *   - Number of distinct authors for matching posts
+     *   - Total comments associated with matching posts
+     *   - Total likes associated with matching posts
+     *
+     * SQL Cartesian Prevention:
+     *   Uses pre-aggregated derived tables for comments and likes joined with posts.
+     *   Zero inflation occurs even if posts have multiple comments and likes.
+     *
+     * @param array $filters Associative array: ['keyword', 'author_id', 'date_from', 'date_to']
+     * @return array ['total_posts' => int, 'total_authors' => int, 'total_comments' => int, 'total_likes' => int]
+     */
+    public function getSearchSummaryStats(array $filters = []): array
+    {
+        $where  = [];
+        $params = [];
+
+        $keyword  = trim($filters['keyword'] ?? '');
+        $authorId = isset($filters['author_id']) && $filters['author_id'] !== '' ? (int) $filters['author_id'] : null;
+        $dateFrom = trim($filters['date_from'] ?? '');
+        $dateTo   = trim($filters['date_to'] ?? '');
+
+        if ($keyword !== '') {
+            $where[] = 'p.content LIKE :keyword';
+            $params[':keyword'] = '%' . $keyword . '%';
+        }
+
+        if ($authorId !== null && $authorId > 0) {
+            $where[] = 'p.user_id = :author_id';
+            $params[':author_id'] = $authorId;
+        }
+
+        if ($dateFrom !== '') {
+            $where[] = 'p.created_at >= :date_from';
+            $params[':date_from'] = $dateFrom . ' 00:00:00';
+        }
+
+        if ($dateTo !== '') {
+            $where[] = 'p.created_at <= :date_to';
+            $params[':date_to'] = $dateTo . ' 23:59:59';
+        }
+
+        $whereClause = !empty($where) ? 'WHERE ' . implode(' AND ', $where) : '';
+
+        $sql = "
+            SELECT 
+                COUNT(p.id) AS total_posts,
+                COUNT(DISTINCT p.user_id) AS total_authors,
+                COALESCE(SUM(c.comment_count), 0) AS total_comments,
+                COALESCE(SUM(l.like_count), 0) AS total_likes
+            FROM posts p
+            LEFT JOIN (
+                SELECT post_id, COUNT(*) AS comment_count
+                FROM comments
+                GROUP BY post_id
+            ) c ON p.id = c.post_id
+            LEFT JOIN (
+                SELECT post_id, COUNT(*) AS like_count
+                FROM likes
+                GROUP BY post_id
+            ) l ON p.id = l.post_id
+            {$whereClause}
+        ";
+
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute($params);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        return [
+            'total_posts'    => (int) ($row['total_posts'] ?? 0),
+            'total_authors'  => (int) ($row['total_authors'] ?? 0),
+            'total_comments' => (int) ($row['total_comments'] ?? 0),
+            'total_likes'    => (int) ($row['total_likes'] ?? 0),
+        ];
+    }
+
+    /**
+     * Search posts by content keyword (legacy wrapper delegating to searchPostsAdvanced).
      *
      * @param string $keyword Search keyword
      * @param int|null $limit Optional max results
@@ -218,27 +413,7 @@ class PostModel
             return [];
         }
 
-        $sql = '
-            SELECT p.id, p.user_id, p.content, p.image, p.created_at,
-                   u.username, u.full_name, u.profile_image
-            FROM posts p
-            INNER JOIN users u ON p.user_id = u.id
-            WHERE p.content LIKE :keyword
-            ORDER BY p.created_at DESC, p.id DESC
-        ';
-
-        if ($limit !== null) {
-            $sql .= ' LIMIT :limit';
-            $stmt = $this->db->prepare($sql);
-            $stmt->bindValue(':keyword', '%' . $keyword . '%', PDO::PARAM_STR);
-            $stmt->bindValue(':limit', (int) $limit, PDO::PARAM_INT);
-            $stmt->execute();
-        } else {
-            $stmt = $this->db->prepare($sql);
-            $stmt->execute([':keyword' => '%' . $keyword . '%']);
-        }
-
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        return $this->searchPostsAdvanced(['keyword' => $keyword], $limit);
     }
 }
 

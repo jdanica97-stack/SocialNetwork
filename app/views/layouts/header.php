@@ -64,16 +64,142 @@ if (session_status() === PHP_SESSION_NONE) {
   <div class="blob blob-3"></div>
 </div>
 
-<!-- ── Floating Glass Navigation ─────────────────────────────────────── -->
+<!-- ── Left-Side Navigation Panel Backdrop ───────────────────────────── -->
+<div class="side-panel-backdrop" id="sidePanelBackdrop" aria-hidden="true"></div>
+
+<!-- ── Left-Side Navigation Panel (Off-Canvas Drawer) ────────────────── -->
+<aside class="side-panel" id="sidePanel" role="dialog" aria-modal="true" aria-label="Navigation Panel" aria-hidden="true">
+  <!-- Panel Header with Logo and Close Button -->
+  <div class="side-panel-header">
+    <div class="side-panel-brand">
+      <img
+        src="/SocialNetwork/public/assets/images/logo-light.jpg"
+        alt="Orbit Logo"
+        class="logo-img logo-img-light"
+        width="50"
+        height="27"
+        loading="eager"
+      >
+      <img
+        src="/SocialNetwork/public/assets/images/logo-dark.jpg"
+        alt="Orbit Logo"
+        class="logo-img logo-img-dark"
+        width="50"
+        height="27"
+        loading="eager"
+      >
+      <span class="side-panel-title">Orbit</span>
+    </div>
+    <button type="button" class="side-panel-close-btn" id="sidePanelCloseBtn" aria-label="Close navigation panel" title="Close">
+      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+    </button>
+  </div>
+
+  <!-- Panel Navigation Links (Search, Profile, Messages) -->
+  <nav class="side-panel-nav" role="navigation" aria-label="Side navigation">
+    <div class="side-panel-section-label">Navigation</div>
+
+    <!-- 1. Search Option -->
+    <a href="/SocialNetwork/public/?url=search" class="side-panel-link" id="sidePanelSearchLink">
+      <div class="side-panel-icon-wrap">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      </div>
+      <div class="side-panel-text">
+        <span class="side-panel-link-title">Search</span>
+        <span class="side-panel-link-desc">Find community posts & members</span>
+      </div>
+    </a>
+
+    <!-- 2. Profile Option -->
+    <?php if (isset($_SESSION['user_id'])): ?>
+      <a href="/SocialNetwork/public/?url=profile" class="side-panel-link" id="sidePanelProfileLink">
+        <div class="side-panel-icon-wrap">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        </div>
+        <div class="side-panel-text">
+          <span class="side-panel-link-title">Profile</span>
+          <span class="side-panel-link-desc">@<?= htmlspecialchars($_SESSION['user_username'] ?? 'user', ENT_QUOTES, 'UTF-8') ?></span>
+        </div>
+      </a>
+    <?php else: ?>
+      <a href="/SocialNetwork/public/?url=auth/login" class="side-panel-link" id="sidePanelProfileLink">
+        <div class="side-panel-icon-wrap">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        </div>
+        <div class="side-panel-text">
+          <span class="side-panel-link-title">Profile</span>
+          <span class="side-panel-link-desc">Sign in to view profile</span>
+        </div>
+      </a>
+    <?php endif; ?>
+
+    <!-- 3. Messages Option (Coming Soon) -->
+    <div class="side-panel-link disabled" aria-disabled="true" title="Direct messaging is currently in development">
+      <div class="side-panel-icon-wrap">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      </div>
+      <div class="side-panel-text">
+        <div class="d-flex align-items-center gap-2">
+          <span class="side-panel-link-title">Messages</span>
+          <span class="badge-coming-soon">Coming Soon</span>
+        </div>
+        <span class="side-panel-link-desc">Direct messaging in progress</span>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Panel Footer with User Details or Guest Access -->
+  <div class="side-panel-footer">
+    <?php if (isset($_SESSION['user_id'])): ?>
+      <div class="side-panel-user-info">
+        <span class="side-panel-user-name"><?= htmlspecialchars($_SESSION['user_full_name'] ?? 'User', ENT_QUOTES, 'UTF-8') ?></span>
+        <span class="side-panel-user-handle">@<?= htmlspecialchars($_SESSION['user_username'] ?? 'user', ENT_QUOTES, 'UTF-8') ?></span>
+      </div>
+    <?php else: ?>
+      <div class="d-flex gap-2 w-100">
+        <a href="/SocialNetwork/public/?url=auth/login" class="btn btn-primary btn-sm flex-fill">Login</a>
+        <a href="/SocialNetwork/public/?url=auth/register" class="btn btn-ghost btn-sm flex-fill">Register</a>
+      </div>
+    <?php endif; ?>
+  </div>
+</aside>
+
+<!-- ── Floating Glass Top Navigation Bar ─────────────────────────────── -->
 <div class="halo-nav-wrapper">
   <nav class="halo-nav glass" role="navigation" aria-label="Main navigation">
 
-    <!-- Brand -->
-    <a href="/SocialNetwork/public/" class="halo-nav-brand" aria-label="Mini Social Network — Home">
-      Mini Social Network
-    </a>
+    <!-- Logo on Left Side (Clickable Trigger for Side Panel) -->
+    <button
+      type="button"
+      class="logo-panel-btn"
+      id="logoSidePanelBtn"
+      aria-label="Orbit — Open navigation side panel"
+      aria-controls="sidePanel"
+      aria-expanded="false"
+      title="Open navigation panel"
+    >
+      <!-- Light Mode Logo (active when in light theme) -->
+      <img
+        src="/SocialNetwork/public/assets/images/logo-light.jpg"
+        alt="Orbit Logo"
+        class="logo-img logo-img-light"
+        width="60"
+        height="32"
+        loading="eager"
+      >
+      <!-- Dark Mode Logo (active when in dark theme) -->
+      <img
+        src="/SocialNetwork/public/assets/images/logo-dark.jpg"
+        alt="Orbit Logo"
+        class="logo-img logo-img-dark"
+        width="60"
+        height="32"
+        loading="eager"
+      >
+      <span class="logo-title">Orbit</span>
+    </button>
 
-    <!-- Nav links -->
+    <!-- Top Nav links (Search and Profile moved to Side Panel!) -->
     <ul class="halo-nav-links" role="list">
 
       <!-- Home (always visible) -->
@@ -84,24 +210,7 @@ if (session_status() === PHP_SESSION_NONE) {
         </a>
       </li>
 
-      <!-- Search (always visible) -->
-      <li>
-        <a href="/SocialNetwork/public/?url=search" aria-label="Search">
-          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          <span class="nav-label">Search</span>
-        </a>
-      </li>
-
-
       <?php if (isset($_SESSION['user_id'])): ?>
-
-        <!-- Profile -->
-        <li>
-          <a href="/SocialNetwork/public/?url=profile" aria-label="My Profile">
-            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-            <span class="nav-label">Profile</span>
-          </a>
-        </li>
 
         <!-- Logout -->
         <li>

@@ -19,10 +19,17 @@
 
 require_once BASE_PATH . '/config/database.php';
 require_once BASE_PATH . '/app/models/UserModel.php';
+require_once BASE_PATH . '/app/models/PostModel.php';
+require_once BASE_PATH . '/app/models/CommentModel.php';
+require_once BASE_PATH . '/app/models/LikeModel.php';
+require_once BASE_PATH . '/app/controllers/PostController.php';
 
 class ProfileController
 {
     private UserModel $userModel;
+    private PostModel $postModel;
+    private CommentModel $commentModel;
+    private LikeModel $likeModel;
 
     // ── Upload settings ───────────────────────────────────────────────────────
     // Absolute server path where uploaded profile images are saved
@@ -48,7 +55,11 @@ class ProfileController
             session_start();
         }
 
-        $this->userModel = new UserModel(getDBConnection());
+        $db = getDBConnection();
+        $this->userModel    = new UserModel($db);
+        $this->postModel    = new PostModel($db);
+        $this->commentModel = new CommentModel($db);
+        $this->likeModel    = new LikeModel($db);
 
         // Absolute path to the profiles upload directory
         $this->uploadDir = BASE_PATH . '/public/assets/images/profiles/';
@@ -82,14 +93,17 @@ class ProfileController
     {
         $this->requireAuth();
 
-        // The user ID comes exclusively from the trusted session
-        $userId = (int) $_SESSION['user_id'];
+        $currentUserId = (int) $_SESSION['user_id'];
 
-        $user = $this->userModel->findById($userId);
+        // If an optional 'id' parameter is provided (e.g., viewing another user's profile),
+        // validate and use it; otherwise default to the authenticated user's own profile.
+        $targetUserId = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT)
+            ?: (isset($_GET['id']) && is_numeric($_GET['id']) ? (int) $_GET['id'] : $currentUserId);
+
+        $user = $this->userModel->findById($targetUserId);
 
         if ($user === false) {
-            // Highly unlikely, but handle gracefully
-            $_SESSION['flash_error'] = 'Your account could not be found.';
+            $_SESSION['flash_error'] = 'User profile could not be found.';
             header('Location: /SocialNetwork/public/');
             exit;
         }
@@ -99,7 +113,24 @@ class ProfileController
         $flashError   = $_SESSION['flash_error']   ?? null;
         unset($_SESSION['flash_success'], $_SESSION['flash_error']);
 
-        $pageTitle = 'My Profile — Mini Social Network';
+        // Fetch posts created by this user (newest first)
+        $posts = $this->postModel->getByUserId($targetUserId);
+
+        // Load comments, likes count, and current user's liked status for each post
+        $commentsByPost  = [];
+        $likeCountByPost = [];
+        $hasLikedByPost  = [];
+
+        foreach ($posts as $p) {
+            $pId = (int) $p['id'];
+            $commentsByPost[$pId]  = $this->commentModel->getByPostId($pId);
+            $likeCountByPost[$pId] = $this->likeModel->countLikes($pId);
+            $hasLikedByPost[$pId]  = $this->likeModel->hasLiked($pId, $currentUserId);
+        }
+
+        $isOwnProfile = ($targetUserId === $currentUserId);
+        $pageTitle    = $isOwnProfile ? 'My Profile — Mini Social Network' : htmlspecialchars($user['full_name']) . ' — Profile';
+
         require_once BASE_PATH . '/app/views/profile/profile.php';
     }
 

@@ -45,56 +45,100 @@ class SearchController
     }
 
     /**
-     * Display the search results page.
-     * Route: GET /SocialNetwork/public/?url=search&q=...&type=...
+     * Display the search results and community statistics report page.
+     * Route: GET /SocialNetwork/public/?url=search&q=...&type=...&author_id=...&date_from=...&date_to=...&sort=...
      */
     public function index(): void
     {
-        $keyword = trim($_GET['q'] ?? '');
-        $type    = strtolower(trim($_GET['type'] ?? 'all'));
+        $keyword  = trim($_GET['q'] ?? '');
+        $type     = strtolower(trim($_GET['type'] ?? 'all'));
+        $authorId = (isset($_GET['author_id']) && $_GET['author_id'] !== '') ? (int) $_GET['author_id'] : null;
+        $dateFrom = trim($_GET['date_from'] ?? '');
+        $dateTo   = trim($_GET['date_to'] ?? '');
+        $sort     = strtolower(trim($_GET['sort'] ?? 'newest'));
 
         // Normalize filter type
         if (!in_array($type, ['all', 'users', 'posts'], true)) {
             $type = 'all';
         }
 
+        // Validate date formats (YYYY-MM-DD)
+        if ($dateFrom !== '' && !preg_match('/^\d{4}-\d{2}-\d{2}$/', $dateFrom)) {
+            $dateFrom = '';
+        }
+        if ($dateTo !== '' && !preg_match('/^\d{4}-\d{2}-\d{2}$/', $dateTo)) {
+            $dateTo = '';
+        }
+
+        // Normalize sort order
+        if (!in_array($sort, ['newest', 'oldest', 'most_liked', 'most_commented'], true)) {
+            $sort = 'newest';
+        }
+
+        $filterApplied = isset($_GET['filter_applied']);
+        $hasSearched   = isset($_GET['q']) || $filterApplied || ($authorId !== null) || ($dateFrom !== '') || ($dateTo !== '') || (isset($_GET['sort']) && $_GET['sort'] !== 'newest');
+
+        // Check whether the search/filter request is empty
+        if ($type === 'users') {
+            $emptyQuery = ($keyword === '');
+        } else {
+            $emptyQuery = ($keyword === '' && $authorId === null && $dateFrom === '' && $dateTo === '' && !$filterApplied);
+        }
+
         $users           = [];
         $posts           = [];
         $commentsByPost  = [];
-        $likeCountByPost = [];
         $hasLikedByPost  = [];
-        $emptyQuery      = ($keyword === '');
-        $hasSearched     = isset($_GET['q']);
+        $summaryStats    = [
+            'total_posts'    => 0,
+            'total_authors'  => 0,
+            'total_comments' => 0,
+            'total_likes'    => 0,
+        ];
 
         $currentUserId = isset($_SESSION['user_id']) ? (int) $_SESSION['user_id'] : null;
 
-        // Only query the database if a search keyword was provided
+        // Retrieve distinct authors for author filter dropdown
+        $authors = $this->postModel->getDistinctAuthors();
+
+        // Only query the database if search criteria was supplied
         if (!$emptyQuery) {
-            // Search Users
-            if ($type === 'all' || $type === 'users') {
+            // 1. Search Users (Step 11)
+            if (($type === 'all' || $type === 'users') && $keyword !== '') {
                 $users = $this->userModel->searchUsers($keyword);
             }
 
-            // Search Posts
+            // 2. Search & Filter Posts with Summary Reporting (Step 11 & Step 12)
             if ($type === 'all' || $type === 'posts') {
-                $posts = $this->postModel->searchPosts($keyword);
+                $filters = [
+                    'keyword'   => $keyword,
+                    'author_id' => $authorId,
+                    'date_from' => $dateFrom,
+                    'date_to'   => $dateTo,
+                    'sort'      => $sort,
+                ];
 
-                // Fetch comments and like metadata for matching posts
+                // Compute summary statistics without Cartesian product
+                $summaryStats = $this->postModel->getSearchSummaryStats($filters);
+
+                // Fetch matching posts with exact aggregated comment_count and like_count
+                $posts = $this->postModel->searchPostsAdvanced($filters);
+
+                // Fetch comment details and like state for current user
                 foreach ($posts as $p) {
                     $pId = (int) $p['id'];
-                    $commentsByPost[$pId]  = $this->commentModel->getByPostId($pId);
-                    $likeCountByPost[$pId] = $this->likeModel->countLikes($pId);
-                    $hasLikedByPost[$pId]  = $currentUserId ? $this->likeModel->hasLiked($pId, $currentUserId) : false;
+                    $commentsByPost[$pId] = $this->commentModel->getByPostId($pId);
+                    $hasLikedByPost[$pId] = $currentUserId ? $this->likeModel->hasLiked($pId, $currentUserId) : false;
                 }
             }
         }
 
         $pageTitle = $emptyQuery
-            ? 'Search — Mini Social Network'
-            : 'Search: ' . $keyword . ' — Mini Social Network';
+            ? 'Search & Community Reports — Mini Social Network'
+            : ($keyword !== '' ? 'Search: ' . $keyword . ' — Mini Social Network' : 'Community Report — Mini Social Network');
 
-        require_once BASE_PATH . '/app/views/layouts/header.php';
-        require_once BASE_PATH . '/app/views/search/results.php';
-        require_once BASE_PATH . '/app/views/layouts/footer.php';
+        require BASE_PATH . '/app/views/layouts/header.php';
+        require BASE_PATH . '/app/views/search/results.php';
+        require BASE_PATH . '/app/views/layouts/footer.php';
     }
 }
