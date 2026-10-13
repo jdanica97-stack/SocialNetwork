@@ -67,6 +67,11 @@ if (!empty($user['profile_image'])) {
                             <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                             Edit Profile
                         </a>
+                    <?php elseif (!empty($_SESSION['user_id'])): ?>
+                        <a href="/SocialNetwork/public/?url=messages/chat&user_id=<?= (int)$user['id'] ?>" class="btn btn-primary btn-sm d-inline-flex align-items-center gap-1">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                            Message
+                        </a>
                     <?php endif; ?>
                 </div>
 
@@ -184,6 +189,7 @@ if (!empty($user['profile_image'])) {
                                                     <span>Edit Post</span>
                                                 </a>
                                                 <form method="POST" action="/SocialNetwork/public/?url=posts/delete" class="m-0 p-0" onsubmit="return confirm('Are you sure you want to delete this post?');">
+                                                    <?= Csrf::field() ?>
                                                     <input type="hidden" name="id" value="<?= $postId ?>">
                                                     <button type="submit" class="post-menu-item delete-item w-100 border-0 bg-transparent text-start" role="menuitem">
                                                         <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
@@ -292,6 +298,7 @@ if (!empty($user['profile_image'])) {
                                                                         Edit
                                                                     </a>
                                                                     <form method="POST" action="/SocialNetwork/public/?url=comments/delete" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this comment?');">
+                                                                        <?= Csrf::field() ?>
                                                                         <input type="hidden" name="id" value="<?= $commentId ?>">
                                                                         <button type="submit" class="comment-action-link delete-link border-0 bg-transparent p-0" title="Delete comment">
                                                                             <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
@@ -316,6 +323,7 @@ if (!empty($user['profile_image'])) {
                                 <!-- Create Comment Form -->
                                 <div class="comment-form-wrap">
                                     <form method="POST" action="/SocialNetwork/public/?url=comments/create">
+                                        <?= Csrf::field() ?>
                                         <input type="hidden" name="post_id" value="<?= $postId ?>">
                                         <div class="d-flex gap-2 align-items-start">
                                             <textarea

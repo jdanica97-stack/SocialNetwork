@@ -23,6 +23,7 @@ require_once BASE_PATH . '/app/models/PostModel.php';
 require_once BASE_PATH . '/app/models/CommentModel.php';
 require_once BASE_PATH . '/app/models/LikeModel.php';
 require_once BASE_PATH . '/app/controllers/PostController.php';
+require_once BASE_PATH . '/app/helpers/Csrf.php';
 
 class ProfileController
 {
@@ -51,9 +52,7 @@ class ProfileController
 
     public function __construct()
     {
-        if (session_status() === PHP_SESSION_NONE) {
-            session_start();
-        }
+        Csrf::initSession();
 
         $db = getDBConnection();
         $this->userModel    = new UserModel($db);
@@ -97,13 +96,23 @@ class ProfileController
 
         // If an optional 'id' parameter is provided (e.g., viewing another user's profile),
         // validate and use it; otherwise default to the authenticated user's own profile.
-        $targetUserId = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT)
-            ?: (isset($_GET['id']) && is_numeric($_GET['id']) ? (int) $_GET['id'] : $currentUserId);
+        if (isset($_GET['id'])) {
+            if (!is_numeric($_GET['id']) || (int)$_GET['id'] <= 0) {
+                $_SESSION['flash_error'] = 'Invalid user profile reference.';
+                http_response_code(400);
+                header('Location: /SocialNetwork/public/');
+                exit;
+            }
+            $targetUserId = (int) $_GET['id'];
+        } else {
+            $targetUserId = $currentUserId;
+        }
 
         $user = $this->userModel->findById($targetUserId);
 
         if ($user === false) {
             $_SESSION['flash_error'] = 'User profile could not be found.';
+            http_response_code(404);
             header('Location: /SocialNetwork/public/');
             exit;
         }
@@ -181,6 +190,11 @@ class ProfileController
 
         $userId = (int) $_SESSION['user_id'];
 
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: /SocialNetwork/public/?url=profile');
+            exit;
+        }
+
         // We need the current user data so the form can be re-displayed on error
         $user = $this->userModel->findById($userId);
         if ($user === false) {
@@ -188,11 +202,19 @@ class ProfileController
             exit;
         }
 
+        $errors = [];
+
+        // ── CSRF Check ────────────────────────────────────────────────────────
+        if (!Csrf::check()) {
+            $errors[] = 'Security verification failed (invalid CSRF token). Please try again.';
+            $pageTitle = 'Edit Profile — Mini Social Network';
+            require_once BASE_PATH . '/app/views/profile/edit.php';
+            return;
+        }
+
         // ── Collect input ─────────────────────────────────────────────────────
         $fullName = trim($_POST['full_name'] ?? '');
         $bio      = trim($_POST['bio']       ?? '');
-
-        $errors = [];
 
         // ── Validate full name ────────────────────────────────────────────────
         if ($fullName === '') {
@@ -228,9 +250,10 @@ class ProfileController
         }
 
         // ── Persist text fields ───────────────────────────────────────────────
-        $this->userModel->updateProfile($userId, $fullName, $bio);
+        $textUpdated = $this->userModel->updateProfile($userId, $fullName, $bio);
 
         // ── Persist new image (only if one was successfully uploaded) ─────────
+        $imgUpdated = true;
         if ($newImageFilename !== null) {
             // Delete the old image file to avoid orphaned files accumulating
             if (!empty($user['profile_image'])) {
@@ -239,7 +262,15 @@ class ProfileController
                     @unlink($oldFile);
                 }
             }
-            $this->userModel->updateProfileImage($userId, $newImageFilename);
+            $imgUpdated = $this->userModel->updateProfileImage($userId, $newImageFilename);
+        }
+
+        if (!$textUpdated || !$imgUpdated) {
+            http_response_code(500);
+            $errors[] = 'An unexpected database error occurred while updating your profile. Please try again.';
+            $pageTitle = 'Edit Profile — Mini Social Network';
+            require_once BASE_PATH . '/app/views/profile/edit.php';
+            return;
         }
 
         // ── Keep the session's display name in sync ────────────────────────────

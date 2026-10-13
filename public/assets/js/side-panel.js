@@ -13,26 +13,32 @@
 (function () {
   'use strict';
 
-  var triggerBtn = document.getElementById('logoSidePanelBtn');
-  var sidePanel  = document.getElementById('sidePanel');
-  var backdrop   = document.getElementById('sidePanelBackdrop');
-  var closeBtn   = document.getElementById('sidePanelCloseBtn');
+  var hamburgerBtn = document.getElementById('hamburgerMenuBtn');
+  var sidePanel    = document.getElementById('sidePanel');
+  var backdrop     = document.getElementById('sidePanelBackdrop');
+  var closeBtn     = document.getElementById('sidePanelCloseBtn');
 
   if (!sidePanel) return;
+
+  function updateAriaState(isOpen) {
+    var state = isOpen ? 'true' : 'false';
+    if (hamburgerBtn) {
+      hamburgerBtn.setAttribute('aria-expanded', state);
+    }
+    sidePanel.setAttribute('aria-hidden', isOpen ? 'false' : 'true');
+  }
 
   function openPanel() {
     sidePanel.classList.add('open');
     if (backdrop) backdrop.classList.add('open');
-    if (triggerBtn) triggerBtn.setAttribute('aria-expanded', 'true');
-    sidePanel.setAttribute('aria-hidden', 'false');
+    updateAriaState(true);
     document.body.classList.add('side-panel-active');
   }
 
   function closePanel() {
     sidePanel.classList.remove('open');
     if (backdrop) backdrop.classList.remove('open');
-    if (triggerBtn) triggerBtn.setAttribute('aria-expanded', 'false');
-    sidePanel.setAttribute('aria-hidden', 'true');
+    updateAriaState(false);
     document.body.classList.remove('side-panel-active');
   }
 
@@ -44,8 +50,8 @@
     }
   }
 
-  if (triggerBtn) {
-    triggerBtn.addEventListener('click', function (e) {
+  if (hamburgerBtn) {
+    hamburgerBtn.addEventListener('click', function (e) {
       e.preventDefault();
       e.stopPropagation();
       togglePanel();
@@ -74,12 +80,20 @@
     }
   });
 
-  // Handle disabled links in the panel
+  // Handle links inside the panel:
+  // - Prevent navigation for disabled items
+  // - Auto-close panel on selecting active navigation links
   sidePanel.addEventListener('click', function (e) {
     var disabledItem = e.target.closest('.side-panel-link.disabled');
     if (disabledItem) {
       e.preventDefault();
       e.stopPropagation();
+      return;
+    }
+
+    var activeLink = e.target.closest('a.side-panel-link, a.side-panel-brand');
+    if (activeLink) {
+      closePanel();
     }
   });
 

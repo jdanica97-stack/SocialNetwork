@@ -217,7 +217,7 @@ main.container {
 .logo-panel-btn {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   background: transparent;
   border: 1px solid transparent;
   border-radius: var(--radius-pill);
@@ -246,11 +246,29 @@ main.container {
   border-color: var(--border-strong);
 }
 
+/* Rounded Logo Container */
+.logo-img-box {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #ffffff;
+  padding: 2px 4px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+[data-theme="dark"] .logo-img-box {
+  background: #1e1e24;
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
 /* Logo image sizing & automatic light/dark switching */
 .logo-img {
-  height: 32px;
+  height: 30px;
   width: auto;
-  max-width: 60px;
+  max-width: 58px;
   object-fit: contain;
   border-radius: 6px;
   display: block;
@@ -357,6 +375,29 @@ body.side-panel-active {
   display: flex;
   align-items: center;
   gap: 10px;
+  text-decoration: none;
+  color: var(--fg);
+  border-radius: 8px;
+  padding: 4px 6px;
+  margin-left: -6px;
+  transition: background var(--transition), opacity var(--transition);
+  cursor: pointer;
+  user-select: none;
+}
+
+.side-panel-brand:hover {
+  background: rgba(0, 0, 0, 0.04);
+  color: var(--fg);
+}
+
+[data-theme="dark"] .side-panel-brand:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--fg);
+}
+
+.side-panel-brand:focus-visible {
+  outline: 2px solid var(--fg);
+  outline-offset: 2px;
 }
 
 .side-panel-title {
@@ -364,6 +405,7 @@ body.side-panel-active {
   font-weight: 700;
   letter-spacing: -0.02em;
   color: var(--fg);
+  line-height: 1;
 }
 
 .side-panel-close-btn {
@@ -526,6 +568,21 @@ body.side-panel-active {
   border-color: rgba(168, 85, 247, 0.35);
 }
 
+.side-panel-divider {
+  height: 1px;
+  background: var(--border);
+  margin: 6px 14px;
+}
+
+.side-panel-logout-link:hover {
+  background: rgba(239, 68, 68, 0.08) !important;
+}
+
+.side-panel-logout-link:hover .side-panel-icon-wrap {
+  background: rgba(239, 68, 68, 0.15) !important;
+  color: #dc2626 !important;
+}
+
 .side-panel-footer {
   padding: 16px 20px;
   border-top: 1px solid rgba(0, 0, 0, 0.06);
@@ -587,6 +644,28 @@ body.side-panel-active {
   color: var(--fg);
   background: var(--surface-hover);
   opacity: 1;
+}
+
+/* ── Hamburger Menu Button Styling ──────────────────────────── */
+.hamburger-nav-btn {
+  font-weight: 500;
+  padding: 6px 9px;
+  min-width: 34px;
+  height: 34px;
+  justify-content: center;
+}
+
+.hamburger-icon-symbol {
+  font-size: 1.15rem;
+  line-height: 1;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.hamburger-nav-btn[aria-expanded="true"] {
+  color: var(--fg);
+  background: var(--surface-hover);
+  border-color: var(--border-strong);
 }
 
 /* Theme toggle icons */
@@ -1556,6 +1635,72 @@ footer.footer.bg-primary { display: none !important; }
   color: var(--fg);
 }
 
+/* ── 19. Direct Messaging ────────────────────────────────────── */
+.conversation-item:hover {
+  background: var(--surface-hover) !important;
+}
 
+.conversation-unread {
+  background: rgba(var(--fg), 0.03) !important;
+}
 
+.chat-main-card {
+  border-radius: var(--radius-card);
+  overflow: hidden;
+}
 
+.chat-bubble {
+  max-width: 78%;
+  padding: 10px 16px;
+  font-size: 0.92rem;
+  line-height: 1.45;
+  word-break: break-word;
+  box-shadow: var(--shadow-sm);
+  transition: transform var(--transition);
+}
+
+.chat-bubble-mine {
+  background: var(--btn-primary-bg);
+  color: var(--btn-primary-fg);
+  border-radius: 18px 18px 4px 18px;
+  align-self: flex-end;
+}
+
+.chat-bubble-theirs {
+  background: var(--surface-hover);
+  color: var(--fg);
+  border: 1px solid var(--border);
+  border-radius: 18px 18px 18px 4px;
+  align-self: flex-start;
+}
+
+.chat-messages-body::-webkit-scrollbar {
+  width: 6px;
+}
+
+.chat-messages-body::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.chat-messages-body::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  border-radius: var(--radius-pill);
+}
+
+.contact-picker-item:hover {
+  background: var(--surface-hover) !important;
+}
+
+.modal {
+  z-index: 1055 !important;
+}
+
+.modal-backdrop {
+  z-index: 1050 !important;
+}
+
+.modal-content.glass {
+  background: var(--surface) !important;
+  backdrop-filter: blur(24px) !important;
+  -webkit-backdrop-filter: blur(24px) !important;
+}

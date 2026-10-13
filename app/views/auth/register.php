@@ -39,6 +39,7 @@ require_once BASE_PATH . '/app/views/layouts/header.php';
     <div class="card-body" style="padding: 32px !important;">
 
       <form method="POST" action="/SocialNetwork/public/?url=auth/register" novalidate>
+        <?= Csrf::field() ?>
 
         <!-- Full Name -->
         <div class="mb-3">

@@ -66,6 +66,7 @@ if (!empty($user['profile_image'])) {
                     enctype="multipart/form-data"
                     novalidate
                 >
+                    <?= Csrf::field() ?>
 
                     <!-- Full Name -->
                     <div class="mb-3">

@@ -45,14 +45,31 @@ class SearchController
     }
 
     /**
+     * Redirect to login if user is not authenticated.
+     */
+    private function requireAuth(): void
+    {
+        if (!isset($_SESSION['user_id'])) {
+            $_SESSION['flash_error'] = 'You must be logged in to access search.';
+            header('Location: /SocialNetwork/public/?url=auth/login');
+            exit;
+        }
+    }
+
+    /**
      * Display the search results and community statistics report page.
      * Route: GET /SocialNetwork/public/?url=search&q=...&type=...&author_id=...&date_from=...&date_to=...&sort=...
      */
     public function index(): void
     {
+        $this->requireAuth();
+
         $keyword  = trim($_GET['q'] ?? '');
+        if (mb_strlen($keyword) > 200) {
+            $keyword = mb_substr($keyword, 0, 200);
+        }
         $type     = strtolower(trim($_GET['type'] ?? 'all'));
-        $authorId = (isset($_GET['author_id']) && $_GET['author_id'] !== '') ? (int) $_GET['author_id'] : null;
+        $authorId = (isset($_GET['author_id']) && is_numeric($_GET['author_id']) && (int)$_GET['author_id'] > 0) ? (int) $_GET['author_id'] : null;
         $dateFrom = trim($_GET['date_from'] ?? '');
         $dateTo   = trim($_GET['date_to'] ?? '');
         $sort     = strtolower(trim($_GET['sort'] ?? 'newest'));
@@ -98,39 +115,45 @@ class SearchController
 
         $currentUserId = isset($_SESSION['user_id']) ? (int) $_SESSION['user_id'] : null;
 
-        // Retrieve distinct authors for author filter dropdown
-        $authors = $this->postModel->getDistinctAuthors();
+        try {
+            // Retrieve distinct authors for author filter dropdown
+            $authors = $this->postModel->getDistinctAuthors();
 
-        // Only query the database if search criteria was supplied
-        if (!$emptyQuery) {
-            // 1. Search Users (Step 11)
-            if (($type === 'all' || $type === 'users') && $keyword !== '') {
-                $users = $this->userModel->searchUsers($keyword);
-            }
+            // Only query the database if search criteria was supplied
+            if (!$emptyQuery) {
+                // 1. Search Users (Step 11)
+                if (($type === 'all' || $type === 'users') && $keyword !== '') {
+                    $users = $this->userModel->searchUsers($keyword);
+                }
 
-            // 2. Search & Filter Posts with Summary Reporting (Step 11 & Step 12)
-            if ($type === 'all' || $type === 'posts') {
-                $filters = [
-                    'keyword'   => $keyword,
-                    'author_id' => $authorId,
-                    'date_from' => $dateFrom,
-                    'date_to'   => $dateTo,
-                    'sort'      => $sort,
-                ];
+                // 2. Search & Filter Posts with Summary Reporting (Step 11 & Step 12)
+                if ($type === 'all' || $type === 'posts') {
+                    $filters = [
+                        'keyword'   => $keyword,
+                        'author_id' => $authorId,
+                        'date_from' => $dateFrom,
+                        'date_to'   => $dateTo,
+                        'sort'      => $sort,
+                    ];
 
-                // Compute summary statistics without Cartesian product
-                $summaryStats = $this->postModel->getSearchSummaryStats($filters);
+                    // Compute summary statistics without Cartesian product
+                    $summaryStats = $this->postModel->getSearchSummaryStats($filters);
 
-                // Fetch matching posts with exact aggregated comment_count and like_count
-                $posts = $this->postModel->searchPostsAdvanced($filters);
+                    // Fetch matching posts with exact aggregated comment_count and like_count
+                    $posts = $this->postModel->searchPostsAdvanced($filters);
 
-                // Fetch comment details and like state for current user
-                foreach ($posts as $p) {
-                    $pId = (int) $p['id'];
-                    $commentsByPost[$pId] = $this->commentModel->getByPostId($pId);
-                    $hasLikedByPost[$pId] = $currentUserId ? $this->likeModel->hasLiked($pId, $currentUserId) : false;
+                    // Fetch comment details and like state for current user
+                    foreach ($posts as $p) {
+                        $pId = (int) $p['id'];
+                        $commentsByPost[$pId] = $this->commentModel->getByPostId($pId);
+                        $hasLikedByPost[$pId] = $currentUserId ? $this->likeModel->hasLiked($pId, $currentUserId) : false;
+                    }
                 }
             }
+        } catch (\Throwable $e) {
+            error_log('[SearchController::index] Exception: ' . $e->getMessage());
+            $flashError = 'Search service is temporarily unavailable. Please try again.';
+            $authors = $authors ?? [];
         }
 
         $pageTitle = $emptyQuery

@@ -21,6 +21,7 @@ require_once BASE_PATH . '/config/database.php';
 require_once BASE_PATH . '/app/models/PostModel.php';
 require_once BASE_PATH . '/app/models/CommentModel.php';
 require_once BASE_PATH . '/app/models/LikeModel.php';
+require_once BASE_PATH . '/app/helpers/Csrf.php';
 
 class PostController
 {
@@ -41,9 +42,7 @@ class PostController
 
     public function __construct()
     {
-        if (session_status() === PHP_SESSION_NONE) {
-            session_start();
-        }
+        Csrf::initSession();
 
         $db = getDBConnection();
         $this->postModel    = new PostModel($db);
@@ -107,9 +106,9 @@ class PostController
         }
 
         // 3. Render view (newsfeed for logged-in users, guest landing for visitors)
-        require_once BASE_PATH . '/app/views/layouts/header.php';
-        require_once BASE_PATH . '/app/views/posts/feed.php';
-        require_once BASE_PATH . '/app/views/layouts/footer.php';
+        require BASE_PATH . '/app/views/layouts/header.php';
+        require BASE_PATH . '/app/views/posts/feed.php';
+        require BASE_PATH . '/app/views/layouts/footer.php';
     }
 
     // ─── Create Post (POST) ───────────────────────────────────────────────────
@@ -123,6 +122,12 @@ class PostController
         $this->requireAuth();
 
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: /SocialNetwork/public/');
+            exit;
+        }
+
+        if (!Csrf::check()) {
+            $_SESSION['flash_error'] = 'Security verification failed (invalid CSRF token). Please try again.';
             header('Location: /SocialNetwork/public/');
             exit;
         }
@@ -220,7 +225,8 @@ class PostController
         $postId = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT)
             ?: (isset($_GET['id']) && is_numeric($_GET['id']) ? (int) $_GET['id'] : null);
 
-        if (!$postId) {
+        if (!$postId || $postId <= 0) {
+            http_response_code(400);
             $_SESSION['flash_error'] = 'Invalid post reference.';
             header('Location: /SocialNetwork/public/');
             exit;
@@ -228,8 +234,16 @@ class PostController
 
         $post = $this->postModel->getById($postId);
 
-        if (!$post || (int) $post['user_id'] !== $userId) {
-            $_SESSION['flash_error'] = 'Post not found or you are not authorized to edit it.';
+        if (!$post) {
+            http_response_code(404);
+            $_SESSION['flash_error'] = 'Post not found or has been deleted.';
+            header('Location: /SocialNetwork/public/');
+            exit;
+        }
+
+        if ((int) $post['user_id'] !== $userId) {
+            http_response_code(403);
+            $_SESSION['flash_error'] = 'You are not authorized to edit this post.';
             header('Location: /SocialNetwork/public/');
             exit;
         }
@@ -252,18 +266,50 @@ class PostController
         $this->requireAuth();
 
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405);
             header('Location: /SocialNetwork/public/');
             exit;
         }
 
-        $userId  = (int) $_SESSION['user_id'];
-        $postId  = filter_input(INPUT_POST, 'id', FILTER_VALIDATE_INT)
+        $userId = (int) $_SESSION['user_id'];
+        $postId = filter_input(INPUT_POST, 'id', FILTER_VALIDATE_INT)
             ?: (isset($_POST['id']) && is_numeric($_POST['id']) ? (int) $_POST['id'] : null);
+
+        if (!Csrf::check()) {
+            http_response_code(403);
+            $_SESSION['flash_error'] = 'Security verification failed (invalid CSRF token). Please try again.';
+            header('Location: /SocialNetwork/public/' . ($postId && $postId > 0 ? '?url=posts/edit&id=' . $postId : ''));
+            exit;
+        }
+
+        if (!$postId || $postId <= 0) {
+            http_response_code(400);
+            $_SESSION['flash_error'] = 'Invalid post reference.';
+            header('Location: /SocialNetwork/public/');
+            exit;
+        }
+
+        $post = $this->postModel->getById($postId);
+
+        if (!$post) {
+            http_response_code(404);
+            $_SESSION['flash_error'] = 'Post not found or has been deleted.';
+            header('Location: /SocialNetwork/public/');
+            exit;
+        }
+
+        if ((int) $post['user_id'] !== $userId) {
+            http_response_code(403);
+            $_SESSION['flash_error'] = 'Unauthorized: You can only edit your own posts.';
+            header('Location: /SocialNetwork/public/');
+            exit;
+        }
+
         $content = trim($_POST['content'] ?? '');
 
-        if (!$postId || $content === '') {
+        if ($content === '') {
             $_SESSION['flash_error'] = 'Content cannot be empty.';
-            header('Location: /SocialNetwork/public/');
+            header('Location: /SocialNetwork/public/?url=posts/edit&id=' . $postId);
             exit;
         }
 
@@ -278,12 +324,12 @@ class PostController
         if ($updated) {
             $_SESSION['flash_success'] = 'Post updated successfully.';
         } else {
-            // Note: rowCount() is 0 if content didn't change
-            $post = $this->postModel->getById($postId);
-            if ($post && (int) $post['user_id'] === $userId) {
+            // Check if unchanged content caused rowCount to be 0
+            if ($post['content'] === $content) {
                 $_SESSION['flash_success'] = 'Post saved (no changes detected).';
             } else {
-                $_SESSION['flash_error'] = 'Unauthorized or post could not be updated.';
+                http_response_code(500);
+                $_SESSION['flash_error'] = 'Failed to update post due to a server error. Please try again.';
             }
         }
 
@@ -302,6 +348,14 @@ class PostController
         $this->requireAuth();
 
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405);
+            header('Location: /SocialNetwork/public/');
+            exit;
+        }
+
+        if (!Csrf::check()) {
+            http_response_code(403);
+            $_SESSION['flash_error'] = 'Security verification failed (invalid CSRF token). Please try again.';
             header('Location: /SocialNetwork/public/');
             exit;
         }
@@ -310,7 +364,8 @@ class PostController
         $postId = filter_input(INPUT_POST, 'id', FILTER_VALIDATE_INT)
             ?: (isset($_POST['id']) && is_numeric($_POST['id']) ? (int) $_POST['id'] : null);
 
-        if (!$postId) {
+        if (!$postId || $postId <= 0) {
+            http_response_code(400);
             $_SESSION['flash_error'] = 'Invalid post reference.';
             header('Location: /SocialNetwork/public/');
             exit;
@@ -319,7 +374,15 @@ class PostController
         // Fetch post to check image and ownership
         $post = $this->postModel->getById($postId);
 
-        if (!$post || (int) $post['user_id'] !== $userId) {
+        if (!$post) {
+            http_response_code(404);
+            $_SESSION['flash_error'] = 'Post not found or has already been deleted.';
+            header('Location: /SocialNetwork/public/');
+            exit;
+        }
+
+        if ((int) $post['user_id'] !== $userId) {
+            http_response_code(403);
             $_SESSION['flash_error'] = 'You are not authorized to delete this post.';
             header('Location: /SocialNetwork/public/');
             exit;
@@ -329,7 +392,7 @@ class PostController
         if (!empty($post['image'])) {
             $imagePath = BASE_PATH . '/public/assets/images/' . $post['image'];
             if (is_file($imagePath)) {
-                unlink($imagePath);
+                @unlink($imagePath);
             }
         }
 
@@ -338,7 +401,8 @@ class PostController
         if ($deleted) {
             $_SESSION['flash_success'] = 'Post deleted successfully.';
         } else {
-            $_SESSION['flash_error'] = 'Could not delete post.';
+            http_response_code(500);
+            $_SESSION['flash_error'] = 'Could not delete post due to a server error.';
         }
 
         header('Location: /SocialNetwork/public/');

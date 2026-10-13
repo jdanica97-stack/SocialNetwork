@@ -18,18 +18,21 @@
 
 require_once BASE_PATH . '/config/database.php';
 require_once BASE_PATH . '/app/models/CommentModel.php';
+require_once BASE_PATH . '/app/models/PostModel.php';
+require_once BASE_PATH . '/app/helpers/Csrf.php';
 
 class CommentController
 {
     private CommentModel $commentModel;
+    private PostModel $postModel;
 
     public function __construct()
     {
-        if (session_status() === PHP_SESSION_NONE) {
-            session_start();
-        }
+        Csrf::initSession();
 
-        $this->commentModel = new CommentModel(getDBConnection());
+        $db = getDBConnection();
+        $this->commentModel = new CommentModel($db);
+        $this->postModel    = new PostModel($db);
     }
 
     // ─── Authentication Guard ─────────────────────────────────────────────────
@@ -40,6 +43,7 @@ class CommentController
     private function requireAuth(): void
     {
         if (!isset($_SESSION['user_id'])) {
+            http_response_code(401);
             $_SESSION['flash_error'] = 'You must be logged in to perform that action.';
             header('Location: /SocialNetwork/public/?url=auth/login');
             exit;
@@ -57,19 +61,38 @@ class CommentController
         $this->requireAuth();
 
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405);
             header('Location: /SocialNetwork/public/');
             exit;
         }
 
         $postId  = filter_input(INPUT_POST, 'post_id', FILTER_VALIDATE_INT);
-        $content = trim($_POST['content'] ?? '');
-        $userId  = (int) $_SESSION['user_id'];
+
+        if (!Csrf::check()) {
+            http_response_code(403);
+            $_SESSION['flash_error'] = 'Security verification failed (invalid CSRF token). Please try again.';
+            header('Location: /SocialNetwork/public/' . ($postId && $postId > 0 ? '#post-' . $postId : ''));
+            exit;
+        }
 
         if (!$postId || $postId <= 0) {
+            http_response_code(400);
             $_SESSION['flash_error'] = 'Invalid post reference.';
             header('Location: /SocialNetwork/public/');
             exit;
         }
+
+        // Verify that target post exists before attempting to comment (foreign key integrity)
+        $post = $this->postModel->getById($postId);
+        if (!$post) {
+            http_response_code(404);
+            $_SESSION['flash_error'] = 'The post you are commenting on does not exist or has been deleted.';
+            header('Location: /SocialNetwork/public/');
+            exit;
+        }
+
+        $content = trim($_POST['content'] ?? '');
+        $userId  = (int) $_SESSION['user_id'];
 
         // Validation
         if ($content === '') {
@@ -89,7 +112,8 @@ class CommentController
         if ($result !== false) {
             $_SESSION['flash_success'] = 'Comment posted successfully.';
         } else {
-            $_SESSION['flash_error'] = 'Could not save your comment. Please try again.';
+            http_response_code(500);
+            $_SESSION['flash_error'] = 'Could not save your comment due to a server error. Please try again.';
         }
 
         header('Location: /SocialNetwork/public/#post-' . $postId);
@@ -109,6 +133,7 @@ class CommentController
         $commentId = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT)
             ?: (isset($_GET['id']) && is_numeric($_GET['id']) ? (int) $_GET['id'] : null);
         if (!$commentId || $commentId <= 0) {
+            http_response_code(400);
             $_SESSION['flash_error'] = 'Invalid comment reference.';
             header('Location: /SocialNetwork/public/');
             exit;
@@ -116,7 +141,8 @@ class CommentController
 
         $comment = $this->commentModel->findById($commentId);
         if (!$comment) {
-            $_SESSION['flash_error'] = 'Comment not found.';
+            http_response_code(404);
+            $_SESSION['flash_error'] = 'Comment not found or has been deleted.';
             header('Location: /SocialNetwork/public/');
             exit;
         }
@@ -124,6 +150,7 @@ class CommentController
         // Server-side ownership check
         $userId = (int) $_SESSION['user_id'];
         if ((int) $comment['user_id'] !== $userId) {
+            http_response_code(403);
             $_SESSION['flash_error'] = 'You are not authorized to edit this comment.';
             header('Location: /SocialNetwork/public/');
             exit;
@@ -145,16 +172,23 @@ class CommentController
         $this->requireAuth();
 
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405);
             header('Location: /SocialNetwork/public/');
             exit;
         }
 
         $commentId = filter_input(INPUT_POST, 'id', FILTER_VALIDATE_INT)
             ?: (isset($_POST['id']) && is_numeric($_POST['id']) ? (int) $_POST['id'] : null);
-        $content   = trim($_POST['content'] ?? '');
-        $userId    = (int) $_SESSION['user_id'];
+
+        if (!Csrf::check()) {
+            http_response_code(403);
+            $_SESSION['flash_error'] = 'Security verification failed (invalid CSRF token). Please try again.';
+            header('Location: /SocialNetwork/public/?url=comments/edit&id=' . ($commentId && $commentId > 0 ? $commentId : ''));
+            exit;
+        }
 
         if (!$commentId || $commentId <= 0) {
+            http_response_code(400);
             $_SESSION['flash_error'] = 'Invalid comment reference.';
             header('Location: /SocialNetwork/public/');
             exit;
@@ -162,17 +196,22 @@ class CommentController
 
         $comment = $this->commentModel->findById($commentId);
         if (!$comment) {
-            $_SESSION['flash_error'] = 'Comment not found.';
+            http_response_code(404);
+            $_SESSION['flash_error'] = 'Comment not found or has been deleted.';
             header('Location: /SocialNetwork/public/');
             exit;
         }
 
         // Server-side ownership check
+        $userId = (int) $_SESSION['user_id'];
         if ((int) $comment['user_id'] !== $userId) {
+            http_response_code(403);
             $_SESSION['flash_error'] = 'Unauthorized: You can only edit your own comments.';
             header('Location: /SocialNetwork/public/');
             exit;
         }
+
+        $content = trim($_POST['content'] ?? '');
 
         // Validation
         $errors = [];
@@ -183,8 +222,8 @@ class CommentController
         }
 
         if (!empty($errors)) {
-            // Re-render edit view with validation errors
-            $comment['content'] = $content; // Preserve typed text
+            // Re-render edit view with validation errors preserving typed text
+            $comment['content'] = $content;
             $pageTitle = 'Edit Comment — Mini Social Network';
             require_once BASE_PATH . '/app/views/comments/edit.php';
             return;
@@ -195,7 +234,8 @@ class CommentController
         if ($updated) {
             $_SESSION['flash_success'] = 'Comment updated successfully.';
         } else {
-            $_SESSION['flash_error'] = 'Could not update your comment. Please try again.';
+            http_response_code(500);
+            $_SESSION['flash_error'] = 'Could not update your comment due to a server error. Please try again.';
         }
 
         header('Location: /SocialNetwork/public/#post-' . $comment['post_id']);
@@ -213,6 +253,14 @@ class CommentController
         $this->requireAuth();
 
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405);
+            header('Location: /SocialNetwork/public/');
+            exit;
+        }
+
+        if (!Csrf::check()) {
+            http_response_code(403);
+            $_SESSION['flash_error'] = 'Security verification failed (invalid CSRF token). Please try again.';
             header('Location: /SocialNetwork/public/');
             exit;
         }
@@ -222,6 +270,7 @@ class CommentController
         $userId    = (int) $_SESSION['user_id'];
 
         if (!$commentId || $commentId <= 0) {
+            http_response_code(400);
             $_SESSION['flash_error'] = 'Invalid comment reference.';
             header('Location: /SocialNetwork/public/');
             exit;
@@ -229,13 +278,15 @@ class CommentController
 
         $comment = $this->commentModel->findById($commentId);
         if (!$comment) {
-            $_SESSION['flash_error'] = 'Comment not found.';
+            http_response_code(404);
+            $_SESSION['flash_error'] = 'Comment not found or has already been deleted.';
             header('Location: /SocialNetwork/public/');
             exit;
         }
 
         // Server-side ownership check
         if ((int) $comment['user_id'] !== $userId) {
+            http_response_code(403);
             $_SESSION['flash_error'] = 'Unauthorized: You can only delete your own comments.';
             header('Location: /SocialNetwork/public/');
             exit;
@@ -247,6 +298,7 @@ class CommentController
         if ($deleted) {
             $_SESSION['flash_success'] = 'Comment deleted successfully.';
         } else {
+            http_response_code(500);
             $_SESSION['flash_error'] = 'Could not delete the comment. Please try again.';
         }
 

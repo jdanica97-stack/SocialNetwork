@@ -28,6 +28,7 @@
 // Load the database connection helper and the User model
 require_once BASE_PATH . '/config/database.php';
 require_once BASE_PATH . '/app/models/UserModel.php';
+require_once BASE_PATH . '/app/helpers/Csrf.php';
 
 class AuthController
 {
@@ -39,10 +40,7 @@ class AuthController
      */
     public function __construct()
     {
-        // Start the session if one isn't already running
-        if (session_status() === PHP_SESSION_NONE) {
-            session_start();
-        }
+        Csrf::initSession();
 
         // Create one PDO connection for this request and inject it into the model
         $this->userModel = new UserModel(getDBConnection());
@@ -94,6 +92,13 @@ class AuthController
         ];
 
         $errors = [];
+
+        // ── CSRF Protection ───────────────────────────────────────────────────
+        if (!Csrf::check()) {
+            $errors[] = 'Invalid or expired security token. Please try again.';
+            require_once BASE_PATH . '/app/views/auth/register.php';
+            return;
+        }
 
         // ── Validation ───────────────────────────────────────────────────────
 
@@ -194,6 +199,14 @@ class AuthController
 
         $old    = ['username' => $username];
         $errors = [];
+
+        // ── CSRF Protection ───────────────────────────────────────────────────
+        if (!Csrf::check()) {
+            $errors[] = 'Invalid or expired security token. Please try again.';
+            $flashSuccess = null;
+            require_once BASE_PATH . '/app/views/auth/login.php';
+            return;
+        }
 
         // ── Validation ────────────────────────────────────────────────────────
 

@@ -51,15 +51,20 @@ class UserModel
      */
     public function findByUsername(string $username): array|false
     {
-        $sql  = 'SELECT id, username, password, full_name, bio, profile_image, created_at
-                 FROM users
-                 WHERE username = :username
-                 LIMIT 1';
+        try {
+            $sql  = 'SELECT id, username, password, full_name, bio, profile_image, created_at
+                     FROM users
+                     WHERE username = :username
+                     LIMIT 1';
 
-        $stmt = $this->db->prepare($sql);
-        $stmt->execute([':username' => $username]);
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute([':username' => $username]);
 
-        return $stmt->fetch(); // PDO::FETCH_ASSOC set globally in config/database.php
+            return $stmt->fetch();
+        } catch (PDOException $e) {
+            error_log('UserModel::findByUsername database error: ' . $e->getMessage());
+            return false;
+        }
     }
 
     /**
@@ -73,11 +78,16 @@ class UserModel
      */
     public function usernameExists(string $username): bool
     {
-        $sql  = 'SELECT COUNT(*) FROM users WHERE username = :username';
-        $stmt = $this->db->prepare($sql);
-        $stmt->execute([':username' => $username]);
+        try {
+            $sql  = 'SELECT COUNT(*) FROM users WHERE username = :username';
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute([':username' => $username]);
 
-        return (int) $stmt->fetchColumn() > 0;
+            return (int) $stmt->fetchColumn() > 0;
+        } catch (PDOException $e) {
+            error_log('UserModel::usernameExists database error: ' . $e->getMessage());
+            return false;
+        }
     }
 
     // ─── Write Operations ─────────────────────────────────────────────────────
@@ -95,16 +105,21 @@ class UserModel
      */
     public function createUser(string $username, string $passwordHash, string $fullName): bool
     {
-        $sql = 'INSERT INTO users (username, password, full_name)
-                VALUES (:username, :password, :full_name)';
+        try {
+            $sql = 'INSERT INTO users (username, password, full_name)
+                    VALUES (:username, :password, :full_name)';
 
-        $stmt = $this->db->prepare($sql);
+            $stmt = $this->db->prepare($sql);
 
-        return $stmt->execute([
-            ':username'  => $username,
-            ':password'  => $passwordHash,
-            ':full_name' => $fullName,
-        ]);
+            return $stmt->execute([
+                ':username'  => $username,
+                ':password'  => $passwordHash,
+                ':full_name' => $fullName,
+            ]);
+        } catch (PDOException $e) {
+            error_log('UserModel::createUser database error: ' . $e->getMessage());
+            return false;
+        }
     }
 
     // ─── Step 6: Profile Operations ───────────────────────────────────────────
@@ -121,16 +136,21 @@ class UserModel
      */
     public function findById(int $id): array|false
     {
-        // Deliberately exclude `password` — it must never appear in profile views.
-        $sql = 'SELECT id, username, full_name, bio, profile_image, created_at
-                FROM users
-                WHERE id = :id
-                LIMIT 1';
+        try {
+            // Deliberately exclude `password` — it must never appear in profile views.
+            $sql = 'SELECT id, username, full_name, bio, profile_image, created_at
+                    FROM users
+                    WHERE id = :id
+                    LIMIT 1';
 
-        $stmt = $this->db->prepare($sql);
-        $stmt->execute([':id' => $id]);
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute([':id' => $id]);
 
-        return $stmt->fetch();
+            return $stmt->fetch();
+        } catch (PDOException $e) {
+            error_log('UserModel::findById database error: ' . $e->getMessage());
+            return false;
+        }
     }
 
     /**
@@ -146,18 +166,23 @@ class UserModel
      */
     public function updateProfile(int $id, string $fullName, string $bio): bool
     {
-        $sql = 'UPDATE users
-                SET full_name = :full_name,
-                    bio       = :bio
-                WHERE id = :id';
+        try {
+            $sql = 'UPDATE users
+                    SET full_name = :full_name,
+                        bio       = :bio
+                    WHERE id = :id';
 
-        $stmt = $this->db->prepare($sql);
+            $stmt = $this->db->prepare($sql);
 
-        return $stmt->execute([
-            ':full_name' => $fullName,
-            ':bio'       => $bio,
-            ':id'        => $id,
-        ]);
+            return $stmt->execute([
+                ':full_name' => $fullName,
+                ':bio'       => $bio,
+                ':id'        => $id,
+            ]);
+        } catch (PDOException $e) {
+            error_log('UserModel::updateProfile database error: ' . $e->getMessage());
+            return false;
+        }
     }
 
     /**
@@ -172,16 +197,21 @@ class UserModel
      */
     public function updateProfileImage(int $id, string $filename): bool
     {
-        $sql = 'UPDATE users
-                SET profile_image = :profile_image
-                WHERE id = :id';
+        try {
+            $sql = 'UPDATE users
+                    SET profile_image = :profile_image
+                    WHERE id = :id';
 
-        $stmt = $this->db->prepare($sql);
+            $stmt = $this->db->prepare($sql);
 
-        return $stmt->execute([
-            ':profile_image' => $filename,
-            ':id'            => $id,
-        ]);
+            return $stmt->execute([
+                ':profile_image' => $filename,
+                ':id'            => $id,
+            ]);
+        } catch (PDOException $e) {
+            error_log('UserModel::updateProfileImage database error: ' . $e->getMessage());
+            return false;
+        }
     }
 
     // ─── Step 11: Search Operations ───────────────────────────────────────────
@@ -197,33 +227,64 @@ class UserModel
      */
     public function searchUsers(string $keyword, ?int $limit = 50): array
     {
-        $keyword = trim($keyword);
-        if ($keyword === '') {
+        try {
+            $keyword = trim($keyword);
+            if ($keyword === '') {
+                return [];
+            }
+
+            $sql = 'SELECT id, username, full_name, bio, profile_image, created_at
+                    FROM users
+                    WHERE username LIKE :kw_username
+                       OR full_name LIKE :kw_name
+                    ORDER BY full_name ASC, username ASC';
+
+            if ($limit !== null) {
+                $sql .= ' LIMIT :limit';
+                $stmt = $this->db->prepare($sql);
+                $stmt->bindValue(':kw_username', '%' . $keyword . '%', PDO::PARAM_STR);
+                $stmt->bindValue(':kw_name', '%' . $keyword . '%', PDO::PARAM_STR);
+                $stmt->bindValue(':limit', (int) $limit, PDO::PARAM_INT);
+                $stmt->execute();
+            } else {
+                $stmt = $this->db->prepare($sql);
+                $stmt->execute([
+                    ':kw_username' => '%' . $keyword . '%',
+                    ':kw_name'     => '%' . $keyword . '%',
+                ]);
+            }
+
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            error_log('UserModel::searchUsers database error: ' . $e->getMessage());
             return [];
         }
+    }
 
-        $sql = 'SELECT id, username, full_name, bio, profile_image, created_at
-                FROM users
-                WHERE username LIKE :kw_username
-                   OR full_name LIKE :kw_name
-                ORDER BY full_name ASC, username ASC';
+    /**
+     * Get all users up to a limit (useful for contact picker / user directory).
+     * Excludes password.
+     *
+     * @param int $limit
+     * @return array
+     */
+    public function getAllUsers(int $limit = 100): array
+    {
+        try {
+            $sql = 'SELECT id, username, full_name, bio, profile_image, created_at
+                    FROM users
+                    ORDER BY full_name ASC, username ASC
+                    LIMIT :limit';
 
-        if ($limit !== null) {
-            $sql .= ' LIMIT :limit';
             $stmt = $this->db->prepare($sql);
-            $stmt->bindValue(':kw_username', '%' . $keyword . '%', PDO::PARAM_STR);
-            $stmt->bindValue(':kw_name', '%' . $keyword . '%', PDO::PARAM_STR);
-            $stmt->bindValue(':limit', (int) $limit, PDO::PARAM_INT);
+            $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
             $stmt->execute();
-        } else {
-            $stmt = $this->db->prepare($sql);
-            $stmt->execute([
-                ':kw_username' => '%' . $keyword . '%',
-                ':kw_name'     => '%' . $keyword . '%',
-            ]);
-        }
 
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            error_log('UserModel::getAllUsers database error: ' . $e->getMessage());
+            return [];
+        }
     }
 }
 

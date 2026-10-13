@@ -18,18 +18,20 @@
 
 require_once BASE_PATH . '/config/database.php';
 require_once BASE_PATH . '/app/models/LikeModel.php';
+require_once BASE_PATH . '/app/models/PostModel.php';
+require_once BASE_PATH . '/app/helpers/Csrf.php';
 
 class LikeController
 {
     private LikeModel $likeModel;
+    private PostModel $postModel;
 
     public function __construct()
     {
-        if (session_status() === PHP_SESSION_NONE) {
-            session_start();
-        }
-
-        $this->likeModel = new LikeModel(getDBConnection());
+        Csrf::initSession();
+        $db = getDBConnection();
+        $this->likeModel = new LikeModel($db);
+        $this->postModel = new PostModel($db);
     }
 
     /**
@@ -110,6 +112,13 @@ class LikeController
             ], 405);
         }
 
+        if (!Csrf::check()) {
+            $this->jsonResponse([
+                'success' => false,
+                'message' => 'Invalid or expired security token.'
+            ], 403);
+        }
+
         $postId = $this->getPostId();
         if (!$postId) {
             $this->jsonResponse([
@@ -118,11 +127,32 @@ class LikeController
             ], 400);
         }
 
+        // Verify that target post exists before attempting like actions
+        $targetPost = $this->postModel->getById($postId);
+        if (!$targetPost) {
+            $this->jsonResponse([
+                'success' => false,
+                'message' => 'Post not found or has been deleted.'
+            ], 404);
+        }
+
         if ($this->likeModel->hasLiked($postId, $userId)) {
-            $this->likeModel->removeLike($postId, $userId);
+            $ok = $this->likeModel->removeLike($postId, $userId);
+            if (!$ok) {
+                $this->jsonResponse([
+                    'success' => false,
+                    'message' => 'Failed to unlike post. Please try again.'
+                ], 500);
+            }
             $liked = false;
         } else {
-            $this->likeModel->addLike($postId, $userId);
+            $ok = $this->likeModel->addLike($postId, $userId);
+            if (!$ok) {
+                $this->jsonResponse([
+                    'success' => false,
+                    'message' => 'Failed to like post. Please try again.'
+                ], 500);
+            }
             $liked = true;
         }
 
@@ -150,6 +180,13 @@ class LikeController
             ], 405);
         }
 
+        if (!Csrf::check()) {
+            $this->jsonResponse([
+                'success' => false,
+                'message' => 'Invalid or expired security token.'
+            ], 403);
+        }
+
         $postId = $this->getPostId();
         if (!$postId) {
             $this->jsonResponse([
@@ -158,8 +195,22 @@ class LikeController
             ], 400);
         }
 
+        $targetPost = $this->postModel->getById($postId);
+        if (!$targetPost) {
+            $this->jsonResponse([
+                'success' => false,
+                'message' => 'Post not found or has been deleted.'
+            ], 404);
+        }
+
         if (!$this->likeModel->hasLiked($postId, $userId)) {
-            $this->likeModel->addLike($postId, $userId);
+            $ok = $this->likeModel->addLike($postId, $userId);
+            if (!$ok) {
+                $this->jsonResponse([
+                    'success' => false,
+                    'message' => 'Failed to like post. Please try again.'
+                ], 500);
+            }
         }
 
         $count = $this->likeModel->countLikes($postId);
@@ -186,6 +237,13 @@ class LikeController
             ], 405);
         }
 
+        if (!Csrf::check()) {
+            $this->jsonResponse([
+                'success' => false,
+                'message' => 'Invalid or expired security token.'
+            ], 403);
+        }
+
         $postId = $this->getPostId();
         if (!$postId) {
             $this->jsonResponse([
@@ -194,8 +252,22 @@ class LikeController
             ], 400);
         }
 
+        $targetPost = $this->postModel->getById($postId);
+        if (!$targetPost) {
+            $this->jsonResponse([
+                'success' => false,
+                'message' => 'Post not found or has been deleted.'
+            ], 404);
+        }
+
         if ($this->likeModel->hasLiked($postId, $userId)) {
-            $this->likeModel->removeLike($postId, $userId);
+            $ok = $this->likeModel->removeLike($postId, $userId);
+            if (!$ok) {
+                $this->jsonResponse([
+                    'success' => false,
+                    'message' => 'Failed to unlike post. Please try again.'
+                ], 500);
+            }
         }
 
         $count = $this->likeModel->countLikes($postId);

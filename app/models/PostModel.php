@@ -51,25 +51,30 @@ class PostModel
      */
     public function getAllPosts(?int $limit = null, int $offset = 0): array
     {
-        $sql = '
-            SELECT p.id, p.user_id, p.content, p.image, p.created_at,
-                   u.username, u.full_name, u.profile_image
-            FROM posts p
-            INNER JOIN users u ON p.user_id = u.id
-            ORDER BY p.created_at DESC, p.id DESC
-        ';
+        try {
+            $sql = '
+                SELECT p.id, p.user_id, p.content, p.image, p.created_at,
+                       u.username, u.full_name, u.profile_image
+                FROM posts p
+                INNER JOIN users u ON p.user_id = u.id
+                ORDER BY p.created_at DESC, p.id DESC
+            ';
 
-        if ($limit !== null) {
-            $sql .= ' LIMIT :limit OFFSET :offset';
-            $stmt = $this->db->prepare($sql);
-            $stmt->bindValue(':limit', (int) $limit, PDO::PARAM_INT);
-            $stmt->bindValue(':offset', (int) $offset, PDO::PARAM_INT);
-            $stmt->execute();
-        } else {
-            $stmt = $this->db->query($sql);
+            if ($limit !== null) {
+                $sql .= ' LIMIT :limit OFFSET :offset';
+                $stmt = $this->db->prepare($sql);
+                $stmt->bindValue(':limit', (int) $limit, PDO::PARAM_INT);
+                $stmt->bindValue(':offset', (int) $offset, PDO::PARAM_INT);
+                $stmt->execute();
+            } else {
+                $stmt = $this->db->query($sql);
+            }
+
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            error_log('PostModel::getAllPosts database error: ' . $e->getMessage());
+            return [];
         }
-
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
     /**
@@ -80,19 +85,24 @@ class PostModel
      */
     public function getById(int $id): array|false
     {
-        $sql = '
-            SELECT p.id, p.user_id, p.content, p.image, p.created_at,
-                   u.username, u.full_name, u.profile_image
-            FROM posts p
-            INNER JOIN users u ON p.user_id = u.id
-            WHERE p.id = :id
-            LIMIT 1
-        ';
+        try {
+            $sql = '
+                SELECT p.id, p.user_id, p.content, p.image, p.created_at,
+                       u.username, u.full_name, u.profile_image
+                FROM posts p
+                INNER JOIN users u ON p.user_id = u.id
+                WHERE p.id = :id
+                LIMIT 1
+            ';
 
-        $stmt = $this->db->prepare($sql);
-        $stmt->execute([':id' => $id]);
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute([':id' => $id]);
 
-        return $stmt->fetch(PDO::FETCH_ASSOC);
+            return $stmt->fetch(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            error_log('PostModel::getById database error: ' . $e->getMessage());
+            return false;
+        }
     }
 
     /**
@@ -103,19 +113,24 @@ class PostModel
      */
     public function getByUserId(int $userId): array
     {
-        $sql = '
-            SELECT p.id, p.user_id, p.content, p.image, p.created_at,
-                   u.username, u.full_name, u.profile_image
-            FROM posts p
-            INNER JOIN users u ON p.user_id = u.id
-            WHERE p.user_id = :user_id
-            ORDER BY p.created_at DESC, p.id DESC
-        ';
+        try {
+            $sql = '
+                SELECT p.id, p.user_id, p.content, p.image, p.created_at,
+                       u.username, u.full_name, u.profile_image
+                FROM posts p
+                INNER JOIN users u ON p.user_id = u.id
+                WHERE p.user_id = :user_id
+                ORDER BY p.created_at DESC, p.id DESC
+            ';
 
-        $stmt = $this->db->prepare($sql);
-        $stmt->execute([':user_id' => $userId]);
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute([':user_id' => $userId]);
 
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            error_log('PostModel::getByUserId database error: ' . $e->getMessage());
+            return [];
+        }
     }
 
     /**
@@ -128,20 +143,25 @@ class PostModel
      */
     public function create(int $userId, string $content, ?string $image = null): int|false
     {
-        $sql = 'INSERT INTO posts (user_id, content, image) VALUES (:user_id, :content, :image)';
-        $stmt = $this->db->prepare($sql);
+        try {
+            $sql = 'INSERT INTO posts (user_id, content, image) VALUES (:user_id, :content, :image)';
+            $stmt = $this->db->prepare($sql);
 
-        $success = $stmt->execute([
-            ':user_id' => $userId,
-            ':content' => $content,
-            ':image'   => $image,
-        ]);
+            $success = $stmt->execute([
+                ':user_id' => $userId,
+                ':content' => $content,
+                ':image'   => $image,
+            ]);
 
-        if ($success) {
-            return (int) $this->db->lastInsertId();
+            if ($success) {
+                return (int) $this->db->lastInsertId();
+            }
+
+            return false;
+        } catch (PDOException $e) {
+            error_log('PostModel::create database error: ' . $e->getMessage());
+            return false;
         }
-
-        return false;
     }
 
     /**
@@ -155,15 +175,20 @@ class PostModel
      */
     public function update(int $id, int $userId, string $content): bool
     {
-        $sql = 'UPDATE posts SET content = :content WHERE id = :id AND user_id = :user_id';
-        $stmt = $this->db->prepare($sql);
-        $stmt->execute([
-            ':content' => $content,
-            ':id'      => $id,
-            ':user_id' => $userId,
-        ]);
+        try {
+            $sql = 'UPDATE posts SET content = :content WHERE id = :id AND user_id = :user_id';
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute([
+                ':content' => $content,
+                ':id'      => $id,
+                ':user_id' => $userId,
+            ]);
 
-        return $stmt->rowCount() > 0;
+            return $stmt->rowCount() > 0;
+        } catch (PDOException $e) {
+            error_log('PostModel::update database error: ' . $e->getMessage());
+            return false;
+        }
     }
 
     /**
@@ -177,14 +202,19 @@ class PostModel
      */
     public function delete(int $id, int $userId): bool
     {
-        $sql = 'DELETE FROM posts WHERE id = :id AND user_id = :user_id';
-        $stmt = $this->db->prepare($sql);
-        $stmt->execute([
-            ':id'      => $id,
-            ':user_id' => $userId,
-        ]);
+        try {
+            $sql = 'DELETE FROM posts WHERE id = :id AND user_id = :user_id';
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute([
+                ':id'      => $id,
+                ':user_id' => $userId,
+            ]);
 
-        return $stmt->rowCount() > 0;
+            return $stmt->rowCount() > 0;
+        } catch (PDOException $e) {
+            error_log('PostModel::delete database error: ' . $e->getMessage());
+            return false;
+        }
     }
 
     /**
@@ -194,10 +224,15 @@ class PostModel
      */
     public function countAll(): int
     {
-        $sql = 'SELECT COUNT(*) FROM posts';
-        $stmt = $this->db->query($sql);
+        try {
+            $sql = 'SELECT COUNT(*) FROM posts';
+            $stmt = $this->db->query($sql);
 
-        return (int) $stmt->fetchColumn();
+            return (int) $stmt->fetchColumn();
+        } catch (PDOException $e) {
+            error_log('PostModel::countAll database error: ' . $e->getMessage());
+            return 0;
+        }
     }
 
     // ─── Step 11 & Step 12: Search, Filtering & Reporting Operations ──────────
@@ -210,15 +245,20 @@ class PostModel
      */
     public function getDistinctAuthors(): array
     {
-        $sql = '
-            SELECT DISTINCT u.id, u.username, u.full_name
-            FROM users u
-            INNER JOIN posts p ON u.id = p.user_id
-            ORDER BY u.full_name ASC, u.username ASC
-        ';
+        try {
+            $sql = '
+                SELECT DISTINCT u.id, u.username, u.full_name
+                FROM users u
+                INNER JOIN posts p ON u.id = p.user_id
+                ORDER BY u.full_name ASC, u.username ASC
+            ';
 
-        $stmt = $this->db->query($sql);
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+            $stmt = $this->db->query($sql);
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            error_log('PostModel::getDistinctAuthors database error: ' . $e->getMessage());
+            return [];
+        }
     }
 
     /**
@@ -242,81 +282,86 @@ class PostModel
      */
     public function searchPostsAdvanced(array $filters = [], ?int $limit = 100, int $offset = 0): array
     {
-        $where  = [];
-        $params = [];
+        try {
+            $where  = [];
+            $params = [];
 
-        $keyword  = trim($filters['keyword'] ?? '');
-        $authorId = isset($filters['author_id']) && $filters['author_id'] !== '' ? (int) $filters['author_id'] : null;
-        $dateFrom = trim($filters['date_from'] ?? '');
-        $dateTo   = trim($filters['date_to'] ?? '');
-        $sort     = strtolower(trim($filters['sort'] ?? 'newest'));
+            $keyword  = trim($filters['keyword'] ?? '');
+            $authorId = isset($filters['author_id']) && $filters['author_id'] !== '' ? (int) $filters['author_id'] : null;
+            $dateFrom = trim($filters['date_from'] ?? '');
+            $dateTo   = trim($filters['date_to'] ?? '');
+            $sort     = strtolower(trim($filters['sort'] ?? 'newest'));
 
-        if ($keyword !== '') {
-            $where[] = 'p.content LIKE :keyword';
-            $params[':keyword'] = '%' . $keyword . '%';
-        }
-
-        if ($authorId !== null && $authorId > 0) {
-            $where[] = 'p.user_id = :author_id';
-            $params[':author_id'] = $authorId;
-        }
-
-        if ($dateFrom !== '') {
-            $where[] = 'p.created_at >= :date_from';
-            $params[':date_from'] = $dateFrom . ' 00:00:00';
-        }
-
-        if ($dateTo !== '') {
-            $where[] = 'p.created_at <= :date_to';
-            $params[':date_to'] = $dateTo . ' 23:59:59';
-        }
-
-        $whereClause = !empty($where) ? 'WHERE ' . implode(' AND ', $where) : '';
-
-        // Safe sort mapping
-        $orderBy = match ($sort) {
-            'oldest'         => 'ORDER BY p.created_at ASC, p.id ASC',
-            'most_liked'     => 'ORDER BY like_count DESC, p.created_at DESC, p.id DESC',
-            'most_commented' => 'ORDER BY comment_count DESC, p.created_at DESC, p.id DESC',
-            default          => 'ORDER BY p.created_at DESC, p.id DESC',
-        };
-
-        $sql = "
-            SELECT p.id, p.user_id, p.content, p.image, p.created_at,
-                   u.username, u.full_name, u.profile_image,
-                   COALESCE(c.comment_count, 0) AS comment_count,
-                   COALESCE(l.like_count, 0) AS like_count
-            FROM posts p
-            INNER JOIN users u ON p.user_id = u.id
-            LEFT JOIN (
-                SELECT post_id, COUNT(*) AS comment_count
-                FROM comments
-                GROUP BY post_id
-            ) c ON p.id = c.post_id
-            LEFT JOIN (
-                SELECT post_id, COUNT(*) AS like_count
-                FROM likes
-                GROUP BY post_id
-            ) l ON p.id = l.post_id
-            {$whereClause}
-            {$orderBy}
-        ";
-
-        if ($limit !== null) {
-            $sql .= ' LIMIT :limit OFFSET :offset';
-            $stmt = $this->db->prepare($sql);
-            foreach ($params as $k => $v) {
-                $stmt->bindValue($k, $v);
+            if ($keyword !== '') {
+                $where[] = 'p.content LIKE :keyword';
+                $params[':keyword'] = '%' . $keyword . '%';
             }
-            $stmt->bindValue(':limit', (int) $limit, PDO::PARAM_INT);
-            $stmt->bindValue(':offset', (int) $offset, PDO::PARAM_INT);
-            $stmt->execute();
-        } else {
-            $stmt = $this->db->prepare($sql);
-            $stmt->execute($params);
-        }
 
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+            if ($authorId !== null && $authorId > 0) {
+                $where[] = 'p.user_id = :author_id';
+                $params[':author_id'] = $authorId;
+            }
+
+            if ($dateFrom !== '') {
+                $where[] = 'p.created_at >= :date_from';
+                $params[':date_from'] = $dateFrom . ' 00:00:00';
+            }
+
+            if ($dateTo !== '') {
+                $where[] = 'p.created_at <= :date_to';
+                $params[':date_to'] = $dateTo . ' 23:59:59';
+            }
+
+            $whereClause = !empty($where) ? 'WHERE ' . implode(' AND ', $where) : '';
+
+            // Safe sort mapping
+            $orderBy = match ($sort) {
+                'oldest'         => 'ORDER BY p.created_at ASC, p.id ASC',
+                'most_liked'     => 'ORDER BY like_count DESC, p.created_at DESC, p.id DESC',
+                'most_commented' => 'ORDER BY comment_count DESC, p.created_at DESC, p.id DESC',
+                default          => 'ORDER BY p.created_at DESC, p.id DESC',
+            };
+
+            $sql = "
+                SELECT p.id, p.user_id, p.content, p.image, p.created_at,
+                       u.username, u.full_name, u.profile_image,
+                       COALESCE(c.comment_count, 0) AS comment_count,
+                       COALESCE(l.like_count, 0) AS like_count
+                FROM posts p
+                INNER JOIN users u ON p.user_id = u.id
+                LEFT JOIN (
+                    SELECT post_id, COUNT(*) AS comment_count
+                    FROM comments
+                    GROUP BY post_id
+                ) c ON p.id = c.post_id
+                LEFT JOIN (
+                    SELECT post_id, COUNT(*) AS like_count
+                    FROM likes
+                    GROUP BY post_id
+                ) l ON p.id = l.post_id
+                {$whereClause}
+                {$orderBy}
+            ";
+
+            if ($limit !== null) {
+                $sql .= ' LIMIT :limit OFFSET :offset';
+                $stmt = $this->db->prepare($sql);
+                foreach ($params as $k => $v) {
+                    $stmt->bindValue($k, $v);
+                }
+                $stmt->bindValue(':limit', (int) $limit, PDO::PARAM_INT);
+                $stmt->bindValue(':offset', (int) $offset, PDO::PARAM_INT);
+                $stmt->execute();
+            } else {
+                $stmt = $this->db->prepare($sql);
+                $stmt->execute($params);
+            }
+
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            error_log('PostModel::searchPostsAdvanced database error: ' . $e->getMessage());
+            return [];
+        }
     }
 
     /**
@@ -337,66 +382,76 @@ class PostModel
      */
     public function getSearchSummaryStats(array $filters = []): array
     {
-        $where  = [];
-        $params = [];
+        try {
+            $where  = [];
+            $params = [];
 
-        $keyword  = trim($filters['keyword'] ?? '');
-        $authorId = isset($filters['author_id']) && $filters['author_id'] !== '' ? (int) $filters['author_id'] : null;
-        $dateFrom = trim($filters['date_from'] ?? '');
-        $dateTo   = trim($filters['date_to'] ?? '');
+            $keyword  = trim($filters['keyword'] ?? '');
+            $authorId = isset($filters['author_id']) && $filters['author_id'] !== '' ? (int) $filters['author_id'] : null;
+            $dateFrom = trim($filters['date_from'] ?? '');
+            $dateTo   = trim($filters['date_to'] ?? '');
 
-        if ($keyword !== '') {
-            $where[] = 'p.content LIKE :keyword';
-            $params[':keyword'] = '%' . $keyword . '%';
+            if ($keyword !== '') {
+                $where[] = 'p.content LIKE :keyword';
+                $params[':keyword'] = '%' . $keyword . '%';
+            }
+
+            if ($authorId !== null && $authorId > 0) {
+                $where[] = 'p.user_id = :author_id';
+                $params[':author_id'] = $authorId;
+            }
+
+            if ($dateFrom !== '') {
+                $where[] = 'p.created_at >= :date_from';
+                $params[':date_from'] = $dateFrom . ' 00:00:00';
+            }
+
+            if ($dateTo !== '') {
+                $where[] = 'p.created_at <= :date_to';
+                $params[':date_to'] = $dateTo . ' 23:59:59';
+            }
+
+            $whereClause = !empty($where) ? 'WHERE ' . implode(' AND ', $where) : '';
+
+            $sql = "
+                SELECT 
+                    COUNT(p.id) AS total_posts,
+                    COUNT(DISTINCT p.user_id) AS total_authors,
+                    COALESCE(SUM(c.comment_count), 0) AS total_comments,
+                    COALESCE(SUM(l.like_count), 0) AS total_likes
+                FROM posts p
+                LEFT JOIN (
+                    SELECT post_id, COUNT(*) AS comment_count
+                    FROM comments
+                    GROUP BY post_id
+                ) c ON p.id = c.post_id
+                LEFT JOIN (
+                    SELECT post_id, COUNT(*) AS like_count
+                    FROM likes
+                    GROUP BY post_id
+                ) l ON p.id = l.post_id
+                {$whereClause}
+            ";
+
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute($params);
+            $row = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            return [
+                'total_posts'    => (int) ($row['total_posts'] ?? 0),
+                'total_authors'  => (int) ($row['total_authors'] ?? 0),
+                'total_comments' => (int) ($row['total_comments'] ?? 0),
+                'total_likes'    => (int) ($row['total_likes'] ?? 0),
+            ];
+        } catch (PDOException $e) {
+            error_log('PostModel::getSearchSummaryStats database error: ' . $e->getMessage());
+            return [
+                'total_posts'    => 0,
+                'total_authors'  => 0,
+                'total_comments' => 0,
+                'total_likes'    => 0,
+            ];
         }
-
-        if ($authorId !== null && $authorId > 0) {
-            $where[] = 'p.user_id = :author_id';
-            $params[':author_id'] = $authorId;
-        }
-
-        if ($dateFrom !== '') {
-            $where[] = 'p.created_at >= :date_from';
-            $params[':date_from'] = $dateFrom . ' 00:00:00';
-        }
-
-        if ($dateTo !== '') {
-            $where[] = 'p.created_at <= :date_to';
-            $params[':date_to'] = $dateTo . ' 23:59:59';
-        }
-
-        $whereClause = !empty($where) ? 'WHERE ' . implode(' AND ', $where) : '';
-
-        $sql = "
-            SELECT 
-                COUNT(p.id) AS total_posts,
-                COUNT(DISTINCT p.user_id) AS total_authors,
-                COALESCE(SUM(c.comment_count), 0) AS total_comments,
-                COALESCE(SUM(l.like_count), 0) AS total_likes
-            FROM posts p
-            LEFT JOIN (
-                SELECT post_id, COUNT(*) AS comment_count
-                FROM comments
-                GROUP BY post_id
-            ) c ON p.id = c.post_id
-            LEFT JOIN (
-                SELECT post_id, COUNT(*) AS like_count
-                FROM likes
-                GROUP BY post_id
-            ) l ON p.id = l.post_id
-            {$whereClause}
-        ";
-
-        $stmt = $this->db->prepare($sql);
-        $stmt->execute($params);
-        $row = $stmt->fetch(PDO::FETCH_ASSOC);
-
-        return [
-            'total_posts'    => (int) ($row['total_posts'] ?? 0),
-            'total_authors'  => (int) ($row['total_authors'] ?? 0),
-            'total_comments' => (int) ($row['total_comments'] ?? 0),
-            'total_likes'    => (int) ($row['total_likes'] ?? 0),
-        ];
     }
 
     /**

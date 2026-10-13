@@ -47,16 +47,17 @@ class LikeModel
             return false;
         }
 
-        $sql = 'INSERT INTO likes (post_id, user_id) VALUES (:post_id, :user_id)';
-        $stmt = $this->db->prepare($sql);
-
         try {
+            $sql = 'INSERT INTO likes (post_id, user_id) VALUES (:post_id, :user_id)';
+            $stmt = $this->db->prepare($sql);
+
             return $stmt->execute([
                 ':post_id' => $postId,
                 ':user_id' => $userId,
             ]);
         } catch (PDOException $e) {
-            // In case of race condition triggering UNIQUE(post_id, user_id)
+            // Duplicate like or foreign key constraint violation
+            error_log('LikeModel::addLike database error: ' . $e->getMessage());
             return false;
         }
     }
@@ -70,14 +71,19 @@ class LikeModel
      */
     public function removeLike(int $postId, int $userId): bool
     {
-        $sql = 'DELETE FROM likes WHERE post_id = :post_id AND user_id = :user_id';
-        $stmt = $this->db->prepare($sql);
-        $stmt->execute([
-            ':post_id' => $postId,
-            ':user_id' => $userId,
-        ]);
+        try {
+            $sql = 'DELETE FROM likes WHERE post_id = :post_id AND user_id = :user_id';
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute([
+                ':post_id' => $postId,
+                ':user_id' => $userId,
+            ]);
 
-        return $stmt->rowCount() > 0;
+            return $stmt->rowCount() > 0;
+        } catch (PDOException $e) {
+            error_log('LikeModel::removeLike database error: ' . $e->getMessage());
+            return false;
+        }
     }
 
     /**
@@ -89,14 +95,19 @@ class LikeModel
      */
     public function hasLiked(int $postId, int $userId): bool
     {
-        $sql = 'SELECT COUNT(*) FROM likes WHERE post_id = :post_id AND user_id = :user_id';
-        $stmt = $this->db->prepare($sql);
-        $stmt->execute([
-            ':post_id' => $postId,
-            ':user_id' => $userId,
-        ]);
+        try {
+            $sql = 'SELECT COUNT(*) FROM likes WHERE post_id = :post_id AND user_id = :user_id';
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute([
+                ':post_id' => $postId,
+                ':user_id' => $userId,
+            ]);
 
-        return ((int) $stmt->fetchColumn()) > 0;
+            return ((int) $stmt->fetchColumn()) > 0;
+        } catch (PDOException $e) {
+            error_log('LikeModel::hasLiked database error: ' . $e->getMessage());
+            return false;
+        }
     }
 
     /**
@@ -107,10 +118,15 @@ class LikeModel
      */
     public function countLikes(int $postId): int
     {
-        $sql = 'SELECT COUNT(*) FROM likes WHERE post_id = :post_id';
-        $stmt = $this->db->prepare($sql);
-        $stmt->execute([':post_id' => $postId]);
+        try {
+            $sql = 'SELECT COUNT(*) FROM likes WHERE post_id = :post_id';
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute([':post_id' => $postId]);
 
-        return (int) $stmt->fetchColumn();
+            return (int) $stmt->fetchColumn();
+        } catch (PDOException $e) {
+            error_log('LikeModel::countLikes database error: ' . $e->getMessage());
+            return 0;
+        }
     }
 }

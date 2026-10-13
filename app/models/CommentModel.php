@@ -45,21 +45,26 @@ class CommentModel
      */
     public function createComment(int $postId, int $userId, string $content): int|false
     {
-        $sql = 'INSERT INTO comments (post_id, user_id, content)
-                VALUES (:post_id, :user_id, :content)';
+        try {
+            $sql = 'INSERT INTO comments (post_id, user_id, content)
+                    VALUES (:post_id, :user_id, :content)';
 
-        $stmt = $this->db->prepare($sql);
-        $success = $stmt->execute([
-            ':post_id' => $postId,
-            ':user_id' => $userId,
-            ':content' => $content,
-        ]);
+            $stmt = $this->db->prepare($sql);
+            $success = $stmt->execute([
+                ':post_id' => $postId,
+                ':user_id' => $userId,
+                ':content' => $content,
+            ]);
 
-        if ($success) {
-            return (int) $this->db->lastInsertId();
+            if ($success) {
+                return (int) $this->db->lastInsertId();
+            }
+
+            return false;
+        } catch (PDOException $e) {
+            error_log('CommentModel::createComment database error: ' . $e->getMessage());
+            return false;
         }
-
-        return false;
     }
 
     // ─── Read ─────────────────────────────────────────────────────────────────
@@ -73,17 +78,22 @@ class CommentModel
      */
     public function getByPostId(int $postId): array
     {
-        $sql = 'SELECT c.id, c.post_id, c.user_id, c.content, c.created_at,
-                       u.username, u.full_name, u.profile_image
-                FROM comments c
-                INNER JOIN users u ON c.user_id = u.id
-                WHERE c.post_id = :post_id
-                ORDER BY c.created_at ASC, c.id ASC';
+        try {
+            $sql = 'SELECT c.id, c.post_id, c.user_id, c.content, c.created_at,
+                           u.username, u.full_name, u.profile_image
+                    FROM comments c
+                    INNER JOIN users u ON c.user_id = u.id
+                    WHERE c.post_id = :post_id
+                    ORDER BY c.created_at ASC, c.id ASC';
 
-        $stmt = $this->db->prepare($sql);
-        $stmt->execute([':post_id' => $postId]);
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute([':post_id' => $postId]);
 
-        return $stmt->fetchAll();
+            return $stmt->fetchAll();
+        } catch (PDOException $e) {
+            error_log('CommentModel::getByPostId database error: ' . $e->getMessage());
+            return [];
+        }
     }
 
     /**
@@ -94,17 +104,22 @@ class CommentModel
      */
     public function findById(int $id): array|false
     {
-        $sql = 'SELECT c.id, c.post_id, c.user_id, c.content, c.created_at,
-                       u.username, u.full_name, u.profile_image
-                FROM comments c
-                INNER JOIN users u ON c.user_id = u.id
-                WHERE c.id = :id
-                LIMIT 1';
+        try {
+            $sql = 'SELECT c.id, c.post_id, c.user_id, c.content, c.created_at,
+                           u.username, u.full_name, u.profile_image
+                    FROM comments c
+                    INNER JOIN users u ON c.user_id = u.id
+                    WHERE c.id = :id
+                    LIMIT 1';
 
-        $stmt = $this->db->prepare($sql);
-        $stmt->execute([':id' => $id]);
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute([':id' => $id]);
 
-        return $stmt->fetch();
+            return $stmt->fetch();
+        } catch (PDOException $e) {
+            error_log('CommentModel::findById database error: ' . $e->getMessage());
+            return false;
+        }
     }
 
     /**
@@ -116,16 +131,21 @@ class CommentModel
      */
     public function isOwner(int $commentId, int $userId): bool
     {
-        $sql = 'SELECT COUNT(*) FROM comments
-                WHERE id = :id AND user_id = :user_id';
+        try {
+            $sql = 'SELECT COUNT(*) FROM comments
+                    WHERE id = :id AND user_id = :user_id';
 
-        $stmt = $this->db->prepare($sql);
-        $stmt->execute([
-            ':id'      => $commentId,
-            ':user_id' => $userId,
-        ]);
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute([
+                ':id'      => $commentId,
+                ':user_id' => $userId,
+            ]);
 
-        return ((int) $stmt->fetchColumn()) > 0;
+            return ((int) $stmt->fetchColumn()) > 0;
+        } catch (PDOException $e) {
+            error_log('CommentModel::isOwner database error: ' . $e->getMessage());
+            return false;
+        }
     }
 
     // ─── Update ───────────────────────────────────────────────────────────────
@@ -139,15 +159,20 @@ class CommentModel
      */
     public function updateComment(int $id, string $content): bool
     {
-        $sql = 'UPDATE comments
-                SET content = :content
-                WHERE id = :id';
+        try {
+            $sql = 'UPDATE comments
+                    SET content = :content
+                    WHERE id = :id';
 
-        $stmt = $this->db->prepare($sql);
-        return $stmt->execute([
-            ':content' => $content,
-            ':id'      => $id,
-        ]);
+            $stmt = $this->db->prepare($sql);
+            return $stmt->execute([
+                ':content' => $content,
+                ':id'      => $id,
+            ]);
+        } catch (PDOException $e) {
+            error_log('CommentModel::updateComment database error: ' . $e->getMessage());
+            return false;
+        }
     }
 
     // ─── Delete ───────────────────────────────────────────────────────────────
@@ -160,8 +185,13 @@ class CommentModel
      */
     public function deleteComment(int $id): bool
     {
-        $sql = 'DELETE FROM comments WHERE id = :id';
-        $stmt = $this->db->prepare($sql);
-        return $stmt->execute([':id' => $id]);
+        try {
+            $sql = 'DELETE FROM comments WHERE id = :id';
+            $stmt = $this->db->prepare($sql);
+            return $stmt->execute([':id' => $id]);
+        } catch (PDOException $e) {
+            error_log('CommentModel::deleteComment database error: ' . $e->getMessage());
+            return false;
+        }
     }
 }

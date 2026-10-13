@@ -95,6 +95,33 @@ CREATE TABLE IF NOT EXISTS likes (
   DEFAULT CHARSET=utf8mb4
   COLLATE=utf8mb4_unicode_ci;
 
+-- ─── 5. messages ─────────────────────────────────────────────────────────────
+-- Stores direct messages between users.
+-- Relationships:
+--   sender_id   → users.id (ON DELETE CASCADE)
+--   receiver_id → users.id (ON DELETE CASCADE)
+
+CREATE TABLE IF NOT EXISTS messages (
+    id          INT          NOT NULL AUTO_INCREMENT,
+    sender_id   INT          NOT NULL,
+    receiver_id INT          NOT NULL,
+    message     TEXT         NOT NULL,
+    is_read     TINYINT(1)   NOT NULL DEFAULT 0,
+    created_at  TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (id),
+    KEY idx_messages_sender (sender_id),
+    KEY idx_messages_receiver (receiver_id),
+    KEY idx_messages_conversation (sender_id, receiver_id),
+    CONSTRAINT fk_messages_sender
+        FOREIGN KEY (sender_id) REFERENCES users (id)
+        ON DELETE CASCADE,
+    CONSTRAINT fk_messages_receiver
+        FOREIGN KEY (receiver_id) REFERENCES users (id)
+        ON DELETE CASCADE
+) ENGINE=InnoDB
+  DEFAULT CHARSET=utf8mb4
+  COLLATE=utf8mb4_unicode_ci;
+
 -- ============================================================
 --  SAMPLE DATA (Development / Testing Only)
 --  Passwords (plaintext → hash):

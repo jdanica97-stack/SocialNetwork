@@ -35,10 +35,49 @@
 // Absolute path to the project root (one level above /public)
 define('BASE_PATH', dirname(__DIR__));
 
-// Start session once, globally — controllers check session_status() before calling again
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
+// Global unhandled exception handler to prevent leaking sensitive credentials/stack traces
+set_exception_handler(function (\Throwable $e) {
+    error_log('[UNCAUGHT EXCEPTION] ' . $e->getMessage() . "\n" . $e->getTraceAsString());
+
+    $isAjax = (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest')
+        || (isset($_SERVER['HTTP_ACCEPT']) && str_contains(strtolower($_SERVER['HTTP_ACCEPT']), 'application/json'));
+
+    http_response_code(500);
+
+    if ($isAjax) {
+        header('Content-Type: application/json; charset=UTF-8');
+        echo json_encode([
+            'success' => false,
+            'message' => 'An unexpected server error occurred. Please try again later.'
+        ]);
+        exit;
+    }
+
+    $pageTitle = '500 — Server Error';
+    if (file_exists(BASE_PATH . '/app/views/layouts/header.php')) {
+        require_once BASE_PATH . '/app/views/layouts/header.php';
+    }
+    ?>
+    <div class="row justify-content-center">
+        <div class="col-md-6 text-center py-5">
+            <i class="bi bi-exclamation-triangle text-danger" style="font-size: 3.5rem;"></i>
+            <h1 class="mt-3">500</h1>
+            <p class="text-muted">An unexpected server error occurred. Our team has been notified.</p>
+            <a href="/SocialNetwork/public/" class="btn btn-primary">
+                <i class="bi bi-house me-1"></i> Go Home
+            </a>
+        </div>
+    </div>
+    <?php
+    if (file_exists(BASE_PATH . '/app/views/layouts/footer.php')) {
+        require_once BASE_PATH . '/app/views/layouts/footer.php';
+    }
+    exit;
+});
+
+// Load CSRF protection helper and initialize session with secure cookie parameters
+require_once BASE_PATH . '/app/helpers/Csrf.php';
+Csrf::initSession();
 
 // Load the PDO connection factory — all controllers/models use getDBConnection()
 require_once BASE_PATH . '/config/database.php';
@@ -204,6 +243,36 @@ if ($url === 'likes/toggle' || $url === 'likes/like' || $url === 'likes/unlike' 
     }
 
     $likeCtrl->toggle();
+    exit;
+}
+
+// ── Messages Routes ───────────────────────────────────────────────────────────
+if ($url === 'messages' || str_starts_with($url, 'messages/')) {
+    require_once BASE_PATH . '/app/controllers/MessageController.php';
+    $messageCtrl = new MessageController();
+
+    if ($url === 'messages') {
+        $messageCtrl->index();
+        exit;
+    }
+
+    if ($url === 'messages/chat') {
+        $messageCtrl->chat();
+        exit;
+    }
+
+    if ($url === 'messages/send') {
+        $messageCtrl->send();
+        exit;
+    }
+
+    if ($url === 'messages/poll') {
+        $messageCtrl->poll();
+        exit;
+    }
+
+    // Default fallback to index for any other messages/*
+    $messageCtrl->index();
     exit;
 }
 

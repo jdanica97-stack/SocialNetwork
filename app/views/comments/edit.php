@@ -46,6 +46,7 @@ require_once BASE_PATH . '/app/views/layouts/header.php';
             <div class="card-body" style="padding: 28px !important;">
 
                 <form method="POST" action="/SocialNetwork/public/?url=comments/update" novalidate>
+                    <?= Csrf::field() ?>
                     <input type="hidden" name="id" value="<?= (int) $comment['id'] ?>">
 
                     <div class="mb-3">

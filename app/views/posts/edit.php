@@ -23,6 +23,7 @@
             </div>
             <div class="card-body" style="padding: 28px !important;">
                 <form method="POST" action="/SocialNetwork/public/?url=posts/update">
+                    <?= Csrf::field() ?>
                     <input type="hidden" name="id" value="<?= (int) $post['id'] ?>">
                     <div class="mb-3">
                         <label for="post_content" class="form-label">Post Content</label>

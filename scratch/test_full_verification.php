@@ -85,7 +85,7 @@ $topNavLinks = $matches[1] ?? '';
 assertTest(strpos($topNavLinks, '?url=search') === false, 'Search is REMOVED from top navigation links');
 assertTest(strpos($topNavLinks, '?url=profile') === false, 'Profile is REMOVED from top navigation links');
 assertTest(strpos($topNavLinks, 'Home') !== false, 'Home link remains in top navigation');
-assertTest(strpos($topNavLinks, '?url=auth/logout') !== false, 'Logout link remains in top navigation');
+assertTest(strpos($headerHtml, 'id="sidePanelLogoutLink"') !== false, 'Logout link is located in the side panel');
 assertTest(strpos($topNavLinks, 'id="themeToggle"') !== false, 'Theme toggle remains in top navigation');
 
 // Check guest top navigation
@@ -102,7 +102,7 @@ assertTest(strpos($guestTopNavLinks, '?url=profile') === false, 'Profile is NOT 
 
 echo PHP_EOL . "=== 3. VERIFYING SIDEBAR JAVASCRIPT & CSS ===" . PHP_EOL;
 $sidePanelJs = file_get_contents(BASE_PATH . '/public/assets/js/side-panel.js');
-assertTest(strpos($sidePanelJs, 'logoSidePanelBtn') !== false, 'side-panel.js handles logo click toggle');
+assertTest(strpos($sidePanelJs, 'hamburgerMenuBtn') !== false, 'side-panel.js handles hamburger click toggle');
 assertTest(strpos($sidePanelJs, 'sidePanelCloseBtn') !== false, 'side-panel.js handles close button click');
 assertTest(strpos($sidePanelJs, 'sidePanelBackdrop') !== false, 'side-panel.js handles backdrop click');
 assertTest(strpos($sidePanelJs, 'Escape') !== false, 'side-panel.js handles Escape key');

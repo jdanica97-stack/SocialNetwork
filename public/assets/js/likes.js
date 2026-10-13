@@ -34,16 +34,27 @@
     btn.style.opacity = '0.6';
     btn.style.pointerEvents = 'none';
 
+    var csrfMeta  = document.querySelector('meta[name="csrf-token"]');
+    var csrfToken = csrfMeta ? csrfMeta.getAttribute('content') : '';
+
     var formData = new URLSearchParams();
     formData.append('post_id', postId);
+    if (csrfToken) {
+      formData.append('csrf_token', csrfToken);
+    }
+
+    var headers = {
+      'Content-Type': 'application/x-www-form-urlencoded',
+      'X-Requested-With': 'XMLHttpRequest',
+      'Accept': 'application/json'
+    };
+    if (csrfToken) {
+      headers['X-CSRF-Token'] = csrfToken;
+    }
 
     fetch('/SocialNetwork/public/?url=likes/toggle', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-        'X-Requested-With': 'XMLHttpRequest',
-        'Accept': 'application/json'
-      },
+      headers: headers,
       body: formData.toString()
     })
       .then(function (response) {
