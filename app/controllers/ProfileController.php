@@ -126,15 +126,17 @@ class ProfileController
         $posts = $this->postModel->getByUserId($targetUserId);
 
         // Load comments, likes count, and current user's liked status for each post
-        $commentsByPost  = [];
-        $likeCountByPost = [];
-        $hasLikedByPost  = [];
+        $commentsByPost     = [];
+        $commentCountByPost = [];
+        $likeCountByPost    = [];
+        $hasLikedByPost     = [];
 
         foreach ($posts as $p) {
             $pId = (int) $p['id'];
-            $commentsByPost[$pId]  = $this->commentModel->getByPostId($pId);
-            $likeCountByPost[$pId] = $this->likeModel->countLikes($pId);
-            $hasLikedByPost[$pId]  = $this->likeModel->hasLiked($pId, $currentUserId);
+            $commentsByPost[$pId]     = $this->commentModel->getPreviewByPostId($pId, 2);
+            $commentCountByPost[$pId] = $this->commentModel->countByPostId($pId);
+            $likeCountByPost[$pId]    = $this->likeModel->countLikes($pId);
+            $hasLikedByPost[$pId]     = $this->likeModel->hasLiked($pId, $currentUserId);
         }
 
         $isOwnProfile = ($targetUserId === $currentUserId);
@@ -142,6 +144,7 @@ class ProfileController
 
         require_once BASE_PATH . '/app/views/profile/profile.php';
     }
+
 
     // ─── Edit Profile (GET) ───────────────────────────────────────────────────
 

@@ -134,6 +134,17 @@ Csrf::initSession();
         </div>
       </a>
 
+      <!-- 4. Notifications Option -->
+      <a href="/SocialNetwork/public/?url=notifications" class="side-panel-link" id="sidePanelNotificationsLink">
+        <div class="side-panel-icon-wrap">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        </div>
+        <div class="side-panel-text">
+          <span class="side-panel-link-title">Notifications</span>
+          <span class="side-panel-link-desc">Activity alerts & updates</span>
+        </div>
+      </a>
+
       <!-- 4. Sign Out Option -->
       <div class="side-panel-divider my-2"></div>
       <a href="/SocialNetwork/public/?url=auth/logout" class="side-panel-link side-panel-logout-link" id="sidePanelLogoutLink" aria-label="Sign Out">
@@ -257,6 +268,50 @@ Csrf::initSession();
             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
             <span class="nav-label">Messages</span>
           </a>
+        </li>
+
+        <!-- Notifications Bell (logged-in users) -->
+        <li class="position-relative" id="notifNavItem">
+          <button
+            type="button"
+            class="halo-nav-btn d-flex align-items-center gap-1 position-relative"
+            id="notifBellBtn"
+            aria-label="Notifications"
+            title="Notifications"
+            style="background: none; border: none; cursor: pointer; padding: 6px 8px;"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+            <span class="nav-label">Notifications</span>
+            <!-- Unread badge (hidden when 0) -->
+            <span
+              id="notifBadge"
+              style="display:none; position:absolute; top:2px; right:2px; min-width:16px; height:16px; background:#ef4444; color:#fff; font-size:0.62rem; font-weight:700; border-radius:999px; align-items:center; justify-content:center; line-height:1; padding:0 3px; border:2px solid var(--surface);"
+              aria-live="polite"
+            ></span>
+          </button>
+
+          <!-- Notifications Dropdown Panel -->
+          <div
+            id="notifDropdown"
+            style="display:none; position:absolute; top:calc(100% + 10px); right:0; width:340px; max-height:420px; overflow-y:auto; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-card); box-shadow:0 8px 32px rgba(0,0,0,0.14); z-index:2000;"
+            role="dialog"
+            aria-label="Notifications panel"
+          >
+            <!-- Dropdown header -->
+            <div class="d-flex align-items-center justify-content-between px-3 py-2 border-bottom" style="border-color:var(--border)!important; position:sticky; top:0; background:var(--surface); z-index:1;">
+              <span style="font-weight:600; font-size:0.88rem; color:var(--fg);">Notifications</span>
+              <div class="d-flex align-items-center gap-2">
+                <button id="notifMarkAllBtn" type="button" class="btn btn-ghost btn-sm py-0 px-1" style="font-size:0.75rem; color:var(--fg-muted);">Mark all read</button>
+                <a href="/SocialNetwork/public/?url=notifications" class="btn btn-ghost btn-sm py-0 px-1" style="font-size:0.75rem; color:var(--fg-muted);">See all</a>
+              </div>
+            </div>
+            <!-- Notification items (filled by JS) -->
+            <div id="notifDropdownBody" style="min-height:60px;">
+              <div class="text-center py-4" id="notifDropdownLoading">
+                <span class="text-muted small">Loading…</span>
+              </div>
+            </div>
+          </div>
         </li>
       <?php endif; ?>
 

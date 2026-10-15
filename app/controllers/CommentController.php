@@ -19,12 +19,14 @@
 require_once BASE_PATH . '/config/database.php';
 require_once BASE_PATH . '/app/models/CommentModel.php';
 require_once BASE_PATH . '/app/models/PostModel.php';
+require_once BASE_PATH . '/app/models/NotificationModel.php';
 require_once BASE_PATH . '/app/helpers/Csrf.php';
 
 class CommentController
 {
     private CommentModel $commentModel;
     private PostModel $postModel;
+    private NotificationModel $notifModel;
 
     public function __construct()
     {
@@ -33,6 +35,7 @@ class CommentController
         $db = getDBConnection();
         $this->commentModel = new CommentModel($db);
         $this->postModel    = new PostModel($db);
+        $this->notifModel   = new NotificationModel($db);
     }
 
     // ─── Authentication Guard ─────────────────────────────────────────────────
@@ -111,6 +114,21 @@ class CommentController
 
         if ($result !== false) {
             $_SESSION['flash_success'] = 'Comment posted successfully.';
+
+            // Notify the post owner (skip if commenter is the post owner)
+            if ($post && isset($post['user_id']) && (int)$post['user_id'] !== $userId) {
+                $preview = mb_substr($content, 0, 100);
+                if (!$this->notifModel->isDuplicate((int)$post['user_id'], $userId, 'comment', $postId)) {
+                    $this->notifModel->create(
+                        (int) $post['user_id'],
+                        $userId,
+                        'comment',
+                        'post',
+                        $postId,
+                        $preview
+                    );
+                }
+            }
         } else {
             http_response_code(500);
             $_SESSION['flash_error'] = 'Could not save your comment due to a server error. Please try again.';
@@ -303,6 +321,59 @@ class CommentController
         }
 
         header('Location: /SocialNetwork/public/#post-' . $postId);
+        exit;
+    }
+
+    // ─── Fetch All Comments for a Post (GET, AJAX JSON) ───────────────────────
+
+    /**
+     * Return all comments for a post as a JSON array.
+     * Called by the "View all N comments" expand button via fetch().
+     * Route: GET /SocialNetwork/public/?url=comments/fetch&post_id={postId}
+     */
+    public function fetch(): void
+    {
+        $this->requireAuth();
+
+        header('Content-Type: application/json; charset=UTF-8');
+
+        $postId = filter_input(INPUT_GET, 'post_id', FILTER_VALIDATE_INT);
+        if (!$postId || $postId <= 0) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => 'Invalid post ID.']);
+            exit;
+        }
+
+        $userId   = (int) $_SESSION['user_id'];
+        $comments = $this->commentModel->getByPostId($postId);
+
+        // Enrich with relative time and ownership flag
+        $result = [];
+        foreach ($comments as $c) {
+            $time = strtotime($c['created_at']);
+            $diff = time() - $time;
+            if ($diff < 60)        { $rel = 'Just now'; }
+            elseif ($diff < 3600)  { $m = max(1,(int)floor($diff/60)); $rel = $m===1?'1 minute ago':$m.' minutes ago'; }
+            elseif ($diff < 86400) { $h = (int)floor($diff/3600); $rel = $h===1?'1 hour ago':$h.' hours ago'; }
+            elseif ($diff < 604800){ $d = (int)floor($diff/86400); $rel = $d===1?'Yesterday':$d.' days ago'; }
+            else                   { $rel = date('M j, Y', $time); }
+
+            $result[] = [
+                'id'            => (int) $c['id'],
+                'post_id'       => (int) $c['post_id'],
+                'user_id'       => (int) $c['user_id'],
+                'author_id'     => (int) ($c['author_id'] ?? $c['user_id']),
+                'content'       => $c['content'],
+                'created_at'    => $c['created_at'],
+                'relative_time' => $rel,
+                'full_name'     => $c['full_name'],
+                'username'      => $c['username'],
+                'profile_image' => $c['profile_image'] ?? null,
+                'is_owner'      => ((int)$c['user_id'] === $userId),
+            ];
+        }
+
+        echo json_encode(['success' => true, 'comments' => $result]);
         exit;
     }
 }

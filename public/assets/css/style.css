@@ -1636,12 +1636,30 @@ footer.footer.bg-primary { display: none !important; }
 }
 
 /* ── 19. Direct Messaging ────────────────────────────────────── */
+.conversation-item {
+  cursor: pointer !important;
+  pointer-events: auto !important;
+  position: relative;
+  z-index: 2;
+}
+
 .conversation-item:hover {
   background: var(--surface-hover) !important;
 }
 
 .conversation-unread {
   background: rgba(var(--fg), 0.03) !important;
+}
+
+.contact-picker-item {
+  cursor: pointer !important;
+  pointer-events: auto !important;
+  position: relative;
+  z-index: 2;
+}
+
+.contact-picker-item:hover {
+  background: var(--surface-hover) !important;
 }
 
 .chat-main-card {
@@ -1674,6 +1692,21 @@ footer.footer.bg-primary { display: none !important; }
   align-self: flex-start;
 }
 
+.chat-footer {
+  position: relative;
+  z-index: 5;
+}
+
+.chat-input-field {
+  pointer-events: auto !important;
+  cursor: text !important;
+}
+
+#chatSubmitBtn {
+  pointer-events: auto !important;
+  cursor: pointer !important;
+}
+
 .chat-messages-body::-webkit-scrollbar {
   width: 6px;
 }
@@ -1691,16 +1724,201 @@ footer.footer.bg-primary { display: none !important; }
   background: var(--surface-hover) !important;
 }
 
+/* Modal — Bootstrap 5 overlay fix */
+/* The modal element itself must never intercept pointer events while hidden.
+   Bootstrap adds/removes .show; we reset pointer-events cleanly here. */
 .modal {
-  z-index: 1055 !important;
+  z-index: 2050 !important;
 }
 
-.modal-backdrop {
-  z-index: 1050 !important;
-}
-
+/* Prevent the glass hover from changing the modal content background or
+   creating an unwanted stacking context that traps pointer events */
+.modal-content.glass:hover,
 .modal-content.glass {
   background: var(--surface) !important;
   backdrop-filter: blur(24px) !important;
   -webkit-backdrop-filter: blur(24px) !important;
+}
+
+.modal-backdrop {
+  z-index: 2040 !important;
+}
+
+/* Ensure the dialog and its content always receive pointer events */
+.modal-dialog,
+.modal-content {
+  position: relative;
+  pointer-events: auto !important;
+}
+
+/* ── 24. Comment Kebab Menu ─────────────────────────────────── */
+.comment-menu-wrap {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.comment-menu-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: none;
+  background: transparent;
+  color: var(--fg-faint);
+  cursor: pointer;
+  padding: 0;
+  transition: background var(--transition), color var(--transition);
+}
+
+.comment-menu-btn:hover,
+.comment-menu-btn[aria-expanded="true"] {
+  background: var(--surface-hover);
+  color: var(--fg);
+}
+
+.comment-menu-dropdown {
+  display: none;
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  min-width: 120px;
+  padding: 4px;
+  border-radius: 12px;
+  background: var(--surface);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-md);
+  z-index: 200;
+}
+
+.comment-menu-dropdown.show {
+  display: block;
+}
+
+.comment-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--fg);
+  text-decoration: none;
+  border-radius: 8px;
+  cursor: pointer;
+  width: 100%;
+  transition: background var(--transition);
+}
+
+.comment-menu-item:hover {
+  background: var(--surface-hover);
+  color: var(--fg);
+}
+
+.comment-menu-delete {
+  color: #ef4444;
+}
+
+.comment-menu-delete:hover {
+  background: rgba(239, 68, 68, 0.08) !important;
+  color: #dc2626 !important;
+}
+
+/* ── 25. Comments Expand Toggle ─────────────────────────────── */
+.comments-expand-row {
+  padding: 4px 0 6px;
+}
+
+.comments-toggle-btn {
+  background: none;
+  border: none;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--fg-muted);
+  cursor: pointer;
+  padding: 2px 0;
+  transition: color var(--transition);
+}
+
+.comments-toggle-btn:hover {
+  color: var(--fg);
+}
+
+/* ── 26. Compact Comment Input & Send Button ────────────────── */
+.comment-input {
+  border-radius: 20px !important;
+  font-size: 0.85rem !important;
+  min-height: 36px !important;
+  padding: 7px 14px !important;
+  resize: none;
+  overflow: hidden;
+  line-height: 1.4;
+}
+
+.comment-submit-btn {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  padding: 0 !important;
+  border-radius: 50% !important;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ── 27. Clickable Author Links ─────────────────────────────── */
+.post-author-link:hover,
+.comment-author-link:hover {
+  opacity: 0.75;
+}
+
+.comment-author-link {
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: var(--fg);
+  text-decoration: none;
+  display: inline;
+}
+
+/* ── 28. Simplified Comment Item (override heavy styling above) ── */
+.comment-item {
+  padding: 6px 0 !important;
+  background: transparent !important;
+  border: none !important;
+  border-radius: 0 !important;
+  margin-bottom: 2px !important;
+}
+
+.comment-item:hover {
+  background: transparent !important;
+}
+
+.comment-avatar {
+  width: 28px !important;
+  height: 28px !important;
+}
+
+.comment-content {
+  font-size: 0.875rem;
+  line-height: 1.45;
+  color: var(--fg);
+  margin-top: 1px;
+}
+
+.comment-time {
+  font-size: 0.72rem;
+  color: var(--fg-faint);
+}
+
+.comment-username {
+  font-size: 0.75rem;
+  color: var(--fg-faint);
+  margin-left: 3px;
+}
+
+.comment-form-wrap {
+  margin-top: 8px;
 }

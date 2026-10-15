@@ -19,19 +19,22 @@
 require_once BASE_PATH . '/config/database.php';
 require_once BASE_PATH . '/app/models/LikeModel.php';
 require_once BASE_PATH . '/app/models/PostModel.php';
+require_once BASE_PATH . '/app/models/NotificationModel.php';
 require_once BASE_PATH . '/app/helpers/Csrf.php';
 
 class LikeController
 {
     private LikeModel $likeModel;
     private PostModel $postModel;
+    private NotificationModel $notifModel;
 
     public function __construct()
     {
         Csrf::initSession();
         $db = getDBConnection();
-        $this->likeModel = new LikeModel($db);
-        $this->postModel = new PostModel($db);
+        $this->likeModel   = new LikeModel($db);
+        $this->postModel   = new PostModel($db);
+        $this->notifModel  = new NotificationModel($db);
     }
 
     /**
@@ -154,6 +157,19 @@ class LikeController
                 ], 500);
             }
             $liked = true;
+
+            // Notify post owner (skip if liker is the post owner)
+            if ($targetPost && isset($targetPost['user_id']) && (int)$targetPost['user_id'] !== $userId) {
+                if (!$this->notifModel->isDuplicate((int)$targetPost['user_id'], $userId, 'like_post', $postId)) {
+                    $this->notifModel->create(
+                        (int) $targetPost['user_id'],
+                        $userId,
+                        'like_post',
+                        'post',
+                        $postId
+                    );
+                }
+            }
         }
 
         $count = $this->likeModel->countLikes($postId);

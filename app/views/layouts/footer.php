@@ -17,7 +17,6 @@
 <!-- Bootstrap 5 JS (for alert dismissal, dropdowns, etc.) -->
 <script
   src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
-  integrity="sha384-YvpcrYf0tY3lHB60NNkmXc4s9bIOgUxi8T/jzmE9d29u+a9V5hJJvHbFBgEwHm/"
   crossorigin="anonymous"
 ></script>
 
@@ -84,6 +83,9 @@
 
 <!-- ── Left-Side Navigation Panel Script ───────────────────────────── -->
 <script src="/SocialNetwork/public/assets/js/side-panel.js"></script>
+
+<!-- ── Notifications Bell, Dropdown & Badge Polling ────────────────── -->
+<script src="/SocialNetwork/public/assets/js/notifications.js"></script>
 
 </body>
 </html>

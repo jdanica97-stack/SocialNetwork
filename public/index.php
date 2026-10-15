@@ -221,6 +221,11 @@ if ($url === 'comments/create' || $url === 'comments/edit' || $url === 'comments
         $commentCtrl->delete();
         exit;
     }
+
+    if ($action === 'fetch') {
+        $commentCtrl->fetch();
+        exit;
+    }
 }
 
 // ── Likes Routes (Step 9) ─────────────────────────────────────────────────────
@@ -273,6 +278,43 @@ if ($url === 'messages' || str_starts_with($url, 'messages/')) {
 
     // Default fallback to index for any other messages/*
     $messageCtrl->index();
+    exit;
+}
+
+// ── Notifications Routes ──────────────────────────────────────────────────
+if ($url === 'notifications' || str_starts_with($url, 'notifications/')) {
+    require_once BASE_PATH . '/app/controllers/NotificationController.php';
+    $notifCtrl = new NotificationController();
+
+    if ($url === 'notifications') {
+        $notifCtrl->index();
+        exit;
+    }
+
+    $notifAction = substr($url, strlen('notifications/'));
+
+    if ($notifAction === 'count') {
+        $notifCtrl->count();
+        exit;
+    }
+
+    if ($notifAction === 'fetch') {
+        $notifCtrl->fetch();
+        exit;
+    }
+
+    if ($notifAction === 'mark-read') {
+        $notifCtrl->markRead();
+        exit;
+    }
+
+    if ($notifAction === 'mark-all-read') {
+        $notifCtrl->markAllRead();
+        exit;
+    }
+
+    // Default fallback to index
+    $notifCtrl->index();
     exit;
 }
 

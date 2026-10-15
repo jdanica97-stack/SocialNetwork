@@ -194,16 +194,75 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-    const searchInput = document.getElementById('contactSearchInput');
-    const items = document.querySelectorAll('.contact-picker-item');
+
+    /* ── 1. Move modal to <body> to escape stacking context of main.container ── */
+    var modalEl = document.getElementById('newChatModal');
+    if (modalEl && modalEl.parentElement !== document.body) {
+        document.body.appendChild(modalEl);
+    }
+
+    /* ── 2. Search filter ── */
+    var searchInput = document.getElementById('contactSearchInput');
+    var pickerItems = document.querySelectorAll('.contact-picker-item');
 
     if (searchInput) {
         searchInput.addEventListener('input', function () {
-            const query = this.value.trim().toLowerCase();
-            items.forEach(function (item) {
-                const searchData = item.getAttribute('data-search') || '';
-                item.style.display = searchData.includes(query) ? 'flex' : 'none';
+            var q = this.value.trim().toLowerCase();
+            pickerItems.forEach(function (item) {
+                var data = item.getAttribute('data-search') || '';
+                item.style.display = data.includes(q) ? 'flex' : 'none';
             });
+        });
+    }
+
+    if (!modalEl) return;
+
+    /* ── 3. Guaranteed backdrop cleanup — runs after Bootstrap hides the modal ── */
+    function cleanupBackdrops() {
+        document.querySelectorAll('.modal-backdrop').forEach(function (el) { el.remove(); });
+        document.body.classList.remove('modal-open');
+        document.body.style.removeProperty('overflow');
+        document.body.style.removeProperty('padding-right');
+    }
+
+    modalEl.addEventListener('hidden.bs.modal', cleanupBackdrops);
+
+    /* Also reset search when modal re-opens */
+    modalEl.addEventListener('show.bs.modal', function () {
+        if (searchInput) {
+            searchInput.value = '';
+            pickerItems.forEach(function (item) { item.style.display = 'flex'; });
+        }
+    });
+
+    /* ── 4. Contact picker — navigate immediately on click ── */
+    /*    Use event delegation on the list so it works even after DOM changes  */
+    var pickerList = document.getElementById('contactPickerList');
+    if (pickerList) {
+        pickerList.addEventListener('click', function (e) {
+            var item = e.target.closest('.contact-picker-item');
+            if (!item) return;
+            e.preventDefault();
+            var url = item.getAttribute('href');
+            if (!url) return;
+
+            /* Close Bootstrap modal gracefully, then navigate */
+            var bsModal = (typeof bootstrap !== 'undefined' && bootstrap.Modal)
+                ? bootstrap.Modal.getInstance(modalEl)
+                : null;
+
+            if (bsModal) {
+                /* Navigate after Bootstrap finishes hiding */
+                modalEl.addEventListener('hidden.bs.modal', function navAfterClose() {
+                    modalEl.removeEventListener('hidden.bs.modal', navAfterClose);
+                    window.location.href = url;
+                }, { once: true });
+                bsModal.hide();
+            } else {
+                /* Bootstrap not loaded — just go */
+                cleanupBackdrops();
+                window.location.href = url;
+            }
         });
     }
 });

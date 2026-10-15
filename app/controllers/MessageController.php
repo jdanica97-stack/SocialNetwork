@@ -21,12 +21,14 @@
 require_once BASE_PATH . '/config/database.php';
 require_once BASE_PATH . '/app/models/MessageModel.php';
 require_once BASE_PATH . '/app/models/UserModel.php';
+require_once BASE_PATH . '/app/models/NotificationModel.php';
 require_once BASE_PATH . '/app/helpers/Csrf.php';
 
 class MessageController
 {
     private MessageModel $messageModel;
     private UserModel $userModel;
+    private NotificationModel $notifModel;
 
     public function __construct()
     {
@@ -35,6 +37,7 @@ class MessageController
         $db = getDBConnection();
         $this->messageModel = new MessageModel($db);
         $this->userModel    = new UserModel($db);
+        $this->notifModel   = new NotificationModel($db);
     }
 
     /**
@@ -229,6 +232,19 @@ class MessageController
         $newMsgId = $this->messageModel->sendMessage($currentUserId, $receiverId, $text);
 
         if ($newMsgId) {
+            // Notify the message recipient
+            $preview = mb_substr($text, 0, 100);
+            if (!$this->notifModel->isDuplicate($receiverId, $currentUserId, 'message', $newMsgId)) {
+                $this->notifModel->create(
+                    $receiverId,
+                    $currentUserId,
+                    'message',
+                    'message',
+                    $newMsgId,
+                    $preview
+                );
+            }
+
             if ($this->isAjax()) {
                 $this->jsonResponse([
                     'success'    => true,

@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 /**
  * app/views/profile/profile.php
@@ -124,9 +124,10 @@ if (!empty($user['profile_image'])) {
                     <?php foreach ($posts as $post): ?>
                         <?php
                         $postId       = (int) $post['id'];
+                        $postAuthorId = (int) $post['user_id'];
                         $postComments = $commentsByPost[$postId] ?? [];
-                        $commentCount = count($postComments);
-                        $isPostOwner  = isset($_SESSION['user_id']) && ((int) $_SESSION['user_id'] === (int) $post['user_id']);
+                        $commentCount = $commentCountByPost[$postId] ?? count($postComments);
+                        $isPostOwner  = isset($_SESSION['user_id']) && ((int) $_SESSION['user_id'] === $postAuthorId);
 
                         // Author avatar with fallback
                         if (!empty($post['profile_image'])) {
@@ -139,24 +140,29 @@ if (!empty($user['profile_image'])) {
                         $formattedDate = date('M j, Y \a\t g:i A', strtotime($post['created_at']));
                         $likeCount     = $likeCountByPost[$postId] ?? 0;
                         $hasLiked      = $hasLikedByPost[$postId] ?? false;
+                        $authorProfileUrl = '/SocialNetwork/public/?url=profile&id=' . $postAuthorId;
                         ?>
 
                         <article class="card post-card glass fade-up mb-3" id="post-<?= $postId ?>" style="background: var(--surface-card); border: 1px solid var(--border);">
                             <div class="card-body">
 
-                                <!-- Post Header: Author info, Timestamp, and Owner Options (Three-dot Menu) -->
+                                <!-- Post Header -->
                                 <div class="d-flex align-items-center justify-content-between mb-3">
                                     <div class="d-flex align-items-center gap-2">
-                                        <img
-                                            src="<?= htmlspecialchars($postAvatar, ENT_QUOTES, 'UTF-8') ?>"
-                                            alt="<?= htmlspecialchars($post['full_name'], ENT_QUOTES, 'UTF-8') ?>"
-                                            style="width: 38px; height: 38px; border-radius: 50%; object-fit: cover; border: 1px solid var(--border);"
-                                            loading="lazy"
-                                        >
+                                        <!-- Clickable avatar -->
+                                        <a href="<?= htmlspecialchars($authorProfileUrl, ENT_QUOTES, 'UTF-8') ?>" title="View profile">
+                                            <img
+                                                src="<?= htmlspecialchars($postAvatar, ENT_QUOTES, 'UTF-8') ?>"
+                                                alt="<?= htmlspecialchars($post['full_name'], ENT_QUOTES, 'UTF-8') ?>"
+                                                style="width: 38px; height: 38px; border-radius: 50%; object-fit: cover; border: 1px solid var(--border); display: block;"
+                                                loading="lazy"
+                                            >
+                                        </a>
                                         <div>
-                                            <div style="font-weight: 600; font-size: 0.9rem; color: var(--fg);">
+                                            <!-- Clickable name -->
+                                            <a href="<?= htmlspecialchars($authorProfileUrl, ENT_QUOTES, 'UTF-8') ?>" style="font-weight: 600; font-size: 0.9rem; color: var(--fg); text-decoration: none;" class="post-author-link">
                                                 <?= htmlspecialchars($post['full_name'], ENT_QUOTES, 'UTF-8') ?>
-                                            </div>
+                                            </a>
                                             <div style="font-size: 0.74rem; color: var(--fg-faint);">
                                                 @<?= htmlspecialchars($post['username'], ENT_QUOTES, 'UTF-8') ?> &bull;
                                                 <time datetime="<?= htmlspecialchars($post['created_at'], ENT_QUOTES, 'UTF-8') ?>" title="<?= htmlspecialchars($formattedDate, ENT_QUOTES, 'UTF-8') ?>">
@@ -166,23 +172,14 @@ if (!empty($user['profile_image'])) {
                                         </div>
                                     </div>
 
-                                    <!-- Post Owner Controls (Three-dot Menu: Only visible to post owner) -->
+                                    <!-- Post Owner Controls -->
                                     <?php if ($isPostOwner): ?>
                                         <div class="post-menu-wrap position-relative">
-                                            <button
-                                                type="button"
-                                                class="post-menu-btn"
-                                                aria-label="Post options"
-                                                aria-expanded="false"
-                                                title="More options"
-                                            >
+                                            <button type="button" class="post-menu-btn" aria-label="Post options" aria-expanded="false" title="More options">
                                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                                                    <circle cx="12" cy="5" r="1.75"/>
-                                                    <circle cx="12" cy="12" r="1.75"/>
-                                                    <circle cx="12" cy="19" r="1.75"/>
+                                                    <circle cx="12" cy="5" r="1.75"/><circle cx="12" cy="12" r="1.75"/><circle cx="12" cy="19" r="1.75"/>
                                                 </svg>
                                             </button>
-
                                             <div class="post-menu-dropdown glass" role="menu">
                                                 <a href="/SocialNetwork/public/?url=posts/edit&id=<?= $postId ?>" class="post-menu-item" role="menuitem">
                                                     <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
@@ -206,7 +203,7 @@ if (!empty($user['profile_image'])) {
                                     <?= nl2br(htmlspecialchars($post['content'], ENT_QUOTES, 'UTF-8')) ?>
                                 </div>
 
-                                <!-- Post Image (if present) -->
+                                <!-- Post Image -->
                                 <?php if (!empty($post['image'])): ?>
                                     <div class="mb-3 post-image-container">
                                         <img
@@ -219,7 +216,7 @@ if (!empty($user['profile_image'])) {
                                     </div>
                                 <?php endif; ?>
 
-                                <!-- Post Interactions (AJAX Like button + Like count + Comment count) -->
+                                <!-- Post Interactions -->
                                 <div class="post-interactions">
                                     <button
                                         type="button"
@@ -250,13 +247,28 @@ if (!empty($user['profile_image'])) {
                             <!-- Comments Section -->
                             <section class="comments-section" aria-label="Comments on post <?= $postId ?>">
 
-                                <!-- Existing Comments List -->
-                                <?php if (!empty($postComments)): ?>
-                                    <div class="comments-list mb-3">
+                                <?php if ($commentCount > 0): ?>
+                                    <!-- "View all" toggle shown when there are more than 2 -->
+                                    <?php if ($commentCount > 2): ?>
+                                        <div class="comments-expand-row">
+                                            <button
+                                                type="button"
+                                                class="comments-toggle-btn"
+                                                data-post-id="<?= $postId ?>"
+                                                data-total="<?= $commentCount ?>"
+                                                aria-expanded="false"
+                                            >
+                                                View all <?= $commentCount ?> comments
+                                            </button>
+                                        </div>
+                                    <?php endif; ?>
+
+                                    <div class="comments-list" id="comments-list-<?= $postId ?>">
                                         <?php foreach ($postComments as $comment): ?>
                                             <?php
-                                            $commentId = (int) $comment['id'];
-                                            $isCommentOwner = isset($_SESSION['user_id']) && ((int) $_SESSION['user_id'] === (int) $comment['user_id']);
+                                            $commentId       = (int) $comment['id'];
+                                            $commentAuthorId = (int) ($comment['author_id'] ?? $comment['user_id']);
+                                            $isCommentOwner  = isset($_SESSION['user_id']) && ((int) $_SESSION['user_id'] === (int) $comment['user_id']);
 
                                             if (!empty($comment['profile_image'])) {
                                                 $commenterAvatar = '/SocialNetwork/public/assets/images/profiles/' . rawurlencode($comment['profile_image']);
@@ -265,53 +277,60 @@ if (!empty($user['profile_image'])) {
                                             }
 
                                             $commentRelativeTime = PostController::timeAgo($comment['created_at']);
-                                            $commentFullDate = date('M j, Y \a\t g:i A', strtotime($comment['created_at']));
+                                            $commentFullDate     = date('M j, Y \a\t g:i A', strtotime($comment['created_at']));
+                                            $commenterProfileUrl = '/SocialNetwork/public/?url=profile&id=' . $commentAuthorId;
                                             ?>
 
                                             <div class="comment-item" id="comment-<?= $commentId ?>">
                                                 <div class="d-flex align-items-start gap-2">
-                                                    <img
-                                                        src="<?= htmlspecialchars($commenterAvatar, ENT_QUOTES, 'UTF-8') ?>"
-                                                        alt="<?= htmlspecialchars($comment['full_name'], ENT_QUOTES, 'UTF-8') ?>"
-                                                        class="comment-avatar"
-                                                        loading="lazy"
-                                                    >
+                                                    <a href="<?= htmlspecialchars($commenterProfileUrl, ENT_QUOTES, 'UTF-8') ?>" title="View profile">
+                                                        <img
+                                                            src="<?= htmlspecialchars($commenterAvatar, ENT_QUOTES, 'UTF-8') ?>"
+                                                            alt="<?= htmlspecialchars($comment['full_name'], ENT_QUOTES, 'UTF-8') ?>"
+                                                            class="comment-avatar"
+                                                            loading="lazy"
+                                                        >
+                                                    </a>
                                                     <div class="flex-grow-1 min-w-0">
-                                                        <div class="d-flex align-items-center justify-content-between flex-wrap gap-1 mb-1">
-                                                            <div>
-                                                                <span class="comment-author">
+                                                        <div class="d-flex align-items-start justify-content-between gap-1">
+                                                            <div class="min-w-0">
+                                                                <a href="<?= htmlspecialchars($commenterProfileUrl, ENT_QUOTES, 'UTF-8') ?>" class="comment-author-link">
                                                                     <?= htmlspecialchars($comment['full_name'], ENT_QUOTES, 'UTF-8') ?>
-                                                                </span>
-                                                                <span class="comment-username">
-                                                                    @<?= htmlspecialchars($comment['username'], ENT_QUOTES, 'UTF-8') ?>
-                                                                </span>
-                                                                <span class="comment-time ms-1" title="<?= htmlspecialchars($commentFullDate, ENT_QUOTES, 'UTF-8') ?>">
+                                                                </a>
+                                                                <span class="comment-username">@<?= htmlspecialchars($comment['username'], ENT_QUOTES, 'UTF-8') ?></span>
+                                                                <span class="comment-time" title="<?= htmlspecialchars($commentFullDate, ENT_QUOTES, 'UTF-8') ?>">
                                                                     &bull; <?= htmlspecialchars($commentRelativeTime, ENT_QUOTES, 'UTF-8') ?>
                                                                 </span>
+                                                                <!-- Comment Content -->
+                                                                <div class="comment-content" style="word-break: break-word; overflow-wrap: anywhere;">
+                                                                    <?= nl2br(htmlspecialchars($comment['content'], ENT_QUOTES, 'UTF-8')) ?>
+                                                                </div>
                                                             </div>
 
-                                                            <!-- Edit & Delete buttons (ONLY for comment owner) -->
+                                                            <!-- Comment Kebab Menu -->
                                                             <?php if ($isCommentOwner): ?>
-                                                                <div class="comment-actions">
-                                                                    <a href="/SocialNetwork/public/?url=comments/edit&id=<?= $commentId ?>" class="comment-action-link" title="Edit comment">
-                                                                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
-                                                                        Edit
-                                                                    </a>
-                                                                    <form method="POST" action="/SocialNetwork/public/?url=comments/delete" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this comment?');">
-                                                                        <?= Csrf::field() ?>
-                                                                        <input type="hidden" name="id" value="<?= $commentId ?>">
-                                                                        <button type="submit" class="comment-action-link delete-link border-0 bg-transparent p-0" title="Delete comment">
-                                                                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-                                                                            Delete
-                                                                        </button>
-                                                                    </form>
+                                                                <div class="comment-menu-wrap">
+                                                                    <button type="button" class="comment-menu-btn" aria-label="Comment options" aria-expanded="false" title="More options">
+                                                                        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                                                                            <circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/>
+                                                                        </svg>
+                                                                    </button>
+                                                                    <div class="comment-menu-dropdown" role="menu">
+                                                                        <a href="/SocialNetwork/public/?url=comments/edit&id=<?= $commentId ?>" class="comment-menu-item" role="menuitem">
+                                                                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                                                                            Edit
+                                                                        </a>
+                                                                        <form method="POST" action="/SocialNetwork/public/?url=comments/delete" class="m-0 p-0" onsubmit="return confirm('Delete this comment?');">
+                                                                            <?= Csrf::field() ?>
+                                                                            <input type="hidden" name="id" value="<?= $commentId ?>">
+                                                                            <button type="submit" class="comment-menu-item comment-menu-delete w-100 border-0 bg-transparent text-start" role="menuitem">
+                                                                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                                                                                Delete
+                                                                            </button>
+                                                                        </form>
+                                                                    </div>
                                                                 </div>
                                                             <?php endif; ?>
-                                                        </div>
-
-                                                        <!-- Comment Content -->
-                                                        <div class="comment-content" style="word-break: break-word; overflow-wrap: anywhere;">
-                                                            <?= nl2br(htmlspecialchars($comment['content'], ENT_QUOTES, 'UTF-8')) ?>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -325,17 +344,18 @@ if (!empty($user['profile_image'])) {
                                     <form method="POST" action="/SocialNetwork/public/?url=comments/create">
                                         <?= Csrf::field() ?>
                                         <input type="hidden" name="post_id" value="<?= $postId ?>">
-                                        <div class="d-flex gap-2 align-items-start">
+                                        <div class="d-flex gap-2 align-items-center">
                                             <textarea
                                                 name="content"
                                                 class="form-control comment-input"
-                                                rows="2"
+                                                rows="1"
                                                 placeholder="Write a comment..."
                                                 maxlength="1000"
                                                 required
                                             ></textarea>
-                                            <button type="submit" class="btn btn-primary btn-sm px-3" style="margin-top: 2px;">
-                                                Comment
+                                            <button type="submit" class="btn btn-ghost btn-sm comment-submit-btn">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                                                <span class="visually-hidden">Post comment</span>
                                             </button>
                                         </div>
                                     </form>

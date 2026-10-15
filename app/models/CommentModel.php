@@ -80,7 +80,7 @@ class CommentModel
     {
         try {
             $sql = 'SELECT c.id, c.post_id, c.user_id, c.content, c.created_at,
-                           u.username, u.full_name, u.profile_image
+                           u.id AS author_id, u.username, u.full_name, u.profile_image
                     FROM comments c
                     INNER JOIN users u ON c.user_id = u.id
                     WHERE c.post_id = :post_id
@@ -93,6 +93,56 @@ class CommentModel
         } catch (PDOException $e) {
             error_log('CommentModel::getByPostId database error: ' . $e->getMessage());
             return [];
+        }
+    }
+
+    /**
+     * Fetch only the first $limit comments for a post (for initial page render).
+     * Also includes author_id for profile link generation.
+     *
+     * @param int $postId
+     * @param int $limit  Number of comments to fetch (default 2)
+     * @return array
+     */
+    public function getPreviewByPostId(int $postId, int $limit = 2): array
+    {
+        try {
+            $sql = 'SELECT c.id, c.post_id, c.user_id, c.content, c.created_at,
+                           u.id AS author_id, u.username, u.full_name, u.profile_image
+                    FROM comments c
+                    INNER JOIN users u ON c.user_id = u.id
+                    WHERE c.post_id = :post_id
+                    ORDER BY c.created_at ASC, c.id ASC
+                    LIMIT :lim';
+
+            $stmt = $this->db->prepare($sql);
+            $stmt->bindValue(':post_id', $postId, PDO::PARAM_INT);
+            $stmt->bindValue(':lim',     $limit,  PDO::PARAM_INT);
+            $stmt->execute();
+
+            return $stmt->fetchAll();
+        } catch (PDOException $e) {
+            error_log('CommentModel::getPreviewByPostId database error: ' . $e->getMessage());
+            return [];
+        }
+    }
+
+    /**
+     * Return the total number of comments for a post.
+     *
+     * @param int $postId
+     * @return int
+     */
+    public function countByPostId(int $postId): int
+    {
+        try {
+            $sql  = 'SELECT COUNT(*) FROM comments WHERE post_id = :post_id';
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute([':post_id' => $postId]);
+            return (int) $stmt->fetchColumn();
+        } catch (PDOException $e) {
+            error_log('CommentModel::countByPostId database error: ' . $e->getMessage());
+            return 0;
         }
     }
 

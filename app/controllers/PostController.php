@@ -81,10 +81,11 @@ class PostController
 
         $currentUserId = isset($_SESSION['user_id']) ? (int) $_SESSION['user_id'] : null;
 
-        $posts           = [];
-        $commentsByPost  = [];
-        $likeCountByPost = [];
-        $hasLikedByPost  = [];
+        $posts              = [];
+        $commentsByPost     = [];
+        $commentCountByPost = [];
+        $likeCountByPost    = [];
+        $hasLikedByPost     = [];
 
         // ── Server-Side Authentication Check ──────────────────────────────────────
         // Only fetch posts from database if the user is actively logged in
@@ -94,12 +95,13 @@ class PostController
             // 1. Get all posts from all users (newest first)
             $posts = $this->postModel->getAllPosts();
 
-            // 2. Load comments, likes count, and user like states for each post
+            // 2. Load only first 2 comments (preview), total count, and likes for each post
             foreach ($posts as $p) {
                 $pId = (int) $p['id'];
-                $commentsByPost[$pId]  = $this->commentModel->getByPostId($pId);
-                $likeCountByPost[$pId] = $this->likeModel->countLikes($pId);
-                $hasLikedByPost[$pId]  = $this->likeModel->hasLiked($pId, $currentUserId);
+                $commentsByPost[$pId]     = $this->commentModel->getPreviewByPostId($pId, 2);
+                $commentCountByPost[$pId] = $this->commentModel->countByPostId($pId);
+                $likeCountByPost[$pId]    = $this->likeModel->countLikes($pId);
+                $hasLikedByPost[$pId]     = $this->likeModel->hasLiked($pId, $currentUserId);
             }
         } else {
             $pageTitle = 'Welcome — Mini Social Network';
@@ -110,6 +112,7 @@ class PostController
         require BASE_PATH . '/app/views/posts/feed.php';
         require BASE_PATH . '/app/views/layouts/footer.php';
     }
+
 
     // ─── Create Post (POST) ───────────────────────────────────────────────────
 
