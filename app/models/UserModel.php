@@ -286,5 +286,93 @@ class UserModel
             return [];
         }
     }
+
+    /**
+     * Get the stored password hash for a user by their primary ID.
+     * Used exclusively for authentication / verifying current password in Settings.
+     *
+     * @param int $id User ID
+     * @return string|false
+     */
+    public function getUserPasswordHash(int $id): string|false
+    {
+        try {
+            $sql  = 'SELECT password FROM users WHERE id = :id LIMIT 1';
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute([':id' => $id]);
+            $col = $stmt->fetchColumn();
+            return $col !== false ? (string) $col : false;
+        } catch (PDOException $e) {
+            error_log('UserModel::getUserPasswordHash database error: ' . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Check if a username is already taken by any user OTHER than the specified user ID.
+     *
+     * @param string $username
+     * @param int $userId
+     * @return bool
+     */
+    public function usernameExistsExcludingUser(string $username, int $userId): bool
+    {
+        try {
+            $sql  = 'SELECT COUNT(*) FROM users WHERE username = :username AND id != :user_id';
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute([
+                ':username' => $username,
+                ':user_id'  => $userId,
+            ]);
+            return (int) $stmt->fetchColumn() > 0;
+        } catch (PDOException $e) {
+            error_log('UserModel::usernameExistsExcludingUser database error: ' . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Update the username for a specific user ID.
+     *
+     * @param int $id
+     * @param string $newUsername
+     * @return bool
+     */
+    public function updateUsername(int $id, string $newUsername): bool
+    {
+        try {
+            $sql  = 'UPDATE users SET username = :username WHERE id = :id';
+            $stmt = $this->db->prepare($sql);
+            return $stmt->execute([
+                ':username' => $newUsername,
+                ':id'       => $id,
+            ]);
+        } catch (PDOException $e) {
+            error_log('UserModel::updateUsername database error: ' . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Update the password hash for a specific user ID.
+     *
+     * @param int $id
+     * @param string $newPasswordHash
+     * @return bool
+     */
+    public function updatePassword(int $id, string $newPasswordHash): bool
+    {
+        try {
+            $sql  = 'UPDATE users SET password = :password WHERE id = :id';
+            $stmt = $this->db->prepare($sql);
+            return $stmt->execute([
+                ':password' => $newPasswordHash,
+                ':id'       => $id,
+            ]);
+        } catch (PDOException $e) {
+            error_log('UserModel::updatePassword database error: ' . $e->getMessage());
+            return false;
+        }
+    }
 }
 

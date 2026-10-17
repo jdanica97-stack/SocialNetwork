@@ -21,6 +21,7 @@ require_once BASE_PATH . '/config/database.php';
 require_once BASE_PATH . '/app/models/PostModel.php';
 require_once BASE_PATH . '/app/models/CommentModel.php';
 require_once BASE_PATH . '/app/models/LikeModel.php';
+require_once BASE_PATH . '/app/models/UserModel.php';
 require_once BASE_PATH . '/app/helpers/Csrf.php';
 
 class PostController
@@ -28,6 +29,7 @@ class PostController
     private PostModel $postModel;
     private CommentModel $commentModel;
     private LikeModel $likeModel;
+    private UserModel $userModel;
 
     // Allowed image MIME types for post attachments
     private array $allowedMimeTypes = [
@@ -48,6 +50,7 @@ class PostController
         $this->postModel    = new PostModel($db);
         $this->commentModel = new CommentModel($db);
         $this->likeModel    = new LikeModel($db);
+        $this->userModel    = new UserModel($db);
     }
 
     // ─── Authentication Guard ─────────────────────────────────────────────────
@@ -87,10 +90,21 @@ class PostController
         $likeCountByPost    = [];
         $hasLikedByPost     = [];
 
+        $currentUserAvatar = null;
+
         // ── Server-Side Authentication Check ──────────────────────────────────────
         // Only fetch posts from database if the user is actively logged in
         if ($currentUserId !== null) {
             $pageTitle = 'Mini Social Network — Home';
+
+            // 0. Load logged-in user details for profile picture display
+            $currentUser = $this->userModel->findById($currentUserId);
+            $displayName = !empty($currentUser['full_name']) ? $currentUser['full_name'] : ($_SESSION['user_full_name'] ?? 'User');
+            if ($currentUser && !empty($currentUser['profile_image']) && file_exists(BASE_PATH . '/public/assets/images/profiles/' . $currentUser['profile_image'])) {
+                $currentUserAvatar = '/SocialNetwork/public/assets/images/profiles/' . rawurlencode($currentUser['profile_image']);
+            } else {
+                $currentUserAvatar = 'https://ui-avatars.com/api/?name=' . rawurlencode($displayName) . '&size=120&background=111113&color=f5f5f7&rounded=true&bold=true';
+            }
 
             // 1. Get all posts from all users (newest first)
             $posts = $this->postModel->getAllPosts();

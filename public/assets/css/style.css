@@ -1772,6 +1772,11 @@ footer.footer.bg-primary { display: none !important; }
   transition: background var(--transition), color var(--transition);
 }
 
+.comment-menu-btn svg,
+.comment-menu-btn svg * {
+  pointer-events: none;
+}
+
 .comment-menu-btn:hover,
 .comment-menu-btn[aria-expanded="true"] {
   background: var(--surface-hover);
@@ -1786,12 +1791,17 @@ footer.footer.bg-primary { display: none !important; }
   min-width: 120px;
   padding: 4px;
   border-radius: 12px;
-  background: var(--surface);
+  background: #ffffff;
+  background: var(--surface-hover);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border: 1px solid var(--border);
   box-shadow: var(--shadow-md);
   z-index: 200;
+}
+
+[data-theme="dark"] .comment-menu-dropdown {
+  background-color: #1e1e24;
 }
 
 .comment-menu-dropdown.show {
@@ -1921,4 +1931,258 @@ footer.footer.bg-primary { display: none !important; }
 
 .comment-form-wrap {
   margin-top: 8px;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   21. Redesigned Post Composer Card (Unified Greeting + Form)
+   ═══════════════════════════════════════════════════════════════════════ */
+.composer-card {
+  border-radius: var(--radius-card);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+
+.composer-card .card-body {
+  padding: 24px !important;
+}
+
+.composer-user-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--border);
+  box-shadow: var(--shadow-sm);
+  display: block;
+  flex-shrink: 0;
+  transition: opacity var(--transition);
+}
+
+.composer-user-avatar:hover {
+  opacity: 0.88;
+}
+
+.composer-greeting {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--fg);
+  letter-spacing: -0.02em;
+  line-height: 1.25;
+  margin: 0;
+}
+
+.composer-subtitle {
+  font-size: 0.88rem;
+  color: var(--fg-muted);
+  line-height: 1.35;
+  margin-top: 2px;
+}
+
+.composer-textarea {
+  min-height: 85px;
+  height: 85px;
+  max-height: 220px;
+  resize: none;
+  overflow-y: auto;
+  padding: 12px 14px;
+  font-size: 0.92rem;
+  line-height: 1.5;
+  background: var(--surface-input);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-input);
+  color: var(--fg);
+  transition: border-color var(--transition), box-shadow var(--transition), background var(--transition);
+}
+
+.composer-textarea:focus {
+  background: var(--surface);
+  border-color: var(--fg-muted);
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.08);
+}
+
+.composer-textarea::placeholder {
+  color: var(--fg-muted);
+  opacity: 0.85;
+}
+
+.composer-preview-wrap {
+  max-width: 100%;
+}
+
+.composer-preview-box {
+  display: inline-block;
+  max-width: 100%;
+  max-height: 240px;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  border: 1px solid var(--border);
+  background: var(--surface-input);
+}
+
+.composer-preview-box img {
+  max-height: 240px;
+  max-width: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+.composer-remove-img-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.7);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  transition: background var(--transition), transform var(--transition);
+}
+
+.composer-remove-img-btn:hover {
+  background: rgba(220, 38, 38, 0.85);
+  transform: scale(1.08);
+}
+
+.composer-footer {
+  padding-top: 10px !important;
+}
+
+.composer-photo-btn {
+  border: 1px dashed var(--border) !important;
+  color: var(--fg-muted) !important;
+  font-size: 0.82rem;
+  padding: 5px 12px;
+}
+
+.composer-photo-btn:hover {
+  border-color: var(--fg-muted) !important;
+  color: var(--fg) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   22. Top Navigation Search Bar
+   ═══════════════════════════════════════════════════════════════════════ */
+.halo-nav-search {
+  flex: 1 1 260px;
+  max-width: 320px;
+  min-width: 140px;
+  margin: 0 10px;
+}
+
+.halo-search-form {
+  width: 100%;
+  margin: 0;
+}
+
+.halo-search-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.halo-search-icon {
+  position: absolute;
+  left: 11px;
+  color: var(--fg-muted);
+  pointer-events: none;
+}
+
+.halo-search-input {
+  width: 100%;
+  height: 34px;
+  padding: 5px 14px 5px 33px;
+  font-size: 0.84rem;
+  background: var(--surface-input);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  color: var(--fg);
+  outline: none;
+  transition: border-color var(--transition), box-shadow var(--transition), background var(--transition);
+}
+
+.halo-search-input:focus {
+  border-color: var(--fg-muted);
+  background: var(--surface);
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.08);
+}
+
+.halo-search-input::placeholder {
+  color: var(--fg-muted);
+  opacity: 0.8;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   23. Settings Page & Password Toggles
+   ═══════════════════════════════════════════════════════════════════════ */
+.toggle-password-btn {
+  background: var(--surface-input) !important;
+  border: 1px solid var(--border) !important;
+  border-left: none !important;
+  color: var(--fg-muted) !important;
+  padding: 0 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.toggle-password-btn:hover {
+  color: var(--fg) !important;
+  background: var(--surface-hover) !important;
+}
+
+/* Comment submit loading state */
+.comment-form button[type="submit"].loading {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   24. Responsive Tweaks for Mobile / Tablet
+   ═══════════════════════════════════════════════════════════════════════ */
+@media (max-width: 768px) {
+  .halo-nav-search {
+    max-width: 200px;
+    margin: 0 6px;
+  }
+  .halo-search-input {
+    height: 32px;
+    font-size: 0.8rem;
+    padding-left: 30px;
+  }
+}
+
+@media (max-width: 576px) {
+  .composer-card .card-body {
+    padding: 16px !important;
+  }
+  .composer-user-avatar {
+    width: 40px;
+    height: 40px;
+  }
+  .composer-greeting {
+    font-size: 1.1rem;
+  }
+  .composer-subtitle {
+    font-size: 0.8rem;
+  }
+  .composer-textarea {
+    min-height: 75px;
+    height: 75px;
+    font-size: 0.88rem;
+    padding: 10px 12px;
+  }
+  .halo-nav-search {
+    max-width: 140px;
+    min-width: 100px;
+    margin: 0 4px;
+  }
 }

@@ -318,6 +318,30 @@ if ($url === 'notifications' || str_starts_with($url, 'notifications/')) {
     exit;
 }
 
+// ── Settings Routes ───────────────────────────────────────────────────────────
+if ($url === 'settings' || str_starts_with($url, 'settings/')) {
+    require_once BASE_PATH . '/app/controllers/SettingsController.php';
+    $settingsCtrl = new SettingsController();
+
+    if ($url === 'settings') {
+        $settingsCtrl->showSettings();
+        exit;
+    }
+
+    if ($url === 'settings/username') {
+        $settingsCtrl->updateUsername();
+        exit;
+    }
+
+    if ($url === 'settings/password') {
+        $settingsCtrl->updatePassword();
+        exit;
+    }
+
+    $settingsCtrl->showSettings();
+    exit;
+}
+
 // ── 404 — Unknown Route ───────────────────────────────────────────────────────
 http_response_code(404);
 $pageTitle = '404 — Page Not Found';

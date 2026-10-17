@@ -129,37 +129,61 @@
 
             <!-- ── 2. LOGGED-IN HOME PAGE & NEWSFEED ───────────────────────────── -->
 
-            <!-- Greeting -->
-            <div class="mb-4 fade-up">
-                <h1 class="home-greeting">
-                    Good day, <?= htmlspecialchars($_SESSION['user_full_name'] ?? 'Friend', ENT_QUOTES, 'UTF-8') ?>.
-                </h1>
-                <p class="home-sub mb-3">
-                    What's on your mind today?
-                </p>
-            </div>
-
-            <!-- Create Post Card (Posts CRUD) -->
-            <div class="card glass fade-up mb-4">
-                <div class="card-body">
-                    <form method="POST" action="/SocialNetwork/public/?url=posts/create" enctype="multipart/form-data">
+            <!-- Unified Post Composer Card (Greeting + Input + Photo + Post in ONE Card) -->
+            <div class="card glass fade-up mb-4 composer-card">
+                <div class="card-body p-4">
+                    <form method="POST" action="/SocialNetwork/public/?url=posts/create" enctype="multipart/form-data" id="createPostForm">
                         <?= Csrf::field() ?>
-                        <div class="mb-3">
+
+                        <!-- 1. Header Row: Avatar + Greeting + Subtitle -->
+                        <div class="composer-header d-flex align-items-center gap-3 mb-3">
+                            <?php if (!empty($currentUserAvatar)): ?>
+                                <a href="/SocialNetwork/public/?url=profile" title="View your profile" class="flex-shrink-0">
+                                    <img
+                                        src="<?= htmlspecialchars($currentUserAvatar, ENT_QUOTES, 'UTF-8') ?>"
+                                        alt="<?= htmlspecialchars($_SESSION['user_full_name'] ?? 'Your profile', ENT_QUOTES, 'UTF-8') ?>"
+                                        class="composer-user-avatar"
+                                    >
+                                </a>
+                            <?php endif; ?>
+                            <div class="min-w-0">
+                                <h1 class="composer-greeting mb-0">
+                                    Good day, <?= htmlspecialchars($_SESSION['user_full_name'] ?? 'Friend', ENT_QUOTES, 'UTF-8') ?>.
+                                </h1>
+                                <p class="composer-subtitle mb-0">
+                                    What's on your mind today?
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- 2. Post Input Row: Full-width compact textarea -->
+                        <div class="composer-input-row mb-3">
                             <textarea
+                                id="composerTextarea"
                                 name="content"
-                                class="form-control"
-                                rows="3"
+                                class="form-control composer-textarea w-100"
                                 placeholder="Share something with the community..."
                                 maxlength="5000"
                                 required
+                                rows="2"
                             ></textarea>
                         </div>
 
-                        <!-- Optional Image Attachment -->
-                        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+                        <!-- 3. Image Preview Container (Inside Card, below text, above footer) -->
+                        <div id="composerImagePreviewWrap" class="composer-preview-wrap mb-3 d-none">
+                            <div class="composer-preview-box position-relative">
+                                <img id="composerImagePreview" src="" alt="Post image attachment preview" class="img-fluid rounded">
+                                <button type="button" class="composer-remove-img-btn" id="composerRemoveImgBtn" aria-label="Remove photo" title="Remove photo">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- 4. Footer: Add Photo button (left) and Post button (right) -->
+                        <div class="composer-footer d-flex align-items-center justify-content-between flex-wrap gap-2 pt-3 border-top" style="border-color: var(--border) !important;">
                             <div class="d-flex align-items-center gap-2">
-                                <label for="postImageInput" class="btn btn-ghost btn-sm text-muted d-inline-flex align-items-center gap-1" style="cursor: pointer; border: 1px dashed var(--border);">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                                <label for="postImageInput" class="btn btn-ghost btn-sm composer-photo-btn d-inline-flex align-items-center gap-1" style="cursor: pointer;">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
                                     <span>Add Photo</span>
                                 </label>
                                 <input
@@ -167,13 +191,12 @@
                                     id="postImageInput"
                                     name="image"
                                     accept="image/jpeg,image/png,image/gif,image/webp"
-                                    style="display: none;"
-                                    onchange="const n = this.files[0]?.name; document.getElementById('imageFileName').textContent = n ? n : '';"
+                                    class="d-none"
                                 >
-                                <span id="imageFileName" class="small text-muted" style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"></span>
+                                <span id="imageFileName" class="small text-muted" style="max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"></span>
                             </div>
 
-                            <button type="submit" class="btn btn-primary btn-sm px-4">
+                            <button type="submit" class="btn btn-primary btn-sm px-4" id="composerSubmitBtn">
                                 Post
                             </button>
                         </div>
@@ -208,7 +231,7 @@
                         $isPostOwner  = isset($_SESSION['user_id']) && ((int) $_SESSION['user_id'] === $postAuthorId);
 
                         // Author avatar with fallback
-                        if (!empty($post['profile_image'])) {
+                        if (!empty($post['profile_image']) && file_exists(BASE_PATH . '/public/assets/images/profiles/' . $post['profile_image'])) {
                             $postAvatar = '/SocialNetwork/public/assets/images/profiles/' . rawurlencode($post['profile_image']);
                         } else {
                             $postAvatar = 'https://ui-avatars.com/api/?name=' . rawurlencode($post['full_name']) . '&size=80&background=111113&color=f5f5f7&rounded=true&bold=true';
@@ -329,7 +352,7 @@
 
                                     <span class="d-inline-flex align-items-center gap-1 text-muted" style="font-size: 0.82rem;">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-                                        <?= $commentCount ?> <?= $commentCount === 1 ? 'comment' : 'comments' ?>
+                                        <span class="post-comment-count-text" id="post-comment-count-<?= $postId ?>"><?= $commentCount ?> <?= $commentCount === 1 ? 'comment' : 'comments' ?></span>
                                     </span>
                                 </div>
 
@@ -363,7 +386,7 @@
                                             $isCommentOwner = isset($_SESSION['user_id']) && ((int) $_SESSION['user_id'] === (int) $comment['user_id']);
 
                                             // Commenter Avatar fallback
-                                            if (!empty($comment['profile_image'])) {
+                                            if (!empty($comment['profile_image']) && file_exists(BASE_PATH . '/public/assets/images/profiles/' . $comment['profile_image'])) {
                                                 $commenterAvatar = '/SocialNetwork/public/assets/images/profiles/' . rawurlencode($comment['profile_image']);
                                             } else {
                                                 $commenterAvatar = 'https://ui-avatars.com/api/?name=' . rawurlencode($comment['full_name']) . '&size=64&background=111113&color=f5f5f7&rounded=true&bold=true';

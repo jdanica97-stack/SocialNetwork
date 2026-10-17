@@ -63,16 +63,29 @@ class CommentController
     {
         $this->requireAuth();
 
+        $isAjax = (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest')
+            || (isset($_SERVER['HTTP_ACCEPT']) && str_contains(strtolower($_SERVER['HTTP_ACCEPT']), 'application/json'));
+
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             http_response_code(405);
+            if ($isAjax) {
+                header('Content-Type: application/json; charset=UTF-8');
+                echo json_encode(['success' => false, 'message' => 'Method not allowed.']);
+                exit;
+            }
             header('Location: /SocialNetwork/public/');
             exit;
         }
 
-        $postId  = filter_input(INPUT_POST, 'post_id', FILTER_VALIDATE_INT);
+        $postId = filter_input(INPUT_POST, 'post_id', FILTER_VALIDATE_INT);
 
         if (!Csrf::check()) {
             http_response_code(403);
+            if ($isAjax) {
+                header('Content-Type: application/json; charset=UTF-8');
+                echo json_encode(['success' => false, 'message' => 'Security verification failed (invalid CSRF token). Please refresh and try again.']);
+                exit;
+            }
             $_SESSION['flash_error'] = 'Security verification failed (invalid CSRF token). Please try again.';
             header('Location: /SocialNetwork/public/' . ($postId && $postId > 0 ? '#post-' . $postId : ''));
             exit;
@@ -80,6 +93,11 @@ class CommentController
 
         if (!$postId || $postId <= 0) {
             http_response_code(400);
+            if ($isAjax) {
+                header('Content-Type: application/json; charset=UTF-8');
+                echo json_encode(['success' => false, 'message' => 'Invalid post reference.']);
+                exit;
+            }
             $_SESSION['flash_error'] = 'Invalid post reference.';
             header('Location: /SocialNetwork/public/');
             exit;
@@ -89,6 +107,11 @@ class CommentController
         $post = $this->postModel->getById($postId);
         if (!$post) {
             http_response_code(404);
+            if ($isAjax) {
+                header('Content-Type: application/json; charset=UTF-8');
+                echo json_encode(['success' => false, 'message' => 'The post you are commenting on does not exist or has been deleted.']);
+                exit;
+            }
             $_SESSION['flash_error'] = 'The post you are commenting on does not exist or has been deleted.';
             header('Location: /SocialNetwork/public/');
             exit;
@@ -99,12 +122,24 @@ class CommentController
 
         // Validation
         if ($content === '') {
+            http_response_code(400);
+            if ($isAjax) {
+                header('Content-Type: application/json; charset=UTF-8');
+                echo json_encode(['success' => false, 'message' => 'Comment content cannot be empty.']);
+                exit;
+            }
             $_SESSION['flash_error'] = 'Comment content cannot be empty.';
             header('Location: /SocialNetwork/public/#post-' . $postId);
             exit;
         }
 
         if (mb_strlen($content) > 1000) {
+            http_response_code(400);
+            if ($isAjax) {
+                header('Content-Type: application/json; charset=UTF-8');
+                echo json_encode(['success' => false, 'message' => 'Comment must be 1000 characters or fewer.']);
+                exit;
+            }
             $_SESSION['flash_error'] = 'Comment must be 1000 characters or fewer.';
             header('Location: /SocialNetwork/public/#post-' . $postId);
             exit;
@@ -113,8 +148,6 @@ class CommentController
         $result = $this->commentModel->createComment($postId, $userId, $content);
 
         if ($result !== false) {
-            $_SESSION['flash_success'] = 'Comment posted successfully.';
-
             // Notify the post owner (skip if commenter is the post owner)
             if ($post && isset($post['user_id']) && (int)$post['user_id'] !== $userId) {
                 $preview = mb_substr($content, 0, 100);
@@ -129,8 +162,43 @@ class CommentController
                     );
                 }
             }
+
+            if ($isAjax) {
+                $comment = $this->commentModel->findById((int) $result);
+                $totalCount = $this->commentModel->countByPostId($postId);
+                $hasImage = !empty($comment['profile_image']) && file_exists(BASE_PATH . '/public/assets/images/profiles/' . $comment['profile_image']);
+
+                http_response_code(200);
+                header('Content-Type: application/json; charset=UTF-8');
+                echo json_encode([
+                    'success'       => true,
+                    'message'       => 'Comment posted successfully.',
+                    'comment_count' => $totalCount,
+                    'comment'       => [
+                        'id'            => (int) $comment['id'],
+                        'post_id'       => (int) $comment['post_id'],
+                        'user_id'       => (int) $comment['user_id'],
+                        'author_id'     => (int) $comment['user_id'],
+                        'content'       => $comment['content'],
+                        'created_at'    => $comment['created_at'],
+                        'relative_time' => 'Just now',
+                        'full_name'     => $comment['full_name'],
+                        'username'      => $comment['username'],
+                        'profile_image' => $hasImage ? $comment['profile_image'] : null,
+                        'is_owner'      => true,
+                    ],
+                ]);
+                exit;
+            }
+
+            $_SESSION['flash_success'] = 'Comment posted successfully.';
         } else {
             http_response_code(500);
+            if ($isAjax) {
+                header('Content-Type: application/json; charset=UTF-8');
+                echo json_encode(['success' => false, 'message' => 'Could not save your comment due to a server error. Please try again.']);
+                exit;
+            }
             $_SESSION['flash_error'] = 'Could not save your comment due to a server error. Please try again.';
         }
 
@@ -368,7 +436,7 @@ class CommentController
                 'relative_time' => $rel,
                 'full_name'     => $c['full_name'],
                 'username'      => $c['username'],
-                'profile_image' => $c['profile_image'] ?? null,
+                'profile_image' => (!empty($c['profile_image']) && file_exists(BASE_PATH . '/public/assets/images/profiles/' . $c['profile_image'])) ? $c['profile_image'] : null,
                 'is_owner'      => ((int)$c['user_id'] === $userId),
             ];
         }
