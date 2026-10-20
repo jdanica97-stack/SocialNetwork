@@ -19,14 +19,12 @@
 require_once BASE_PATH . '/config/database.php';
 require_once BASE_PATH . '/app/models/CommentModel.php';
 require_once BASE_PATH . '/app/models/PostModel.php';
-require_once BASE_PATH . '/app/models/NotificationModel.php';
 require_once BASE_PATH . '/app/helpers/Csrf.php';
 
 class CommentController
 {
     private CommentModel $commentModel;
     private PostModel $postModel;
-    private NotificationModel $notifModel;
 
     public function __construct()
     {
@@ -35,7 +33,6 @@ class CommentController
         $db = getDBConnection();
         $this->commentModel = new CommentModel($db);
         $this->postModel    = new PostModel($db);
-        $this->notifModel   = new NotificationModel($db);
     }
 
     // ─── Authentication Guard ─────────────────────────────────────────────────
@@ -148,21 +145,6 @@ class CommentController
         $result = $this->commentModel->createComment($postId, $userId, $content);
 
         if ($result !== false) {
-            // Notify the post owner (skip if commenter is the post owner)
-            if ($post && isset($post['user_id']) && (int)$post['user_id'] !== $userId) {
-                $preview = mb_substr($content, 0, 100);
-                if (!$this->notifModel->isDuplicate((int)$post['user_id'], $userId, 'comment', $postId)) {
-                    $this->notifModel->create(
-                        (int) $post['user_id'],
-                        $userId,
-                        'comment',
-                        'post',
-                        $postId,
-                        $preview
-                    );
-                }
-            }
-
             if ($isAjax) {
                 $comment = $this->commentModel->findById((int) $result);
                 $totalCount = $this->commentModel->countByPostId($postId);

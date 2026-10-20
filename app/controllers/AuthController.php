@@ -121,9 +121,23 @@ class AuthController
             $errors[] = 'Username must be 3–50 characters and may only contain letters, numbers, and underscores.';
         }
 
-        // 3. Minimum password length (8 characters)
-        if ($password !== '' && strlen($password) < 8) {
-            $errors[] = 'Password must be at least 8 characters long.';
+        // 3. Password complexity requirements (8+ chars, uppercase, lowercase, number, special char)
+        if ($password !== '') {
+            if (strlen($password) < 8) {
+                $errors[] = 'Password must be at least 8 characters long.';
+            }
+            if (!preg_match('/[A-Z]/', $password)) {
+                $errors[] = 'Password must contain at least one uppercase letter (A–Z).';
+            }
+            if (!preg_match('/[a-z]/', $password)) {
+                $errors[] = 'Password must contain at least one lowercase letter (a–z).';
+            }
+            if (!preg_match('/[0-9]/', $password)) {
+                $errors[] = 'Password must contain at least one number (0–9).';
+            }
+            if (!preg_match('/[^a-zA-Z0-9]/', $password)) {
+                $errors[] = 'Password must contain at least one special character (e.g. !@#$%^&*).';
+            }
         }
 
         // 4. Password confirmation match
@@ -249,9 +263,10 @@ class AuthController
         session_regenerate_id(true);
 
         // ── Store user info in the session ────────────────────────────────────
-        $_SESSION['user_id']        = $user['id'];
-        $_SESSION['user_username']  = $user['username'];
-        $_SESSION['user_full_name'] = $user['full_name'];
+        $_SESSION['user_id']            = $user['id'];
+        $_SESSION['user_username']      = $user['username'];
+        $_SESSION['user_full_name']     = $user['full_name'];
+        $_SESSION['user_profile_image'] = $user['profile_image'] ?? '';
 
         // ── Redirect to the home / dashboard page ─────────────────────────────
         $this->redirect('/SocialNetwork/public/');

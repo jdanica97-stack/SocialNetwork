@@ -95,7 +95,35 @@ require_once BASE_PATH . '/app/views/layouts/header.php';
               required
               autocomplete="new-password"
               aria-required="true"
+              aria-describedby="passwordRequirements"
             >
+          </div>
+
+          <!-- Password Requirements Checklist -->
+          <div id="passwordRequirements" class="password-checklist" aria-live="polite">
+            <div class="checklist-title">Password Requirements</div>
+            <ul class="checklist-items">
+              <li id="req-length" class="req-item unmet" aria-checked="false" role="checkbox">
+                <span class="req-icon" aria-hidden="true"></span>
+                <span class="req-label">At least 8 characters long</span>
+              </li>
+              <li id="req-uppercase" class="req-item unmet" aria-checked="false" role="checkbox">
+                <span class="req-icon" aria-hidden="true"></span>
+                <span class="req-label">Contains an uppercase letter</span>
+              </li>
+              <li id="req-lowercase" class="req-item unmet" aria-checked="false" role="checkbox">
+                <span class="req-icon" aria-hidden="true"></span>
+                <span class="req-label">Contains a lowercase letter</span>
+              </li>
+              <li id="req-number" class="req-item unmet" aria-checked="false" role="checkbox">
+                <span class="req-icon" aria-hidden="true"></span>
+                <span class="req-label">Contains a number</span>
+              </li>
+              <li id="req-special" class="req-item unmet" aria-checked="false" role="checkbox">
+                <span class="req-icon" aria-hidden="true"></span>
+                <span class="req-label">Contains a special character</span>
+              </li>
+            </ul>
           </div>
         </div>
 
@@ -115,13 +143,16 @@ require_once BASE_PATH . '/app/views/layouts/header.php';
               required
               autocomplete="new-password"
               aria-required="true"
+              aria-describedby="confirmFeedback"
             >
           </div>
+          <!-- Confirm Password Feedback -->
+          <div id="confirmFeedback" class="password-match-feedback" aria-live="polite"></div>
         </div>
 
         <!-- Submit -->
         <div class="d-grid">
-          <button type="submit" class="btn btn-primary btn-lg">Create Account</button>
+          <button type="submit" id="submitBtn" class="btn btn-primary btn-lg" disabled>Create Account</button>
         </div>
 
       </form>
@@ -133,5 +164,119 @@ require_once BASE_PATH . '/app/views/layouts/header.php';
   </p>
 
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  const form = document.querySelector('form');
+  const fullNameInput = document.getElementById('full_name');
+  const usernameInput = document.getElementById('username');
+  const passwordInput = document.getElementById('password');
+  const confirmPasswordInput = document.getElementById('confirm_password');
+  const submitBtn = document.getElementById('submitBtn');
+  const confirmFeedback = document.getElementById('confirmFeedback');
+
+  const reqElements = {
+    length: document.getElementById('req-length'),
+    uppercase: document.getElementById('req-uppercase'),
+    lowercase: document.getElementById('req-lowercase'),
+    number: document.getElementById('req-number'),
+    special: document.getElementById('req-special')
+  };
+
+  const iconCheck = '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+  const iconUnmet = '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/></svg>';
+  const iconCross = '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>';
+
+  // Initialize icons
+  Object.values(reqElements).forEach(el => {
+    if (el) {
+      el.querySelector('.req-icon').innerHTML = iconUnmet;
+    }
+  });
+
+  function validateRequirements() {
+    const pwd = passwordInput.value || '';
+    const confirm = confirmPasswordInput.value || '';
+
+    const checks = {
+      length: pwd.length >= 8,
+      uppercase: /[A-Z]/.test(pwd),
+      lowercase: /[a-z]/.test(pwd),
+      number: /[0-9]/.test(pwd),
+      special: /[^a-zA-Z0-9]/.test(pwd)
+    };
+
+    let allRulesMet = true;
+    for (const [key, met] of Object.entries(checks)) {
+      const el = reqElements[key];
+      if (el) {
+        if (met) {
+          el.classList.remove('unmet');
+          el.classList.add('met');
+          el.setAttribute('aria-checked', 'true');
+          el.querySelector('.req-icon').innerHTML = iconCheck;
+        } else {
+          el.classList.remove('met');
+          el.classList.add('unmet');
+          el.setAttribute('aria-checked', 'false');
+          el.querySelector('.req-icon').innerHTML = iconUnmet;
+          allRulesMet = false;
+        }
+      }
+    }
+
+    // Confirmation matching check
+    let passwordsMatch = false;
+    if (confirm.length === 0) {
+      confirmFeedback.innerHTML = '';
+      confirmFeedback.className = 'password-match-feedback';
+    } else if (confirm === pwd && allRulesMet) {
+      confirmFeedback.innerHTML = iconCheck + ' <span>Passwords match</span>';
+      confirmFeedback.className = 'password-match-feedback match';
+      passwordsMatch = true;
+    } else if (confirm === pwd) {
+      confirmFeedback.innerHTML = iconCheck + ' <span>Passwords match</span>';
+      confirmFeedback.className = 'password-match-feedback match';
+      passwordsMatch = true;
+    } else {
+      confirmFeedback.innerHTML = iconCross + ' <span>Passwords do not match</span>';
+      confirmFeedback.className = 'password-match-feedback mismatch';
+      passwordsMatch = false;
+    }
+
+    const hasFullName = fullNameInput.value.trim().length > 0;
+    const hasUsername = usernameInput.value.trim().length >= 3;
+
+    if (allRulesMet && passwordsMatch && hasFullName && hasUsername) {
+      submitBtn.disabled = false;
+    } else {
+      submitBtn.disabled = true;
+    }
+
+    return { allRulesMet, passwordsMatch };
+  }
+
+  passwordInput.addEventListener('input', validateRequirements);
+  confirmPasswordInput.addEventListener('input', validateRequirements);
+  fullNameInput.addEventListener('input', validateRequirements);
+  usernameInput.addEventListener('input', validateRequirements);
+
+  // Run on initial load in case browser pre-filled
+  validateRequirements();
+
+  form.addEventListener('submit', function (e) {
+    const { allRulesMet, passwordsMatch } = validateRequirements();
+    if (!allRulesMet || !passwordsMatch) {
+      e.preventDefault();
+      e.stopPropagation();
+      if (!allRulesMet) {
+        passwordInput.focus();
+      } else {
+        confirmPasswordInput.focus();
+      }
+    }
+  });
+});
+</script>
 
 <?php require_once BASE_PATH . '/app/views/layouts/footer.php'; ?>

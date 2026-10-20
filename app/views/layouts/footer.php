@@ -9,6 +9,17 @@
 
 </main><!-- /#main-content -->
 
+<!-- ── Image Gallery Lightbox Modal ────────────────────────────────────── -->
+<div id="imageLightboxModal" class="image-lightbox-modal" aria-hidden="true" role="dialog" aria-label="Image preview">
+  <button type="button" class="lightbox-close-btn" id="lightboxCloseBtn" aria-label="Close preview" title="Close (Esc)">&times;</button>
+  <button type="button" class="lightbox-nav-btn lightbox-prev-btn" id="lightboxPrevBtn" aria-label="Previous image" title="Previous">&#10094;</button>
+  <button type="button" class="lightbox-nav-btn lightbox-next-btn" id="lightboxNextBtn" aria-label="Next image" title="Next">&#10095;</button>
+  <div class="lightbox-content-box">
+    <img id="lightboxImg" src="" alt="Enlarged view">
+    <div id="lightboxCounter" class="lightbox-counter"></div>
+  </div>
+</div>
+
 <!-- ── Minimal Footer ──────────────────────────────────────────────────── -->
 <footer class="halo-footer" role="contentinfo">
   <span>Mini Social Network &mdash; &copy; <?= date('Y') ?></span>
@@ -81,11 +92,8 @@
 <!-- ── Post & Comment Options Dropdown Menu Script ─────────────────── -->
 <script src="/SocialNetwork/public/assets/js/dropdown.js?v=<?= filemtime(BASE_PATH . '/public/assets/js/dropdown.js') ?>"></script>
 
-<!-- ── Left-Side Navigation Panel Script ───────────────────────────── -->
-<script src="/SocialNetwork/public/assets/js/side-panel.js"></script>
-
-<!-- ── Notifications Bell, Dropdown & Badge Polling ────────────────── -->
-<script src="/SocialNetwork/public/assets/js/notifications.js"></script>
+<!-- ── Profile Dropdown Navigation Script ───────────────────────────── -->
+<script src="/SocialNetwork/public/assets/js/profile-dropdown.js?v=<?= file_exists(BASE_PATH . '/public/assets/js/profile-dropdown.js') ? filemtime(BASE_PATH . '/public/assets/js/profile-dropdown.js') : '1' ?>"></script>
 
 </body>
 </html>

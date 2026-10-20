@@ -214,6 +214,59 @@ class UserModel
         }
     }
 
+    /**
+     * Update only the bio column for a given user.
+     *
+     * Used by ProfileController::update() when editing profile details (bio & avatar).
+     *
+     * @param  int    $id   The user's primary-key ID.
+     * @param  string $bio  The user's biography text.
+     * @return bool         true on success, false on DB failure.
+     */
+    public function updateBio(int $id, string $bio): bool
+    {
+        try {
+            $sql = 'UPDATE users SET bio = :bio WHERE id = :id';
+            $stmt = $this->db->prepare($sql);
+            return $stmt->execute([
+                ':bio' => $bio,
+                ':id'  => $id,
+            ]);
+        } catch (PDOException $e) {
+            error_log('UserModel::updateBio database error: ' . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Update both full_name and username together in a single atomic query.
+     *
+     * Used by Account Information card in View Profile.
+     *
+     * @param  int    $id        The user's primary-key ID.
+     * @param  string $fullName  The new full name.
+     * @param  string $username  The new username.
+     * @return bool              true on success, false on DB failure.
+     */
+    public function updateAccountInfo(int $id, string $fullName, string $username): bool
+    {
+        try {
+            $sql = 'UPDATE users
+                    SET full_name = :full_name,
+                        username  = :username
+                    WHERE id = :id';
+            $stmt = $this->db->prepare($sql);
+            return $stmt->execute([
+                ':full_name' => $fullName,
+                ':username'  => $username,
+                ':id'        => $id,
+            ]);
+        } catch (PDOException $e) {
+            error_log('UserModel::updateAccountInfo database error: ' . $e->getMessage());
+            return false;
+        }
+    }
+
     // ─── Step 11: Search Operations ───────────────────────────────────────────
 
     /**
@@ -289,7 +342,7 @@ class UserModel
 
     /**
      * Get the stored password hash for a user by their primary ID.
-     * Used exclusively for authentication / verifying current password in Settings.
+     * Used exclusively for authentication / verifying current password before changing it.
      *
      * @param int $id User ID
      * @return string|false

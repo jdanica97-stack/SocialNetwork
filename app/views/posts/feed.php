@@ -171,12 +171,7 @@
 
                         <!-- 3. Image Preview Container (Inside Card, below text, above footer) -->
                         <div id="composerImagePreviewWrap" class="composer-preview-wrap mb-3 d-none">
-                            <div class="composer-preview-box position-relative">
-                                <img id="composerImagePreview" src="" alt="Post image attachment preview" class="img-fluid rounded">
-                                <button type="button" class="composer-remove-img-btn" id="composerRemoveImgBtn" aria-label="Remove photo" title="Remove photo">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                                </button>
-                            </div>
+                            <div id="composerPreviewGrid" class="composer-preview-grid d-flex flex-wrap gap-2"></div>
                         </div>
 
                         <!-- 4. Footer: Add Photo button (left) and Post button (right) -->
@@ -184,12 +179,13 @@
                             <div class="d-flex align-items-center gap-2">
                                 <label for="postImageInput" class="btn btn-ghost btn-sm composer-photo-btn d-inline-flex align-items-center gap-1" style="cursor: pointer;">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-                                    <span>Add Photo</span>
+                                    <span>Add Photos</span>
                                 </label>
                                 <input
                                     type="file"
                                     id="postImageInput"
-                                    name="image"
+                                    name="images[]"
+                                    multiple
                                     accept="image/jpeg,image/png,image/gif,image/webp"
                                     class="d-none"
                                 >
@@ -312,18 +308,8 @@
                                     <?= nl2br(htmlspecialchars($post['content'], ENT_QUOTES, 'UTF-8')) ?>
                                 </div>
 
-                                <!-- Post Image (if present) -->
-                                <?php if (!empty($post['image'])): ?>
-                                    <div class="mb-3 post-image-container">
-                                        <img
-                                            src="/SocialNetwork/public/assets/images/<?= htmlspecialchars($post['image'], ENT_QUOTES, 'UTF-8') ?>"
-                                            alt="Post attachment"
-                                            class="img-fluid rounded"
-                                            style="max-height: 480px; width: 100%; object-fit: cover; border: 1px solid var(--border);"
-                                            loading="lazy"
-                                        >
-                                    </div>
-                                <?php endif; ?>
+                                <!-- Post Images Gallery -->
+                                <?php require BASE_PATH . '/app/views/posts/_gallery.php'; ?>
 
                                 <?php
                                 $likeCount = $likeCountByPost[$postId] ?? 0;

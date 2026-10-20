@@ -63,15 +63,16 @@ if (!empty($user['profile_image'])) {
                     >
 
                     <?php if (!empty($isOwnProfile)): ?>
-                        <a href="/SocialNetwork/public/?url=profile/edit" class="btn btn-ghost btn-sm">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                            Edit Profile
-                        </a>
-                    <?php elseif (!empty($_SESSION['user_id'])): ?>
-                        <a href="/SocialNetwork/public/?url=messages/chat&user_id=<?= (int)$user['id'] ?>" class="btn btn-primary btn-sm d-inline-flex align-items-center gap-1">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-                            Message
-                        </a>
+                        <div class="d-flex gap-2 align-items-center flex-wrap">
+                            <a href="/SocialNetwork/public/?url=profile/edit" class="btn btn-ghost btn-sm" id="editProfileBtn">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                                Edit Profile
+                            </a>
+                            <button type="button" class="btn btn-ghost btn-sm" id="accountSettingsToggleBtn" aria-expanded="false" aria-controls="accountSettingsSection">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                                Account Settings
+                            </button>
+                        </div>
                     <?php endif; ?>
                 </div>
 
@@ -99,6 +100,138 @@ if (!empty($user['profile_image'])) {
                 </div>
 
             </div><!-- /.card-body -->
+
+            <!-- ── Expandable Account Settings Drawer (Hidden by default, only on own profile) ── -->
+            <?php if (!empty($isOwnProfile)): ?>
+            <div id="accountSettingsSection" class="account-settings-drawer" style="display: none;">
+                <div class="p-3 p-md-4">
+                    <div class="row justify-content-center">
+                        <div class="col-12" style="max-width: 680px;">
+
+                            <!-- ── Card 1: Account Information ───────────────────────── -->
+                            <div class="card glass mb-4" style="background: var(--surface-card); border: 1px solid var(--border);">
+                                <div class="card-body p-4">
+                                    <div class="d-flex align-items-center gap-2 mb-3">
+                                        <div style="width:32px;height:32px;border-radius:8px;background:var(--surface-input);display:flex;align-items:center;justify-content:center;color:var(--fg);">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                                        </div>
+                                        <div>
+                                            <h2 class="h5 mb-0" style="font-weight:600;color:var(--fg);">Account Information</h2>
+                                            <span class="small text-muted">Update your full name and public @username</span>
+                                        </div>
+                                    </div>
+
+                                    <form method="POST" action="/SocialNetwork/public/?url=profile/account" id="profileAccountInfoForm" novalidate>
+                                        <?= Csrf::field() ?>
+
+                                        <!-- Full Name -->
+                                        <div class="mb-3">
+                                            <label for="accountFullName" class="form-label small fw-medium" style="color:var(--fg-muted);">Full Name</label>
+                                            <input
+                                                type="text"
+                                                id="accountFullName"
+                                                name="full_name"
+                                                class="form-control"
+                                                value="<?= htmlspecialchars($user['full_name'] ?? '', ENT_QUOTES, 'UTF-8') ?>"
+                                                maxlength="100"
+                                                required
+                                                autocomplete="name"
+                                            >
+                                            <div class="form-text small" style="color:var(--fg-faint);">1–100 characters.</div>
+                                        </div>
+
+                                        <!-- Username -->
+                                        <div class="mb-4">
+                                            <label for="accountUsername" class="form-label small fw-medium" style="color:var(--fg-muted);">Username</label>
+                                            <div class="input-group">
+                                                <span class="input-group-text" style="background:var(--surface-input);border-color:var(--border);color:var(--fg-muted);">@</span>
+                                                <input
+                                                    type="text"
+                                                    id="accountUsername"
+                                                    name="username"
+                                                    class="form-control"
+                                                    value="<?= htmlspecialchars($user['username'] ?? '', ENT_QUOTES, 'UTF-8') ?>"
+                                                    maxlength="50"
+                                                    pattern="[a-zA-Z0-9_]{3,50}"
+                                                    required
+                                                    autocomplete="username"
+                                                >
+                                            </div>
+                                            <div class="form-text small" style="color:var(--fg-faint);">3–50 characters. Letters, numbers, and underscores only.</div>
+                                        </div>
+
+                                        <div class="text-end">
+                                            <button type="submit" class="btn btn-primary btn-sm px-4" id="saveAccountInfoBtn">Save Changes</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+
+                            <!-- ── Card 2: Change Password ───────────────────────────── -->
+                            <div class="card glass mb-2" style="background: var(--surface-card); border: 1px solid var(--border);">
+                                <div class="card-body p-4">
+                                    <div class="d-flex align-items-center gap-2 mb-3">
+                                        <div style="width:32px;height:32px;border-radius:8px;background:var(--surface-input);display:flex;align-items:center;justify-content:center;color:var(--fg);">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                                        </div>
+                                        <div>
+                                            <h2 class="h5 mb-0" style="font-weight:600;color:var(--fg);">Change Password</h2>
+                                            <span class="small text-muted">Ensure your account is protected with a secure password</span>
+                                        </div>
+                                    </div>
+
+                                    <form method="POST" action="/SocialNetwork/public/?url=profile/password" id="profileChangePasswordForm">
+                                        <?= Csrf::field() ?>
+
+                                        <!-- Current Password -->
+                                        <div class="mb-3">
+                                            <label for="profileCurrentPw" class="form-label small fw-medium" style="color:var(--fg-muted);">Current Password</label>
+                                            <div class="input-group">
+                                                <input type="password" id="profileCurrentPw" name="current_password" class="form-control" placeholder="Enter your current password" required autocomplete="current-password">
+                                                <button class="btn btn-ghost toggle-password-btn" type="button" data-target="profileCurrentPw" aria-label="Toggle password visibility">
+                                                    <svg class="eye-open" xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                                                    <svg class="eye-closed d-none" xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        <!-- New Password -->
+                                        <div class="mb-3">
+                                            <label for="profileNewPw" class="form-label small fw-medium" style="color:var(--fg-muted);">New Password</label>
+                                            <div class="input-group">
+                                                <input type="password" id="profileNewPw" name="new_password" class="form-control" placeholder="At least 8 characters" minlength="8" required autocomplete="new-password">
+                                                <button class="btn btn-ghost toggle-password-btn" type="button" data-target="profileNewPw" aria-label="Toggle password visibility">
+                                                    <svg class="eye-open" xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                                                    <svg class="eye-closed d-none" xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+                                                </button>
+                                            </div>
+                                            <div class="form-text small" style="color:var(--fg-faint);">Must be at least 8 characters long.</div>
+                                        </div>
+
+                                        <!-- Confirm New Password -->
+                                        <div class="mb-4">
+                                            <label for="profileConfirmPw" class="form-label small fw-medium" style="color:var(--fg-muted);">Confirm New Password</label>
+                                            <div class="input-group">
+                                                <input type="password" id="profileConfirmPw" name="confirm_password" class="form-control" placeholder="Re-type new password" minlength="8" required autocomplete="new-password">
+                                                <button class="btn btn-ghost toggle-password-btn" type="button" data-target="profileConfirmPw" aria-label="Toggle password visibility">
+                                                    <svg class="eye-open" xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                                                    <svg class="eye-closed d-none" xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        <div class="text-end">
+                                            <button type="submit" class="btn btn-primary btn-sm px-4" id="savePasswordBtn">Update Password</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <?php endif; ?>
 
             <!-- Posts Section Header -->
             <div class="profile-section-label d-flex align-items-center justify-content-between">
@@ -203,18 +336,8 @@ if (!empty($user['profile_image'])) {
                                     <?= nl2br(htmlspecialchars($post['content'], ENT_QUOTES, 'UTF-8')) ?>
                                 </div>
 
-                                <!-- Post Image -->
-                                <?php if (!empty($post['image'])): ?>
-                                    <div class="mb-3 post-image-container">
-                                        <img
-                                            src="/SocialNetwork/public/assets/images/<?= htmlspecialchars($post['image'], ENT_QUOTES, 'UTF-8') ?>"
-                                            alt="Post attachment"
-                                            class="img-fluid rounded"
-                                            style="max-height: 480px; width: 100%; object-fit: cover; border: 1px solid var(--border);"
-                                            loading="lazy"
-                                        >
-                                    </div>
-                                <?php endif; ?>
+                                <!-- Post Images Gallery -->
+                                <?php require BASE_PATH . '/app/views/posts/_gallery.php'; ?>
 
                                 <!-- Post Interactions -->
                                 <div class="post-interactions">
@@ -372,5 +495,59 @@ if (!empty($user['profile_image'])) {
 
     </div>
 </div>
+
+<?php if (!empty($isOwnProfile)): ?>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    // ── 1. Account Settings Section Expand / Collapse Toggle ─────────────
+    var toggleBtn       = document.getElementById('accountSettingsToggleBtn');
+    var settingsSection = document.getElementById('accountSettingsSection');
+
+    if (toggleBtn && settingsSection) {
+        toggleBtn.addEventListener('click', function (e) {
+            e.preventDefault();
+            var isHidden = (settingsSection.style.display === 'none' || !settingsSection.classList.contains('visible'));
+            if (isHidden) {
+                settingsSection.style.display = 'block';
+                // Force reflow for smooth transition
+                void settingsSection.offsetHeight;
+                settingsSection.classList.add('visible');
+                toggleBtn.setAttribute('aria-expanded', 'true');
+                toggleBtn.classList.add('active');
+            } else {
+                settingsSection.classList.remove('visible');
+                toggleBtn.setAttribute('aria-expanded', 'false');
+                toggleBtn.classList.remove('active');
+                setTimeout(function () {
+                    if (!settingsSection.classList.contains('visible')) {
+                        settingsSection.style.display = 'none';
+                    }
+                }, 250);
+            }
+        });
+    }
+
+    // ── 2. Password Visibility Toggles ────────────────────────────────────
+    document.querySelectorAll('.toggle-password-btn').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            var targetId = this.getAttribute('data-target');
+            var input = document.getElementById(targetId);
+            if (!input) return;
+            var eyeOpen   = this.querySelector('.eye-open');
+            var eyeClosed = this.querySelector('.eye-closed');
+            if (input.type === 'password') {
+                input.type = 'text';
+                if (eyeOpen)   eyeOpen.classList.add('d-none');
+                if (eyeClosed) eyeClosed.classList.remove('d-none');
+            } else {
+                input.type = 'password';
+                if (eyeOpen)   eyeOpen.classList.remove('d-none');
+                if (eyeClosed) eyeClosed.classList.add('d-none');
+            }
+        });
+    });
+});
+</script>
+<?php endif; ?>
 
 <?php require_once BASE_PATH . '/app/views/layouts/footer.php'; ?>

@@ -95,32 +95,25 @@ CREATE TABLE IF NOT EXISTS likes (
   DEFAULT CHARSET=utf8mb4
   COLLATE=utf8mb4_unicode_ci;
 
--- ─── 5. messages ─────────────────────────────────────────────────────────────
--- Stores direct messages between users.
+-- ─── 5. post_images ──────────────────────────────────────────────────────────
+-- Stores images attached to multi-image posts.
 -- Relationships:
---   sender_id   → users.id (ON DELETE CASCADE)
---   receiver_id → users.id (ON DELETE CASCADE)
+--   One post → many post_images (posts.id → post_images.post_id)
 
-CREATE TABLE IF NOT EXISTS messages (
-    id          INT          NOT NULL AUTO_INCREMENT,
-    sender_id   INT          NOT NULL,
-    receiver_id INT          NOT NULL,
-    message     TEXT         NOT NULL,
-    is_read     TINYINT(1)   NOT NULL DEFAULT 0,
-    created_at  TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+CREATE TABLE IF NOT EXISTS post_images (
+    id         INT          NOT NULL AUTO_INCREMENT,
+    post_id    INT          NOT NULL,
+    image_path VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (id),
-    KEY idx_messages_sender (sender_id),
-    KEY idx_messages_receiver (receiver_id),
-    KEY idx_messages_conversation (sender_id, receiver_id),
-    CONSTRAINT fk_messages_sender
-        FOREIGN KEY (sender_id) REFERENCES users (id)
-        ON DELETE CASCADE,
-    CONSTRAINT fk_messages_receiver
-        FOREIGN KEY (receiver_id) REFERENCES users (id)
+    KEY idx_post_images_post (post_id),
+    CONSTRAINT fk_post_images_post
+        FOREIGN KEY (post_id) REFERENCES posts (id)
         ON DELETE CASCADE
 ) ENGINE=InnoDB
   DEFAULT CHARSET=utf8mb4
   COLLATE=utf8mb4_unicode_ci;
+
 
 -- ============================================================
 --  SAMPLE DATA (Development / Testing Only)

@@ -68,25 +68,6 @@ if (!empty($user['profile_image'])) {
                 >
                     <?= Csrf::field() ?>
 
-                    <!-- Full Name -->
-                    <div class="mb-3">
-                        <label for="full_name" class="form-label">
-                            Full Name <span style="color:var(--fg-faint)">*</span>
-                        </label>
-                        <input
-                            type="text"
-                            class="form-control"
-                            id="full_name"
-                            name="full_name"
-                            maxlength="100"
-                            placeholder="Your full name"
-                            value="<?= htmlspecialchars($user['full_name'], ENT_QUOTES, 'UTF-8') ?>"
-                            required
-                            autocomplete="name"
-                        >
-                        <div class="form-text">Maximum 100 characters.</div>
-                    </div>
-
                     <!-- Bio -->
                     <div class="mb-3">
                         <label for="bio" class="form-label">
@@ -150,7 +131,7 @@ if (!empty($user['profile_image'])) {
         </div>
 
         <p class="edit-info-note">
-            Username cannot be changed. Password changes are not available here.
+            Full name, username, and password can be changed from Account Settings on your <a href="/SocialNetwork/public/?url=profile">profile page</a>.
         </p>
 
     </div>

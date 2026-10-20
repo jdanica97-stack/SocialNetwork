@@ -49,6 +49,16 @@ class PostModel
      * @param int $offset Optional offset
      * @return array Array of associative arrays representing posts
      */
+    /**
+     * Retrieve all posts from all users for the newsfeed.
+     * Ordered by created_at DESC (newest first), with p.id DESC as secondary sort.
+     *
+     * Joined with the `users` table to fetch the author's username, full_name, and profile_image.
+     *
+     * @param int|null $limit Optional maximum number of posts to retrieve (for pagination/infinite scroll)
+     * @param int $offset Optional offset
+     * @return array Array of associative arrays representing posts
+     */
     public function getAllPosts(?int $limit = null, int $offset = 0): array
     {
         try {
@@ -70,7 +80,8 @@ class PostModel
                 $stmt = $this->db->query($sql);
             }
 
-            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+            $posts = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            return $this->attachImagesToPosts($posts);
         } catch (PDOException $e) {
             error_log('PostModel::getAllPosts database error: ' . $e->getMessage());
             return [];
@@ -98,7 +109,19 @@ class PostModel
             $stmt = $this->db->prepare($sql);
             $stmt->execute([':id' => $id]);
 
-            return $stmt->fetch(PDO::FETCH_ASSOC);
+            $post = $stmt->fetch(PDO::FETCH_ASSOC);
+            if ($post) {
+                $images = $this->getImagesByPostId((int) $post['id']);
+                if (!empty($images)) {
+                    $post['images'] = $images;
+                } elseif (!empty($post['image'])) {
+                    $post['images'] = [$post['image']];
+                } else {
+                    $post['images'] = [];
+                }
+            }
+
+            return $post;
         } catch (PDOException $e) {
             error_log('PostModel::getById database error: ' . $e->getMessage());
             return false;
@@ -126,7 +149,8 @@ class PostModel
             $stmt = $this->db->prepare($sql);
             $stmt->execute([':user_id' => $userId]);
 
-            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+            $posts = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            return $this->attachImagesToPosts($posts);
         } catch (PDOException $e) {
             error_log('PostModel::getByUserId database error: ' . $e->getMessage());
             return [];
@@ -134,15 +158,24 @@ class PostModel
     }
 
     /**
-     * Create a new post.
+     * Create a new post with one or multiple images.
      *
      * @param int $userId The author's user ID
      * @param string $content Text content of the post
-     * @param string|null $image Optional image filename
+     * @param array|string|null $images Optional image filename or array of filenames
      * @return int|false The newly created post ID, or false on failure
      */
-    public function create(int $userId, string $content, ?string $image = null): int|false
+    public function create(int $userId, string $content, array|string|null $images = null): int|false
     {
+        $imageList = [];
+        if (is_array($images)) {
+            $imageList = array_values(array_filter($images));
+        } elseif (!empty($images)) {
+            $imageList = [$images];
+        }
+
+        $primaryImage = !empty($imageList) ? $imageList[0] : null;
+
         try {
             $sql = 'INSERT INTO posts (user_id, content, image) VALUES (:user_id, :content, :image)';
             $stmt = $this->db->prepare($sql);
@@ -150,11 +183,15 @@ class PostModel
             $success = $stmt->execute([
                 ':user_id' => $userId,
                 ':content' => $content,
-                ':image'   => $image,
+                ':image'   => $primaryImage,
             ]);
 
             if ($success) {
-                return (int) $this->db->lastInsertId();
+                $newPostId = (int) $this->db->lastInsertId();
+                if (!empty($imageList)) {
+                    $this->addImages($newPostId, $imageList);
+                }
+                return $newPostId;
             }
 
             return false;
@@ -203,6 +240,8 @@ class PostModel
     public function delete(int $id, int $userId): bool
     {
         try {
+            $images = $this->getImagesByPostId($id);
+
             $sql = 'DELETE FROM posts WHERE id = :id AND user_id = :user_id';
             $stmt = $this->db->prepare($sql);
             $stmt->execute([
@@ -210,9 +249,197 @@ class PostModel
                 ':user_id' => $userId,
             ]);
 
-            return $stmt->rowCount() > 0;
+            $deleted = $stmt->rowCount() > 0;
+            if ($deleted) {
+                foreach ($images as $imgPath) {
+                    $fullPath = BASE_PATH . '/public/assets/images/' . $imgPath;
+                    if (file_exists($fullPath)) {
+                        @unlink($fullPath);
+                    }
+                }
+            }
+
+            return $deleted;
         } catch (PDOException $e) {
             error_log('PostModel::delete database error: ' . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Add multiple images to a post in post_images.
+     *
+     * @param int $postId
+     * @param array $imagePaths
+     * @return bool
+     */
+    public function addImages(int $postId, array $imagePaths): bool
+    {
+        if (empty($imagePaths)) {
+            return true;
+        }
+
+        try {
+            $sql = 'INSERT INTO post_images (post_id, image_path, sort_order) VALUES (:post_id, :image_path, :sort_order)';
+            $stmt = $this->db->prepare($sql);
+
+            foreach ($imagePaths as $order => $path) {
+                if (!empty($path)) {
+                    $stmt->execute([
+                        ':post_id'    => $postId,
+                        ':image_path' => $path,
+                        ':sort_order' => (int) $order,
+                    ]);
+                }
+            }
+
+            return true;
+        } catch (PDOException $e) {
+            error_log('PostModel::addImages database error: ' . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Get all image paths for a specific post.
+     *
+     * @param int $postId
+     * @return array Array of image paths
+     */
+    public function getImagesByPostId(int $postId): array
+    {
+        try {
+            $sql = 'SELECT image_path FROM post_images WHERE post_id = :post_id ORDER BY sort_order ASC, id ASC';
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute([':post_id' => $postId]);
+            $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            return array_column($rows, 'image_path');
+        } catch (PDOException $e) {
+            error_log('PostModel::getImagesByPostId database error: ' . $e->getMessage());
+            return [];
+        }
+    }
+
+    /**
+     * Get image paths for multiple posts in a single query.
+     *
+     * @param array $postIds
+     * @return array [post_id => [image1, image2, ...]]
+     */
+    public function getImagesByPostIds(array $postIds): array
+    {
+        if (empty($postIds)) {
+            return [];
+        }
+
+        try {
+            $inPlaceholders = implode(',', array_fill(0, count($postIds), '?'));
+            $sql = "SELECT post_id, image_path FROM post_images WHERE post_id IN ($inPlaceholders) ORDER BY sort_order ASC, id ASC";
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute(array_values($postIds));
+            $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            $result = [];
+            foreach ($rows as $row) {
+                $pid = (int) $row['post_id'];
+                if (!isset($result[$pid])) {
+                    $result[$pid] = [];
+                }
+                $result[$pid][] = $row['image_path'];
+            }
+
+            return $result;
+        } catch (PDOException $e) {
+            error_log('PostModel::getImagesByPostIds database error: ' . $e->getMessage());
+            return [];
+        }
+    }
+
+    /**
+     * Attach 'images' array to a collection of post rows.
+     *
+     * @param array $posts
+     * @return array
+     */
+    private function attachImagesToPosts(array $posts): array
+    {
+        if (empty($posts)) {
+            return [];
+        }
+
+        $postIds = array_column($posts, 'id');
+        $imagesByPost = $this->getImagesByPostIds($postIds);
+
+        foreach ($posts as &$p) {
+            $pid = (int) $p['id'];
+            if (isset($imagesByPost[$pid]) && !empty($imagesByPost[$pid])) {
+                $p['images'] = $imagesByPost[$pid];
+            } elseif (!empty($p['image'])) {
+                $p['images'] = [$p['image']];
+            } else {
+                $p['images'] = [];
+            }
+        }
+        unset($p);
+
+        return $posts;
+    }
+
+    /**
+     * Update post content and its associated images.
+     *
+     * @param int $postId
+     * @param int $userId
+     * @param string $content
+     * @param array $keepImages Image paths to keep
+     * @param array $newImages Newly uploaded image paths
+     * @return bool
+     */
+    public function updatePostWithImages(int $postId, int $userId, string $content, array $keepImages = [], array $newImages = []): bool
+    {
+        try {
+            // Verify ownership
+            $existing = $this->getById($postId);
+            if (!$existing || (int)$existing['user_id'] !== $userId) {
+                return false;
+            }
+
+            // Remove unkept images from post_images & disk
+            $currentImages = $this->getImagesByPostId($postId);
+            foreach ($currentImages as $img) {
+                if (!in_array($img, $keepImages, true)) {
+                    $delStmt = $this->db->prepare('DELETE FROM post_images WHERE post_id = :post_id AND image_path = :image_path');
+                    $delStmt->execute([':post_id' => $postId, ':image_path' => $img]);
+                    $fullPath = BASE_PATH . '/public/assets/images/' . $img;
+                    if (file_exists($fullPath)) {
+                        @unlink($fullPath);
+                    }
+                }
+            }
+
+            // Add new images
+            if (!empty($newImages)) {
+                $this->addImages($postId, $newImages);
+            }
+
+            // Determine primary image
+            $finalImages = array_merge($keepImages, $newImages);
+            $primaryImage = !empty($finalImages) ? $finalImages[0] : null;
+
+            // Update posts table
+            $sql = 'UPDATE posts SET content = :content, image = :image WHERE id = :id AND user_id = :user_id';
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute([
+                ':content' => $content,
+                ':image'   => $primaryImage,
+                ':id'      => $postId,
+                ':user_id' => $userId,
+            ]);
+
+            return true;
+        } catch (PDOException $e) {
+            error_log('PostModel::updatePostWithImages database error: ' . $e->getMessage());
             return false;
         }
     }
@@ -357,7 +584,8 @@ class PostModel
                 $stmt->execute($params);
             }
 
-            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+            $posts = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            return $this->attachImagesToPosts($posts);
         } catch (PDOException $e) {
             error_log('PostModel::searchPostsAdvanced database error: ' . $e->getMessage());
             return [];

@@ -165,63 +165,23 @@ class PostController
             exit;
         }
 
-        // Handle optional image upload
-        if (isset($_FILES['image']) && $_FILES['image']['error'] !== UPLOAD_ERR_NO_FILE) {
-            $file = $_FILES['image'];
-
-            if ($file['error'] !== UPLOAD_ERR_OK) {
-                $_SESSION['flash_error'] = 'An error occurred while uploading the image.';
-                header('Location: /SocialNetwork/public/');
-                exit;
-            }
-
-            if ($file['size'] > $this->maxImageSize) {
-                $_SESSION['flash_error'] = 'Image size must be 5 MB or smaller.';
-                header('Location: /SocialNetwork/public/');
-                exit;
-            }
-
-            $finfo    = new finfo(FILEINFO_MIME_TYPE);
-            $mimeType = $finfo->file($file['tmp_name']);
-
-            if (!in_array($mimeType, $this->allowedMimeTypes, true)) {
-                $_SESSION['flash_error'] = 'Invalid image format. Allowed formats: JPG, PNG, GIF, WebP.';
-                header('Location: /SocialNetwork/public/');
-                exit;
-            }
-
-            $mimeToExt = [
-                'image/jpeg' => 'jpg',
-                'image/png'  => 'png',
-                'image/gif'  => 'gif',
-                'image/webp' => 'webp',
-            ];
-            $ext = $mimeToExt[$mimeType] ?? 'jpg';
-
-            $uniqueName = bin2hex(random_bytes(16)) . '.' . $ext;
-            $uploadDir  = BASE_PATH . '/public/assets/images/posts/';
-
-            if (!is_dir($uploadDir)) {
-                mkdir($uploadDir, 0755, true);
-            }
-
-            $destination = $uploadDir . $uniqueName;
-
-            if (move_uploaded_file($file['tmp_name'], $destination)) {
-                $imageName = 'posts/' . $uniqueName;
-            } else {
-                $_SESSION['flash_error'] = 'Failed to save the uploaded image.';
-                header('Location: /SocialNetwork/public/');
-                exit;
-            }
+        // Handle optional multi-image upload
+        $imagePaths = [];
+        try {
+            $imagePaths = $this->processUploadedImages();
+        } catch (RuntimeException $e) {
+            $_SESSION['flash_error'] = $e->getMessage();
+            header('Location: /SocialNetwork/public/');
+            exit;
         }
 
-        $newPostId = $this->postModel->create($userId, $content, $imageName);
+        $newPostId = $this->postModel->create($userId, $content, $imagePaths);
 
         if ($newPostId) {
             $_SESSION['flash_success'] = 'Post created successfully!';
             header('Location: /SocialNetwork/public/#post-' . $newPostId);
         } else {
+            $this->cleanupFiles($imagePaths);
             $_SESSION['flash_error'] = 'Failed to create post. Please try again.';
             header('Location: /SocialNetwork/public/');
         }
@@ -336,18 +296,30 @@ class PostController
             exit;
         }
 
-        $updated = $this->postModel->update($postId, $userId, $content);
+        $newImages = [];
+        try {
+            $newImages = $this->processUploadedImages();
+        } catch (RuntimeException $e) {
+            $_SESSION['flash_error'] = $e->getMessage();
+            header('Location: /SocialNetwork/public/?url=posts/edit&id=' . $postId);
+            exit;
+        }
+
+        $keepImages = isset($_POST['keep_images']) && is_array($_POST['keep_images']) ? $_POST['keep_images'] : [];
+        $currentImages = $this->postModel->getImagesByPostId($postId);
+        if (empty($currentImages) && !empty($post['image'])) {
+            $currentImages = [$post['image']];
+        }
+        $validatedKeep = array_values(array_intersect($keepImages, $currentImages));
+
+        $updated = $this->postModel->updatePostWithImages($postId, $userId, $content, $validatedKeep, $newImages);
 
         if ($updated) {
             $_SESSION['flash_success'] = 'Post updated successfully.';
         } else {
-            // Check if unchanged content caused rowCount to be 0
-            if ($post['content'] === $content) {
-                $_SESSION['flash_success'] = 'Post saved (no changes detected).';
-            } else {
-                http_response_code(500);
-                $_SESSION['flash_error'] = 'Failed to update post due to a server error. Please try again.';
-            }
+            $this->cleanupFiles($newImages);
+            http_response_code(500);
+            $_SESSION['flash_error'] = 'Failed to update post due to a server error. Please try again.';
         }
 
         header('Location: /SocialNetwork/public/#post-' . $postId);
@@ -461,5 +433,98 @@ class PostController
         }
 
         return date('M j, Y \a\t g:i A', $time);
+    }
+
+    /**
+     * Process uploaded image(s) safely from $_FILES['images'] or $_FILES['image'].
+     *
+     * @return array Array of relative image paths (e.g. ['posts/xyz.jpg'])
+     * @throws RuntimeException If an invalid file or size error occurs
+     */
+    private function processUploadedImages(): array
+    {
+        $uploadedPaths = [];
+        $filesToProcess = [];
+
+        if (isset($_FILES['images']) && is_array($_FILES['images']['name'])) {
+            $count = count($_FILES['images']['name']);
+            for ($i = 0; $i < $count; $i++) {
+                if ($_FILES['images']['error'][$i] === UPLOAD_ERR_NO_FILE) {
+                    continue;
+                }
+                $filesToProcess[] = [
+                    'name'     => $_FILES['images']['name'][$i],
+                    'tmp_name' => $_FILES['images']['tmp_name'][$i],
+                    'error'    => $_FILES['images']['error'][$i],
+                    'size'     => $_FILES['images']['size'][$i],
+                ];
+            }
+        } elseif (isset($_FILES['image']) && !is_array($_FILES['image']['name']) && $_FILES['image']['error'] !== UPLOAD_ERR_NO_FILE) {
+            $filesToProcess[] = $_FILES['image'];
+        }
+
+        if (empty($filesToProcess)) {
+            return [];
+        }
+
+        $uploadDir = BASE_PATH . '/public/assets/images/posts/';
+        if (!is_dir($uploadDir)) {
+            mkdir($uploadDir, 0755, true);
+        }
+
+        $mimeToExt = [
+            'image/jpeg' => 'jpg',
+            'image/png'  => 'png',
+            'image/gif'  => 'gif',
+            'image/webp' => 'webp',
+        ];
+
+        $finfo = new finfo(FILEINFO_MIME_TYPE);
+
+        foreach ($filesToProcess as $file) {
+            if ($file['error'] !== UPLOAD_ERR_OK) {
+                $this->cleanupFiles($uploadedPaths);
+                throw new RuntimeException('An error occurred during image upload (error code: ' . (int)$file['error'] . ').');
+            }
+
+            if ($file['size'] > $this->maxImageSize) {
+                $this->cleanupFiles($uploadedPaths);
+                throw new RuntimeException('Image size exceeds the 5 MB limit.');
+            }
+
+            $mimeType = $finfo->file($file['tmp_name']);
+            if (!in_array($mimeType, $this->allowedMimeTypes, true)) {
+                $this->cleanupFiles($uploadedPaths);
+                throw new RuntimeException('Invalid image format. Allowed formats: JPG, PNG, GIF, WebP.');
+            }
+
+            $ext = $mimeToExt[$mimeType] ?? 'jpg';
+            $uniqueName = bin2hex(random_bytes(16)) . '.' . $ext;
+            $destination = $uploadDir . $uniqueName;
+
+            if (!move_uploaded_file($file['tmp_name'], $destination)) {
+                $this->cleanupFiles($uploadedPaths);
+                throw new RuntimeException('Failed to save the uploaded image.');
+            }
+
+            $uploadedPaths[] = 'posts/' . $uniqueName;
+        }
+
+        return $uploadedPaths;
+    }
+
+    /**
+     * Clean up newly uploaded files if a subsequent batch file fails or post creation fails.
+     *
+     * @param array $paths Relative image paths
+     */
+    private function cleanupFiles(array $paths): void
+    {
+        foreach ($paths as $path) {
+            $fullPath = BASE_PATH . '/public/assets/images/' . $path;
+            if (file_exists($fullPath)) {
+                @unlink($fullPath);
+            }
+        }
     }
 }

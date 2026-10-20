@@ -14,9 +14,11 @@
  *   auth/register           → AuthController::showRegister()   [GET]
  *   auth/register           → AuthController::register()       [POST]
  *   auth/logout             → AuthController::logout()         [GET]
- *   profile                 → ProfileController::showProfile() [GET]
- *   profile/edit            → ProfileController::showEdit()    [GET]
- *   profile/update          → ProfileController::update()      [POST]
+ *   profile                 → ProfileController::showProfile()   [GET]
+ *   profile/edit            → ProfileController::showEdit()      [GET]
+ *   profile/update          → ProfileController::update()        [POST]
+ *   profile/username        → ProfileController::updateUsername() [POST]
+ *   profile/password        → ProfileController::updatePassword() [POST]
  *   posts/create            → PostController::create()         [POST]
  *   posts/edit              → PostController::edit()           [GET]
  *   posts/update            → PostController::update()         [POST]
@@ -133,7 +135,8 @@ if ($url === 'auth/login' || $url === 'auth/register' || $url === 'auth/logout')
 }
 
 // ── Profile Routes ────────────────────────────────────────────────────────────
-if ($url === 'profile' || $url === 'profile/edit' || $url === 'profile/update') {
+if ($url === 'profile' || $url === 'profile/edit' || $url === 'profile/update'
+    || $url === 'profile/account' || $url === 'profile/username' || $url === 'profile/password') {
     require_once BASE_PATH . '/app/controllers/ProfileController.php';
     $profile = new ProfileController();
 
@@ -152,6 +155,33 @@ if ($url === 'profile' || $url === 'profile/edit' || $url === 'profile/update') 
             $profile->update();
         } else {
             header('Location: /SocialNetwork/public/?url=profile/edit');
+        }
+        exit;
+    }
+
+    if ($url === 'profile/account') {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $profile->updateAccount();
+        } else {
+            header('Location: /SocialNetwork/public/?url=profile');
+        }
+        exit;
+    }
+
+    if ($url === 'profile/username') {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $profile->updateUsername();
+        } else {
+            header('Location: /SocialNetwork/public/?url=profile');
+        }
+        exit;
+    }
+
+    if ($url === 'profile/password') {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $profile->updatePassword();
+        } else {
+            header('Location: /SocialNetwork/public/?url=profile');
         }
         exit;
     }
@@ -251,96 +281,6 @@ if ($url === 'likes/toggle' || $url === 'likes/like' || $url === 'likes/unlike' 
     exit;
 }
 
-// ── Messages Routes ───────────────────────────────────────────────────────────
-if ($url === 'messages' || str_starts_with($url, 'messages/')) {
-    require_once BASE_PATH . '/app/controllers/MessageController.php';
-    $messageCtrl = new MessageController();
-
-    if ($url === 'messages') {
-        $messageCtrl->index();
-        exit;
-    }
-
-    if ($url === 'messages/chat') {
-        $messageCtrl->chat();
-        exit;
-    }
-
-    if ($url === 'messages/send') {
-        $messageCtrl->send();
-        exit;
-    }
-
-    if ($url === 'messages/poll') {
-        $messageCtrl->poll();
-        exit;
-    }
-
-    // Default fallback to index for any other messages/*
-    $messageCtrl->index();
-    exit;
-}
-
-// ── Notifications Routes ──────────────────────────────────────────────────
-if ($url === 'notifications' || str_starts_with($url, 'notifications/')) {
-    require_once BASE_PATH . '/app/controllers/NotificationController.php';
-    $notifCtrl = new NotificationController();
-
-    if ($url === 'notifications') {
-        $notifCtrl->index();
-        exit;
-    }
-
-    $notifAction = substr($url, strlen('notifications/'));
-
-    if ($notifAction === 'count') {
-        $notifCtrl->count();
-        exit;
-    }
-
-    if ($notifAction === 'fetch') {
-        $notifCtrl->fetch();
-        exit;
-    }
-
-    if ($notifAction === 'mark-read') {
-        $notifCtrl->markRead();
-        exit;
-    }
-
-    if ($notifAction === 'mark-all-read') {
-        $notifCtrl->markAllRead();
-        exit;
-    }
-
-    // Default fallback to index
-    $notifCtrl->index();
-    exit;
-}
-
-// ── Settings Routes ───────────────────────────────────────────────────────────
-if ($url === 'settings' || str_starts_with($url, 'settings/')) {
-    require_once BASE_PATH . '/app/controllers/SettingsController.php';
-    $settingsCtrl = new SettingsController();
-
-    if ($url === 'settings') {
-        $settingsCtrl->showSettings();
-        exit;
-    }
-
-    if ($url === 'settings/username') {
-        $settingsCtrl->updateUsername();
-        exit;
-    }
-
-    if ($url === 'settings/password') {
-        $settingsCtrl->updatePassword();
-        exit;
-    }
-
-    $settingsCtrl->showSettings();
-    exit;
-}
 
 // ── 404 — Unknown Route ───────────────────────────────────────────────────────
 http_response_code(404);

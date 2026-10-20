@@ -451,17 +451,8 @@ if ($authorId !== null) {
                                         <?= nl2br(htmlspecialchars($post['content'], ENT_QUOTES, 'UTF-8')) ?>
                                     </div>
 
-                                    <?php if (!empty($post['image'])): ?>
-                                        <div class="mb-3 post-image-container">
-                                            <img
-                                                src="/SocialNetwork/public/assets/images/<?= htmlspecialchars($post['image'], ENT_QUOTES, 'UTF-8') ?>"
-                                                alt="Post attachment"
-                                                class="img-fluid rounded"
-                                                style="max-height: 400px; width: 100%; object-fit: cover; border: 1px solid var(--border);"
-                                                loading="lazy"
-                                            >
-                                        </div>
-                                    <?php endif; ?>
+                                    <!-- Post Images Gallery -->
+                                    <?php require BASE_PATH . '/app/views/posts/_gallery.php'; ?>
 
                                     <!-- Exact Metrics & Interactive Bar (Step 12) -->
                                     <div class="post-interactions d-flex align-items-center justify-content-between flex-wrap gap-2">

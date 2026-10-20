@@ -16,6 +16,46 @@
 
 require_once BASE_PATH . '/app/helpers/Csrf.php';
 Csrf::initSession();
+
+// Resolve logged-in user profile details for shared navigation & sidebar
+$navUserAvatar    = null;
+$navUserName      = null;
+$navUserFirstName = null;
+$navUserHandle    = null;
+
+if (isset($_SESSION['user_id'])) {
+    $currentSessionUserId = (int) $_SESSION['user_id'];
+
+    // Ensure session has profile information cached without unnecessary DB hits
+    if (!isset($_SESSION['user_profile_image'])) {
+        require_once BASE_PATH . '/config/database.php';
+        require_once BASE_PATH . '/app/models/UserModel.php';
+        $sessionUserModel = new UserModel(getDBConnection());
+        $sessionUserData  = $sessionUserModel->findById($currentSessionUserId);
+        if ($sessionUserData) {
+            $_SESSION['user_profile_image'] = $sessionUserData['profile_image'] ?? '';
+            $_SESSION['user_full_name']     = $sessionUserData['full_name'] ?? ($_SESSION['user_full_name'] ?? 'User');
+            $_SESSION['user_username']      = $sessionUserData['username'] ?? ($_SESSION['user_username'] ?? 'user');
+        } else {
+            $_SESSION['user_profile_image'] = '';
+        }
+    }
+
+    $navUserName   = $_SESSION['user_full_name'] ?? 'User';
+    $navUserHandle = $_SESSION['user_username'] ?? 'user';
+
+    // First name extraction for compact Facebook-style display
+    $nameParts = preg_split('/\s+/', trim($navUserName));
+    $navUserFirstName = !empty($nameParts[0]) ? $nameParts[0] : $navUserName;
+
+    // Validate avatar image path or fallback to initial avatar
+    $profileImgFile = $_SESSION['user_profile_image'] ?? '';
+    if (!empty($profileImgFile) && file_exists(BASE_PATH . '/public/assets/images/profiles/' . $profileImgFile)) {
+        $navUserAvatar = '/SocialNetwork/public/assets/images/profiles/' . rawurlencode($profileImgFile);
+    } else {
+        $navUserAvatar = 'https://ui-avatars.com/api/?name=' . rawurlencode($navUserName) . '&size=120&background=111113&color=f5f5f7&rounded=true&bold=true';
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -65,192 +105,41 @@ Csrf::initSession();
   <div class="blob blob-3"></div>
 </div>
 
-<?php if (isset($_SESSION['user_id'])): ?>
-  <!-- ── Left-Side Navigation Panel Backdrop ───────────────────────────── -->
-  <div class="side-panel-backdrop" id="sidePanelBackdrop" aria-hidden="true"></div>
-
-  <!-- ── Left-Side Navigation Panel (Off-Canvas Drawer) ────────────────── -->
-  <aside class="side-panel" id="sidePanel" role="dialog" aria-modal="true" aria-label="Navigation Panel" aria-hidden="true">
-    <!-- Panel Header with Clickable Logo Brand and Close Button -->
-    <div class="side-panel-header">
-      <a href="/SocialNetwork/public/" class="side-panel-brand" id="sidePanelBrandLink" aria-label="Orbit — Go to Home" title="Home">
-        <img
-          src="/SocialNetwork/public/assets/images/logo-light.jpg"
-          alt="Orbit Logo"
-          class="logo-img logo-img-light"
-          width="50"
-          height="27"
-          loading="eager"
-        >
-        <img
-          src="/SocialNetwork/public/assets/images/logo-dark.jpg"
-          alt="Orbit Logo"
-          class="logo-img logo-img-dark"
-          width="50"
-          height="27"
-          loading="eager"
-        >
-        <span class="side-panel-title">Orbit</span>
-      </a>
-      <button type="button" class="side-panel-close-btn" id="sidePanelCloseBtn" aria-label="Close navigation panel" title="Close">
-        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-      </button>
-    </div>
-
-    <!-- Panel Navigation Links (Search, Profile, Messages, and Sign Out) -->
-    <nav class="side-panel-nav" role="navigation" aria-label="Side navigation">
-      <div class="side-panel-section-label">Navigation</div>
-
-      <!-- 1. Profile Option -->
-      <a href="/SocialNetwork/public/?url=profile" class="side-panel-link" id="sidePanelProfileLink">
-        <div class="side-panel-icon-wrap">
-          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-        </div>
-        <div class="side-panel-text">
-          <span class="side-panel-link-title">Profile</span>
-          <span class="side-panel-link-desc">@<?= htmlspecialchars($_SESSION['user_username'] ?? 'user', ENT_QUOTES, 'UTF-8') ?></span>
-        </div>
-      </a>
-
-      <!-- 2. Messages Option -->
-      <a href="/SocialNetwork/public/?url=messages" class="side-panel-link" id="sidePanelMessagesLink">
-        <div class="side-panel-icon-wrap">
-          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-        </div>
-        <div class="side-panel-text">
-          <span class="side-panel-link-title">Messages</span>
-          <span class="side-panel-link-desc">Direct conversations & chats</span>
-        </div>
-      </a>
-
-      <!-- 3. Notifications Option -->
-      <a href="/SocialNetwork/public/?url=notifications" class="side-panel-link" id="sidePanelNotificationsLink">
-        <div class="side-panel-icon-wrap">
-          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
-        </div>
-        <div class="side-panel-text">
-          <span class="side-panel-link-title">Notifications</span>
-          <span class="side-panel-link-desc">Activity alerts & updates</span>
-        </div>
-      </a>
-
-      <!-- 4. Settings Option -->
-      <a href="/SocialNetwork/public/?url=settings" class="side-panel-link" id="sidePanelSettingsLink">
-        <div class="side-panel-icon-wrap">
-          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="12" cy="12" r="3"></circle>
-            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
-          </svg>
-        </div>
-        <div class="side-panel-text">
-          <span class="side-panel-link-title">Settings</span>
-          <span class="side-panel-link-desc">Account & credentials</span>
-        </div>
-      </a>
-
-      <!-- 4. Sign Out Option -->
-      <div class="side-panel-divider my-2"></div>
-      <a href="/SocialNetwork/public/?url=auth/logout" class="side-panel-link side-panel-logout-link" id="sidePanelLogoutLink" aria-label="Sign Out">
-        <div class="side-panel-icon-wrap text-danger">
-          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-        </div>
-        <div class="side-panel-text">
-          <span class="side-panel-link-title text-danger">Sign Out</span>
-          <span class="side-panel-link-desc">Log out of your account</span>
-        </div>
-      </a>
-    </nav>
-
-    <!-- Panel Footer with User Details -->
-    <div class="side-panel-footer">
-      <div class="side-panel-user-info">
-        <span class="side-panel-user-name"><?= htmlspecialchars($_SESSION['user_full_name'] ?? 'User', ENT_QUOTES, 'UTF-8') ?></span>
-        <span class="side-panel-user-handle">@<?= htmlspecialchars($_SESSION['user_username'] ?? 'user', ENT_QUOTES, 'UTF-8') ?></span>
-      </div>
-    </div>
-  </aside>
-<?php endif; ?>
-
 <!-- ── Floating Glass Top Navigation Bar ─────────────────────────────── -->
 <div class="halo-nav-wrapper">
   <nav class="halo-nav glass" role="navigation" aria-label="Main navigation">
 
-    <!-- Left Section: Hamburger Menu (far left), Logo, and "Orbit" Brand Name -->
-    <div class="halo-nav-left d-flex align-items-center gap-2">
-      <?php if (isset($_SESSION['user_id'])): ?>
-        <!-- 1. Hamburger Menu Button (Far Left) — ONLY trigger for side panel -->
-        <button
-          type="button"
-          class="halo-nav-btn hamburger-nav-btn"
-          id="hamburgerMenuBtn"
-          aria-label="Toggle navigation menu"
-          aria-controls="sidePanel"
-          aria-expanded="false"
-          title="Menu"
-        >
-          <span class="hamburger-icon-symbol" aria-hidden="true">&#9776;</span>
-        </button>
-
-        <!-- 2. Orbit Logo beside it & 3. "Orbit" Brand Name — Direct Link to Home (no sidepanel trigger) -->
-        <a
-          href="/SocialNetwork/public/"
-          class="logo-panel-btn"
-          id="logoSidePanelBtn"
-          aria-label="Orbit — Home"
-          title="Orbit"
-        >
-          <!-- Rounded Logo Image Container -->
-          <div class="logo-img-box">
-            <img
-              src="/SocialNetwork/public/assets/images/logo-light.jpg"
-              alt="Orbit Logo"
-              class="logo-img logo-img-light"
-              width="60"
-              height="32"
-              loading="eager"
-            >
-            <img
-              src="/SocialNetwork/public/assets/images/logo-dark.jpg"
-              alt="Orbit Logo"
-              class="logo-img logo-img-dark"
-              width="60"
-              height="32"
-              loading="eager"
-            >
-          </div>
-          <!-- "Orbit" Brand Name beside logo -->
-          <span class="logo-title">Orbit</span>
-        </a>
-      <?php else: ?>
-        <!-- Direct Clickable Brand Link to Home Landing for Logged-Out Users -->
-        <a
-          href="/SocialNetwork/public/"
-          class="logo-panel-btn"
-          id="logoSidePanelBtn"
-          aria-label="Orbit — Home"
-          title="Orbit"
-        >
-          <div class="logo-img-box">
-            <img
-              src="/SocialNetwork/public/assets/images/logo-light.jpg"
-              alt="Orbit Logo"
-              class="logo-img logo-img-light"
-              width="60"
-              height="32"
-              loading="eager"
-            >
-            <img
-              src="/SocialNetwork/public/assets/images/logo-dark.jpg"
-              alt="Orbit Logo"
-              class="logo-img logo-img-dark"
-              width="60"
-              height="32"
-              loading="eager"
-            >
-          </div>
-          <span class="logo-title">Orbit</span>
-        </a>
-      <?php endif; ?>
+    <!-- Left Section: Orbit Logo and Brand Name (Links to Home) -->
+    <div class="halo-nav-left d-flex align-items-center">
+      <a
+        href="/SocialNetwork/public/"
+        class="logo-panel-btn"
+        id="logoBrandBtn"
+        aria-label="Orbit — Home"
+        title="Orbit"
+      >
+        <!-- Rounded Logo Image Container -->
+        <div class="logo-img-box">
+          <img
+            src="/SocialNetwork/public/assets/images/logo-light.jpg"
+            alt="Orbit Logo"
+            class="logo-img logo-img-light"
+            width="60"
+            height="32"
+            loading="eager"
+          >
+          <img
+            src="/SocialNetwork/public/assets/images/logo-dark.jpg"
+            alt="Orbit Logo"
+            class="logo-img logo-img-dark"
+            width="60"
+            height="32"
+            loading="eager"
+          >
+        </div>
+        <!-- "Orbit" Brand Name beside logo -->
+        <span class="logo-title">Orbit</span>
+      </a>
     </div>
 
     <?php if (isset($_SESSION['user_id'])): ?>
@@ -285,56 +174,75 @@ Csrf::initSession();
         </a>
       </li>
 
-      <?php if (isset($_SESSION['user_id'])): ?>
-        <!-- Messages (logged-in users) -->
-        <li>
-          <a href="/SocialNetwork/public/?url=messages" aria-label="Messages">
-            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-            <span class="nav-label">Messages</span>
-          </a>
-        </li>
+      <!-- Theme toggle -->
+      <li>
+        <button
+          class="halo-nav-btn"
+          id="themeToggle"
+          aria-label="Toggle dark mode"
+          title="Toggle theme"
+        >
+          <!-- Moon (shown in light mode) -->
+          <svg class="icon-moon" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+          <!-- Sun (shown in dark mode) -->
+          <svg class="icon-sun" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+        </button>
+      </li>
 
-        <!-- Notifications Bell (logged-in users) -->
-        <li class="position-relative" id="notifNavItem">
+      <?php if (isset($_SESSION['user_id'])): ?>
+        <!-- Profile Dropdown at Top Right (logged-in users) -->
+        <li class="position-relative profile-dropdown-wrapper" id="profileDropdownWrapper">
           <button
             type="button"
-            class="halo-nav-btn d-flex align-items-center gap-1 position-relative"
-            id="notifBellBtn"
-            aria-label="Notifications"
-            title="Notifications"
-            style="background: none; border: none; cursor: pointer; padding: 6px 8px;"
+            class="nav-profile-btn"
+            id="profileDropdownBtn"
+            aria-label="Account menu for <?= htmlspecialchars($navUserName, ENT_QUOTES, 'UTF-8') ?>"
+            aria-expanded="false"
+            aria-haspopup="true"
+            aria-controls="profileDropdownMenu"
+            title="<?= htmlspecialchars($navUserName, ENT_QUOTES, 'UTF-8') ?>"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
-            <span class="nav-label">Notifications</span>
-            <!-- Unread badge (hidden when 0) -->
-            <span
-              id="notifBadge"
-              style="display:none; position:absolute; top:2px; right:2px; min-width:16px; height:16px; background:#ef4444; color:#fff; font-size:0.62rem; font-weight:700; border-radius:999px; align-items:center; justify-content:center; line-height:1; padding:0 3px; border:2px solid var(--surface);"
-              aria-live="polite"
-            ></span>
+            <img
+              src="<?= htmlspecialchars($navUserAvatar, ENT_QUOTES, 'UTF-8') ?>"
+              alt="<?= htmlspecialchars($navUserName, ENT_QUOTES, 'UTF-8') ?>"
+              class="nav-user-avatar"
+              width="28"
+              height="28"
+              loading="eager"
+            >
+            <span class="nav-user-name"><?= htmlspecialchars($navUserFirstName, ENT_QUOTES, 'UTF-8') ?></span>
+            <svg class="profile-chevron-icon" xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
           </button>
 
-          <!-- Notifications Dropdown Panel -->
+          <!-- Dropdown Menu -->
           <div
-            id="notifDropdown"
-            style="display:none; position:absolute; top:calc(100% + 10px); right:0; width:340px; max-height:420px; overflow-y:auto; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-card); box-shadow:0 8px 32px rgba(0,0,0,0.14); z-index:2000;"
-            role="dialog"
-            aria-label="Notifications panel"
+            class="profile-dropdown-menu"
+            id="profileDropdownMenu"
+            role="menu"
+            aria-label="User Account Menu"
           >
-            <!-- Dropdown header -->
-            <div class="d-flex align-items-center justify-content-between px-3 py-2 border-bottom" style="border-color:var(--border)!important; position:sticky; top:0; background:var(--surface); z-index:1;">
-              <span style="font-weight:600; font-size:0.88rem; color:var(--fg);">Notifications</span>
-              <div class="d-flex align-items-center gap-2">
-                <button id="notifMarkAllBtn" type="button" class="btn btn-ghost btn-sm py-0 px-1" style="font-size:0.75rem; color:var(--fg-muted);">Mark all read</button>
-                <a href="/SocialNetwork/public/?url=notifications" class="btn btn-ghost btn-sm py-0 px-1" style="font-size:0.75rem; color:var(--fg-muted);">See all</a>
-              </div>
+            <!-- User summary header -->
+            <div class="profile-dropdown-header">
+              <div class="profile-dropdown-name text-truncate"><?= htmlspecialchars($navUserName, ENT_QUOTES, 'UTF-8') ?></div>
+              <div class="profile-dropdown-handle text-truncate">@<?= htmlspecialchars($navUserHandle, ENT_QUOTES, 'UTF-8') ?></div>
             </div>
-            <!-- Notification items (filled by JS) -->
-            <div id="notifDropdownBody" style="min-height:60px;">
-              <div class="text-center py-4" id="notifDropdownLoading">
-                <span class="text-muted small">Loading…</span>
+            <div class="profile-dropdown-divider"></div>
+
+            <!-- 1. View Profile -->
+            <a href="/SocialNetwork/public/?url=profile" class="profile-dropdown-link" role="menuitem" id="dropdownProfileLink">
+              <div class="profile-dropdown-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
               </div>
-            </div>
+              <span>View Profile</span>
+            </a>
+
+            <!-- 2. Sign Out -->
+            <a href="/SocialNetwork/public/?url=auth/logout" class="profile-dropdown-link profile-dropdown-logout" role="menuitem" id="dropdownLogoutLink">
+              <div class="profile-dropdown-icon text-danger">
+                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+              </div>
+              <span class="text-danger">Sign Out</span>
+            </a>
           </div>
         </li>
       <?php endif; ?>
@@ -358,21 +266,6 @@ Csrf::initSession();
         </li>
 
       <?php endif; ?>
-
-      <!-- Theme toggle -->
-      <li>
-        <button
-          class="halo-nav-btn"
-          id="themeToggle"
-          aria-label="Toggle dark mode"
-          title="Toggle theme"
-        >
-          <!-- Moon (shown in light mode) -->
-          <svg class="icon-moon" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
-          <!-- Sun (shown in dark mode) -->
-          <svg class="icon-sun" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
-        </button>
-      </li>
 
     </ul>
   </nav>

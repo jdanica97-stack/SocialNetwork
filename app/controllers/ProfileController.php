@@ -4,15 +4,18 @@
  * app/controllers/ProfileController.php
  *
  * Handles all profile-related actions for the currently logged-in user:
- *   - showProfile()  — Load and display the user's profile page (GET)
- *   - showEdit()     — Display the profile edit form pre-filled with current data (GET)
- *   - update()       — Process the edit form: validate, save, redirect (POST)
+ *   - showProfile()    — Load and display the user's profile page (GET)
+ *   - showEdit()       — Display the profile edit form pre-filled with current data (GET)
+ *   - update()         — Process the edit form: validate, save, redirect (POST)
+ *   - updateUsername() — Process username/name change form (POST)
+ *   - updatePassword() — Process password change form (POST)
  *
  * Security contract:
  *   - Every method begins by verifying the session (requireAuth()).
  *   - The user ID always comes from $_SESSION['user_id'] — never from
  *     a URL parameter or a form field — so a user cannot tamper with
  *     their own ID to edit someone else's profile.
+ *   - CSRF protection on all mutating actions.
  *   - Output escaping is done in the Views, not here.
  *   - SQL is done in UserModel, not here.
  */
@@ -216,15 +219,7 @@ class ProfileController
         }
 
         // ── Collect input ─────────────────────────────────────────────────────
-        $fullName = trim($_POST['full_name'] ?? '');
-        $bio      = trim($_POST['bio']       ?? '');
-
-        // ── Validate full name ────────────────────────────────────────────────
-        if ($fullName === '') {
-            $errors[] = 'Full name is required.';
-        } elseif (mb_strlen($fullName) > 100) {
-            $errors[] = 'Full name must not exceed 100 characters.';
-        }
+        $bio = trim($_POST['bio'] ?? '');
 
         // ── Validate bio (optional) ───────────────────────────────────────────
         if (mb_strlen($bio) > 500) {
@@ -252,8 +247,8 @@ class ProfileController
             return;
         }
 
-        // ── Persist text fields ───────────────────────────────────────────────
-        $textUpdated = $this->userModel->updateProfile($userId, $fullName, $bio);
+        // ── Persist bio ───────────────────────────────────────────────────────
+        $textUpdated = $this->userModel->updateBio($userId, $bio);
 
         // ── Persist new image (only if one was successfully uploaded) ─────────
         $imgUpdated = true;
@@ -276,8 +271,10 @@ class ProfileController
             return;
         }
 
-        // ── Keep the session's display name in sync ────────────────────────────
-        $_SESSION['user_full_name'] = $fullName;
+        // ── Keep the session's profile image in sync ──────────────────────────
+        if ($newImageFilename !== null && $imgUpdated) {
+            $_SESSION['user_profile_image'] = $newImageFilename;
+        }
 
         // ── Flash success and redirect ─────────────────────────────────────────
         $_SESSION['flash_success'] = 'Your profile has been updated successfully.';
@@ -373,5 +370,212 @@ class ProfileController
             return null;
         }
         return $this->uploadWebPath . rawurlencode($filename);
+    }
+
+    // ─── Update Account Information (Full Name + Username) (POST) ──────────────
+
+    /**
+     * Process updating both Full Name and Username in a single atomic operation.
+     * Route: POST /SocialNetwork/public/?url=profile/account
+     */
+    public function updateAccount(): void
+    {
+        $this->requireAuth();
+        $userId = (int) $_SESSION['user_id'];
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: /SocialNetwork/public/?url=profile');
+            exit;
+        }
+
+        if (!Csrf::check()) {
+            $_SESSION['flash_error'] = 'Security verification failed (invalid CSRF token). Please try again.';
+            header('Location: /SocialNetwork/public/?url=profile');
+            exit;
+        }
+
+        $fullName = trim($_POST['full_name'] ?? '');
+        $username = trim($_POST['username'] ?? '');
+
+        // ── Validate Full Name ────────────────────────────────────────────────
+        if ($fullName === '') {
+            $_SESSION['flash_error'] = 'Full name is required.';
+            header('Location: /SocialNetwork/public/?url=profile');
+            exit;
+        }
+        if (mb_strlen($fullName) > 100) {
+            $_SESSION['flash_error'] = 'Full name must not exceed 100 characters.';
+            header('Location: /SocialNetwork/public/?url=profile');
+            exit;
+        }
+
+        // ── Validate Username ─────────────────────────────────────────────────
+        if ($username === '') {
+            $_SESSION['flash_error'] = 'Username cannot be empty.';
+            header('Location: /SocialNetwork/public/?url=profile');
+            exit;
+        }
+        if (!preg_match('/^[a-zA-Z0-9_]{3,50}$/', $username)) {
+            $_SESSION['flash_error'] = 'Username must be 3–50 characters and may only contain letters, numbers, and underscores.';
+            header('Location: /SocialNetwork/public/?url=profile');
+            exit;
+        }
+
+        // ── Check if username is taken by another user ────────────────────────
+        if ($this->userModel->usernameExistsExcludingUser($username, $userId)) {
+            $_SESSION['flash_error'] = 'That username is already taken. Please choose another.';
+            header('Location: /SocialNetwork/public/?url=profile');
+            exit;
+        }
+
+        // ── Persist both fields atomically ────────────────────────────────────
+        $updated = $this->userModel->updateAccountInfo($userId, $fullName, $username);
+        if ($updated) {
+            $_SESSION['user_full_name'] = $fullName;
+            $_SESSION['user_username']  = $username;
+            $_SESSION['flash_success'] = 'Account information updated successfully.';
+        } else {
+            $_SESSION['flash_error'] = 'Failed to update account information due to a server error. Please try again.';
+        }
+
+        header('Location: /SocialNetwork/public/?url=profile');
+        exit;
+    }
+
+    // ─── Update Username (POST) ───────────────────────────────────────────────
+
+    /**
+     * Process changing the user's username.
+     * Route: POST /SocialNetwork/public/?url=profile/username
+     */
+    public function updateUsername(): void
+    {
+        $this->requireAuth();
+        $userId = (int) $_SESSION['user_id'];
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: /SocialNetwork/public/?url=profile');
+            exit;
+        }
+
+        if (!Csrf::check()) {
+            $_SESSION['flash_error'] = 'Security verification failed (invalid CSRF token). Please try again.';
+            header('Location: /SocialNetwork/public/?url=profile');
+            exit;
+        }
+
+        $newUsername = trim($_POST['username'] ?? '');
+
+        if ($newUsername === '') {
+            $_SESSION['flash_error'] = 'Username cannot be empty.';
+            header('Location: /SocialNetwork/public/?url=profile');
+            exit;
+        }
+
+        if (!preg_match('/^[a-zA-Z0-9_]{3,50}$/', $newUsername)) {
+            $_SESSION['flash_error'] = 'Username must be 3–50 characters and may only contain letters, numbers, and underscores.';
+            header('Location: /SocialNetwork/public/?url=profile');
+            exit;
+        }
+
+        $currentUser = $this->userModel->findById($userId);
+        if (!$currentUser) {
+            $_SESSION['flash_error'] = 'User account not found.';
+            header('Location: /SocialNetwork/public/?url=profile');
+            exit;
+        }
+
+        if ($newUsername === $currentUser['username']) {
+            $_SESSION['flash_success'] = 'Username is already set to @' . $newUsername . '.';
+            header('Location: /SocialNetwork/public/?url=profile');
+            exit;
+        }
+
+        if ($this->userModel->usernameExistsExcludingUser($newUsername, $userId)) {
+            $_SESSION['flash_error'] = 'That username is already taken. Please choose another.';
+            header('Location: /SocialNetwork/public/?url=profile');
+            exit;
+        }
+
+        $updated = $this->userModel->updateUsername($userId, $newUsername);
+        if ($updated) {
+            $_SESSION['user_username'] = $newUsername;
+            $_SESSION['flash_success'] = 'Username successfully updated to @' . $newUsername . '.';
+        } else {
+            $_SESSION['flash_error'] = 'Failed to update username due to a server error. Please try again.';
+        }
+
+        header('Location: /SocialNetwork/public/?url=profile');
+        exit;
+    }
+
+    // ─── Update Password (POST) ───────────────────────────────────────────────
+
+    /**
+     * Process changing the user's password.
+     * Route: POST /SocialNetwork/public/?url=profile/password
+     */
+    public function updatePassword(): void
+    {
+        $this->requireAuth();
+        $userId = (int) $_SESSION['user_id'];
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: /SocialNetwork/public/?url=profile');
+            exit;
+        }
+
+        if (!Csrf::check()) {
+            $_SESSION['flash_error'] = 'Security verification failed (invalid CSRF token). Please try again.';
+            header('Location: /SocialNetwork/public/?url=profile');
+            exit;
+        }
+
+        $currentPassword = $_POST['current_password'] ?? '';
+        $newPassword     = $_POST['new_password']     ?? '';
+        $confirmPassword = $_POST['confirm_password'] ?? '';
+
+        if ($currentPassword === '' || $newPassword === '' || $confirmPassword === '') {
+            $_SESSION['flash_error'] = 'Please fill in all password fields.';
+            header('Location: /SocialNetwork/public/?url=profile');
+            exit;
+        }
+
+        $storedHash = $this->userModel->getUserPasswordHash($userId);
+        if (!$storedHash || !password_verify($currentPassword, $storedHash)) {
+            $_SESSION['flash_error'] = 'Your current password is incorrect.';
+            header('Location: /SocialNetwork/public/?url=profile');
+            exit;
+        }
+
+        if (strlen($newPassword) < 8) {
+            $_SESSION['flash_error'] = 'New password must be at least 8 characters long.';
+            header('Location: /SocialNetwork/public/?url=profile');
+            exit;
+        }
+
+        if ($newPassword !== $confirmPassword) {
+            $_SESSION['flash_error'] = 'The new password and confirmation do not match.';
+            header('Location: /SocialNetwork/public/?url=profile');
+            exit;
+        }
+
+        if (password_verify($newPassword, $storedHash)) {
+            $_SESSION['flash_error'] = 'Your new password cannot be the same as your current password.';
+            header('Location: /SocialNetwork/public/?url=profile');
+            exit;
+        }
+
+        $newHash = password_hash($newPassword, PASSWORD_BCRYPT);
+        $updated = $this->userModel->updatePassword($userId, $newHash);
+
+        if ($updated) {
+            $_SESSION['flash_success'] = 'Password changed successfully.';
+        } else {
+            $_SESSION['flash_error'] = 'Failed to update password due to a server error. Please try again.';
+        }
+
+        header('Location: /SocialNetwork/public/?url=profile');
+        exit;
     }
 }
