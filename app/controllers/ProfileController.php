@@ -27,6 +27,7 @@ require_once BASE_PATH . '/app/models/CommentModel.php';
 require_once BASE_PATH . '/app/models/LikeModel.php';
 require_once BASE_PATH . '/app/controllers/PostController.php';
 require_once BASE_PATH . '/app/helpers/Csrf.php';
+require_once BASE_PATH . '/app/helpers/PasswordValidator.php';
 
 class ProfileController
 {
@@ -548,14 +549,9 @@ class ProfileController
             exit;
         }
 
-        if (strlen($newPassword) < 8) {
-            $_SESSION['flash_error'] = 'New password must be at least 8 characters long.';
-            header('Location: /SocialNetwork/public/?url=profile');
-            exit;
-        }
-
-        if ($newPassword !== $confirmPassword) {
-            $_SESSION['flash_error'] = 'The new password and confirmation do not match.';
+        $pwErrors = PasswordValidator::validate($newPassword, $confirmPassword, 'New password');
+        if (!empty($pwErrors)) {
+            $_SESSION['flash_error'] = implode(' ', $pwErrors);
             header('Location: /SocialNetwork/public/?url=profile');
             exit;
         }

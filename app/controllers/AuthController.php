@@ -29,6 +29,7 @@
 require_once BASE_PATH . '/config/database.php';
 require_once BASE_PATH . '/app/models/UserModel.php';
 require_once BASE_PATH . '/app/helpers/Csrf.php';
+require_once BASE_PATH . '/app/helpers/PasswordValidator.php';
 
 class AuthController
 {
@@ -121,28 +122,12 @@ class AuthController
             $errors[] = 'Username must be 3–50 characters and may only contain letters, numbers, and underscores.';
         }
 
-        // 3. Password complexity requirements (8+ chars, uppercase, lowercase, number, special char)
+        // 3. Password complexity requirements (8+ chars, uppercase, lowercase, number, special char, confirmation match)
         if ($password !== '') {
-            if (strlen($password) < 8) {
-                $errors[] = 'Password must be at least 8 characters long.';
+            $pwErrors = PasswordValidator::validate($password, $confirmPassword !== '' ? $confirmPassword : null, 'Password');
+            foreach ($pwErrors as $pwErr) {
+                $errors[] = $pwErr;
             }
-            if (!preg_match('/[A-Z]/', $password)) {
-                $errors[] = 'Password must contain at least one uppercase letter (A–Z).';
-            }
-            if (!preg_match('/[a-z]/', $password)) {
-                $errors[] = 'Password must contain at least one lowercase letter (a–z).';
-            }
-            if (!preg_match('/[0-9]/', $password)) {
-                $errors[] = 'Password must contain at least one number (0–9).';
-            }
-            if (!preg_match('/[^a-zA-Z0-9]/', $password)) {
-                $errors[] = 'Password must contain at least one special character (e.g. !@#$%^&*).';
-            }
-        }
-
-        // 4. Password confirmation match
-        if ($password !== '' && $confirmPassword !== '' && $password !== $confirmPassword) {
-            $errors[] = 'Passwords do not match.';
         }
 
         // 5. Username uniqueness — only hit the DB if everything else is valid

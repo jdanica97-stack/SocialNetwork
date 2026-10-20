@@ -131,7 +131,7 @@ if (!empty($user['profile_image'])) {
         </div>
 
         <p class="edit-info-note">
-            Full name, username, and password can be changed from Account Settings on your <a href="/SocialNetwork/public/?url=profile">profile page</a>.
+            Full name, username, and password can be changed from Manage Account on your <a href="/SocialNetwork/public/?url=profile">profile page</a>.
         </p>
 
     </div>

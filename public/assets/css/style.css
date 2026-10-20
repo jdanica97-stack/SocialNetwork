@@ -2029,10 +2029,26 @@ footer.footer.bg-primary { display: none !important; }
   transform: translateY(0);
 }
 
+#manageAccountToggleBtn.active,
 #accountSettingsToggleBtn.active {
   background: var(--surface-hover) !important;
   color: var(--primary) !important;
   border-color: var(--primary) !important;
+}
+
+.manage-account-card {
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.35);
+  border-radius: var(--radius-card) !important;
+}
+
+.manage-account-section {
+  background: rgba(255, 255, 255, 0.02) !important;
+  border: 1px solid var(--border) !important;
+  transition: border-color var(--transition-fast), background var(--transition-fast);
+}
+
+.manage-account-section:hover {
+  border-color: rgba(255, 255, 255, 0.15) !important;
 }
 
 /* Comment submit loading state */
