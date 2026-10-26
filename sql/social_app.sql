@@ -104,11 +104,67 @@ CREATE TABLE IF NOT EXISTS post_images (
     id         INT          NOT NULL AUTO_INCREMENT,
     post_id    INT          NOT NULL,
     image_path VARCHAR(255) NOT NULL,
+    sort_order INT          NOT NULL DEFAULT 0,
     created_at TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (id),
     KEY idx_post_images_post (post_id),
     CONSTRAINT fk_post_images_post
         FOREIGN KEY (post_id) REFERENCES posts (id)
+        ON DELETE CASCADE
+) ENGINE=InnoDB
+  DEFAULT CHARSET=utf8mb4
+  COLLATE=utf8mb4_unicode_ci;
+
+-- ─── 6. messages ─────────────────────────────────────────────────────────────
+-- Stores direct messages between users.
+-- Relationships:
+--   sender_id    → users.id (ON DELETE CASCADE)
+--   recipient_id → users.id (ON DELETE CASCADE)
+
+CREATE TABLE IF NOT EXISTS messages (
+    id           INT          NOT NULL AUTO_INCREMENT,
+    sender_id    INT          NOT NULL,
+    recipient_id INT          NOT NULL,
+    message      TEXT         NOT NULL,
+    is_read      TINYINT(1)   NOT NULL DEFAULT 0,
+    created_at   TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (id),
+    KEY idx_messages_sender_recipient (sender_id, recipient_id),
+    KEY idx_messages_recipient_read (recipient_id, is_read),
+    KEY idx_messages_created (created_at),
+    CONSTRAINT fk_messages_sender
+        FOREIGN KEY (sender_id) REFERENCES users (id)
+        ON DELETE CASCADE,
+    CONSTRAINT fk_messages_recipient
+        FOREIGN KEY (recipient_id) REFERENCES users (id)
+        ON DELETE CASCADE
+) ENGINE=InnoDB
+  DEFAULT CHARSET=utf8mb4
+  COLLATE=utf8mb4_unicode_ci;
+
+-- ─── 7. notifications ────────────────────────────────────────────────────────
+-- Stores system event notifications for users (e.g. new messages, likes, comments).
+-- Relationships:
+--   user_id  → users.id (recipient, ON DELETE CASCADE)
+--   actor_id → users.id (performer of action, ON DELETE CASCADE)
+
+CREATE TABLE IF NOT EXISTS notifications (
+    id         INT          NOT NULL AUTO_INCREMENT,
+    user_id    INT          NOT NULL,
+    actor_id   INT          DEFAULT NULL,
+    type       VARCHAR(50)  NOT NULL,
+    target_id  INT          DEFAULT NULL,
+    message    TEXT         NOT NULL,
+    is_read    TINYINT(1)   NOT NULL DEFAULT 0,
+    created_at TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (id),
+    KEY idx_notifications_user_read (user_id, is_read),
+    KEY idx_notifications_created (created_at),
+    CONSTRAINT fk_notifications_user
+        FOREIGN KEY (user_id) REFERENCES users (id)
+        ON DELETE CASCADE,
+    CONSTRAINT fk_notifications_actor
+        FOREIGN KEY (actor_id) REFERENCES users (id)
         ON DELETE CASCADE
 ) ENGINE=InnoDB
   DEFAULT CHARSET=utf8mb4

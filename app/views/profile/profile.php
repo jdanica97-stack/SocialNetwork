@@ -126,7 +126,7 @@ if (!empty($user['profile_image'])) {
                                     <div class="row g-4 align-items-stretch">
                                         <!-- Left Section: Account Information -->
                                         <div class="col-12 col-lg-6 d-flex flex-column">
-                                            <div class="manage-account-section p-3 p-md-4 rounded-3 d-flex flex-column h-100" style="background: var(--surface-card-subtle, rgba(255,255,255,0.02)); border: 1px solid var(--border);">
+                                            <div class="manage-account-section p-3 p-md-4 rounded-3 d-flex flex-column h-100">
                                                 <div class="d-flex align-items-center gap-2 mb-3">
                                                     <div style="width:30px;height:30px;border-radius:8px;background:var(--surface-input);display:flex;align-items:center;justify-content:center;color:var(--fg);">
                                                         <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
@@ -187,7 +187,7 @@ if (!empty($user['profile_image'])) {
 
                                         <!-- Right Section: Change Password -->
                                         <div class="col-12 col-lg-6 d-flex flex-column">
-                                            <div class="manage-account-section p-3 p-md-4 rounded-3 d-flex flex-column h-100" style="background: var(--surface-card-subtle, rgba(255,255,255,0.02)); border: 1px solid var(--border);">
+                                            <div class="manage-account-section p-3 p-md-4 rounded-3 d-flex flex-column h-100">
                                                 <div class="d-flex align-items-center gap-2 mb-3">
                                                     <div style="width:30px;height:30px;border-radius:8px;background:var(--surface-input);display:flex;align-items:center;justify-content:center;color:var(--fg);">
                                                         <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>

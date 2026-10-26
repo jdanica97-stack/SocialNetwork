@@ -281,6 +281,48 @@ if ($url === 'likes/toggle' || $url === 'likes/like' || $url === 'likes/unlike' 
     exit;
 }
 
+// ── Messages Routes ───────────────────────────────────────────────────────────
+if ($url === 'messages' || str_starts_with($url, 'messages/')) {
+    require_once BASE_PATH . '/app/controllers/MessageController.php';
+    $msgCtrl = new MessageController();
+
+    if ($url === 'messages/send') {
+        $msgCtrl->send();
+        exit;
+    }
+
+    if ($url === 'messages/fetch') {
+        $msgCtrl->fetch();
+        exit;
+    }
+
+    $msgCtrl->index();
+    exit;
+}
+
+// ── Notifications Routes ──────────────────────────────────────────────────────
+if ($url === 'notifications' || str_starts_with($url, 'notifications/')) {
+    require_once BASE_PATH . '/app/controllers/NotificationController.php';
+    $notifCtrl = new NotificationController();
+
+    if ($url === 'notifications/read') {
+        $notifCtrl->read();
+        exit;
+    }
+
+    if ($url === 'notifications/read-all') {
+        $notifCtrl->readAll();
+        exit;
+    }
+
+    if ($url === 'notifications/delete') {
+        $notifCtrl->delete();
+        exit;
+    }
+
+    $notifCtrl->index();
+    exit;
+}
 
 // ── 404 — Unknown Route ───────────────────────────────────────────────────────
 http_response_code(404);

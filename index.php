@@ -3,5 +3,5 @@
  * Root index.php
  * Redirects http://localhost/SocialNetwork/ to the public entry point.
  */
-header('Location: /SocialNetwork/public/index.php');
+header('Location: public/index.php');
 exit;

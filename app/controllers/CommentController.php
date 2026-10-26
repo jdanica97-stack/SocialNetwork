@@ -19,20 +19,23 @@
 require_once BASE_PATH . '/config/database.php';
 require_once BASE_PATH . '/app/models/CommentModel.php';
 require_once BASE_PATH . '/app/models/PostModel.php';
+require_once BASE_PATH . '/app/models/NotificationModel.php';
 require_once BASE_PATH . '/app/helpers/Csrf.php';
 
 class CommentController
 {
     private CommentModel $commentModel;
     private PostModel $postModel;
+    private NotificationModel $notificationModel;
 
     public function __construct()
     {
         Csrf::initSession();
 
         $db = getDBConnection();
-        $this->commentModel = new CommentModel($db);
-        $this->postModel    = new PostModel($db);
+        $this->commentModel      = new CommentModel($db);
+        $this->postModel         = new PostModel($db);
+        $this->notificationModel = new NotificationModel($db);
     }
 
     // ─── Authentication Guard ─────────────────────────────────────────────────
@@ -145,6 +148,18 @@ class CommentController
         $result = $this->commentModel->createComment($postId, $userId, $content);
 
         if ($result !== false) {
+            // Notify post author if commented by another user
+            if ((int) $post['user_id'] !== $userId) {
+                $commenterName = !empty($_SESSION['user_full_name']) ? $_SESSION['user_full_name'] : 'Someone';
+                $this->notificationModel->createNotification(
+                    (int) $post['user_id'],
+                    $userId,
+                    'comment',
+                    $postId,
+                    $commenterName . ' commented on your post.'
+                );
+            }
+
             if ($isAjax) {
                 $comment = $this->commentModel->findById((int) $result);
                 $totalCount = $this->commentModel->countByPostId($postId);

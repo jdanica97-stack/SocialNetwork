@@ -19,12 +19,12 @@
 
 // ─── Database Credentials ─────────────────────────────────────────────────────
 
-define('DB_HOST',    '127.0.0.1');
-define('DB_PORT',    '3306');
-define('DB_NAME',    'social_app');
-define('DB_USER',    'root');
-define('DB_PASS',    '');
-define('DB_CHARSET', 'utf8mb4');
+if (!defined('DB_HOST'))    define('DB_HOST',    getenv('DB_HOST') ?: '127.0.0.1');
+if (!defined('DB_PORT'))    define('DB_PORT',    getenv('DB_PORT') ?: '3306');
+if (!defined('DB_NAME'))    define('DB_NAME',    getenv('DB_NAME') ?: 'social_app');
+if (!defined('DB_USER'))    define('DB_USER',    getenv('DB_USER') ?: 'root');
+if (!defined('DB_PASS'))    define('DB_PASS',    getenv('DB_PASS') !== false ? getenv('DB_PASS') : '');
+if (!defined('DB_CHARSET')) define('DB_CHARSET', getenv('DB_CHARSET') ?: 'utf8mb4');
 
 // ─── PDO Connection Function ──────────────────────────────────────────────────
 
@@ -68,11 +68,42 @@ function getDBConnection(): PDO
         try {
             $pdo = new PDO($dsn, DB_USER, DB_PASS, $options);
         } catch (PDOException $e) {
+            // If database does not exist (Error 1049), attempt auto-creation & schema import
+            if ($e->getCode() === 1049 || str_contains($e->getMessage(), 'Unknown database')) {
+                try {
+                    $serverDsn = sprintf('mysql:host=%s;port=%s;charset=%s', DB_HOST, DB_PORT, DB_CHARSET);
+                    $serverPdo = new PDO($serverDsn, DB_USER, DB_PASS, $options);
+                    $serverPdo->exec(sprintf(
+                        "CREATE DATABASE IF NOT EXISTS `%s` CHARACTER SET %s COLLATE %s_unicode_ci;",
+                        DB_NAME,
+                        DB_CHARSET,
+                        DB_CHARSET === 'utf8mb4' ? 'utf8mb4' : 'utf8'
+                    ));
+
+                    // Reconnect to the database
+                    $pdo = new PDO($dsn, DB_USER, DB_PASS, $options);
+
+                    // Import initial schema if available
+                    $sqlPath = dirname(__DIR__) . '/sql/social_app.sql';
+                    if (file_exists($sqlPath)) {
+                        $sql = file_get_contents($sqlPath);
+                        if (!empty($sql)) {
+                            $pdo->exec($sql);
+                        }
+                    }
+
+                    return $pdo;
+                } catch (PDOException $initEx) {
+                    error_log('Database auto-initialization failed: ' . $initEx->getMessage());
+                    die('Database connection error: Could not initialize database "' . htmlspecialchars(DB_NAME) . '". Details: ' . htmlspecialchars($initEx->getMessage()));
+                }
+            }
+
             // Log the real error message for the developer (server-side only)
             error_log('Database connection failed: ' . $e->getMessage());
 
-            // Show a safe, generic message to the user — never expose credentials
-            die('A database connection error occurred. Please try again later.');
+            // Show an informative error message
+            die('Database connection error: ' . htmlspecialchars($e->getMessage()));
         }
     }
 

@@ -57,12 +57,12 @@
                     <p style="max-width: 500px; margin-inline: auto; margin-bottom: 28px; color: var(--fg-muted); font-size: 1rem; line-height: 1.65;">
                         A simple platform where users can create profiles, share posts, comment, and interact with other users.
                     </p>
-                    <div class="btn-group-hero">
-                        <a href="/SocialNetwork/public/?url=auth/register" class="btn btn-primary btn-lg">
-                            Register
-                        </a>
-                        <a href="/SocialNetwork/public/?url=auth/login" class="btn btn-ghost btn-lg">
+                    <div class="btn-group-hero d-flex justify-content-center align-items-center gap-3 flex-wrap">
+                        <a href="/SocialNetwork/public/?url=auth/login" class="btn btn-primary btn-lg px-4">
                             Login
+                        </a>
+                        <a href="/SocialNetwork/public/?url=auth/register" class="btn btn-ghost btn-lg px-4">
+                            Register
                         </a>
                     </div>
                 </div>
@@ -112,13 +112,6 @@
                                     </p>
                                 </div>
                             </div>
-                        </div>
-
-                        <div class="text-center pt-4 mt-2">
-                            <p class="small text-muted mb-2">Ready to join our community?</p>
-                            <a href="/SocialNetwork/public/?url=auth/register" class="btn btn-primary btn-sm px-4">
-                                Create an Account
-                            </a>
                         </div>
                     </div>
                 </div>
