@@ -147,7 +147,6 @@ if (isset($_SESSION['user_id'])) {
             loading="eager"
           >
         </div>
-        <!-- "Orbit" Brand Name beside logo -->
         <span class="logo-title">Orbit</span>
       </a>
     </div>
@@ -182,21 +181,6 @@ if (isset($_SESSION['user_id'])) {
           <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
           <span class="nav-label">Home</span>
         </a>
-      </li>
-
-      <!-- Theme toggle -->
-      <li>
-        <button
-          class="halo-nav-btn"
-          id="themeToggle"
-          aria-label="Toggle dark mode"
-          title="Toggle theme"
-        >
-          <!-- Moon (shown in light mode) -->
-          <svg class="icon-moon" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
-          <!-- Sun (shown in dark mode) -->
-          <svg class="icon-sun" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
-        </button>
       </li>
 
       <?php if (isset($_SESSION['user_id'])): ?>
@@ -268,27 +252,23 @@ if (isset($_SESSION['user_id'])) {
               <span>View Profile</span>
             </a>
 
-            <!-- 2. Messages -->
-            <a href="/SocialNetwork/public/?url=messages" class="profile-dropdown-link" role="menuitem">
-              <div class="profile-dropdown-icon">
-                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-              </div>
-              <span>Messages</span>
-              <?php if (!empty($navUnreadMessages) && $navUnreadMessages > 0): ?>
-                <span class="badge rounded-pill bg-primary ms-auto" style="font-size: 0.65rem; padding: 2px 6px;"><?= $navUnreadMessages ?></span>
-              <?php endif; ?>
-            </a>
+            <div class="profile-dropdown-divider"></div>
 
-            <!-- 3. Notifications -->
-            <a href="/SocialNetwork/public/?url=notifications" class="profile-dropdown-link" role="menuitem">
+            <!-- Theme Toggle -->
+            <button
+              type="button"
+              class="profile-dropdown-link w-100 text-start border-0 bg-transparent"
+              id="themeToggle"
+              role="menuitem"
+              aria-label="Toggle dark mode"
+            >
               <div class="profile-dropdown-icon">
-                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+                <svg class="icon-moon" xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+                <svg class="icon-sun" xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
               </div>
-              <span>Notifications</span>
-              <?php if (!empty($navUnreadNotifications) && $navUnreadNotifications > 0): ?>
-                <span class="badge rounded-pill bg-primary ms-auto" style="font-size: 0.65rem; padding: 2px 6px;"><?= $navUnreadNotifications ?></span>
-              <?php endif; ?>
-            </a>
+              <span class="icon-moon-label">Dark Mode</span>
+              <span class="icon-sun-label">Light Mode</span>
+            </button>
 
             <div class="profile-dropdown-divider"></div>
 

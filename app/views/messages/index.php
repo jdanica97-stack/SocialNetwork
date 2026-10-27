@@ -39,10 +39,10 @@ $currentUserId = (int) $_SESSION['user_id'];
 
         <!-- ── Messages Container Card ──────────────────────────────────────── -->
         <div class="card glass messages-main-card fade-up visible">
-            <div class="row g-0 messages-layout">
+            <div class="row g-0 messages-layout" id="messagesLayout">
 
                 <!-- ── Left Column: Conversations Sidebar ─────────────────────── -->
-                <div class="col-12 col-md-5 col-lg-4 messages-sidebar border-end" style="border-color: var(--border) !important;">
+                <div class="col-12 col-md-5 col-lg-4 messages-sidebar border-end" id="messagesSidebar" style="border-color: var(--border) !important;">
 
                     <!-- Sidebar Header: Title + New Chat Button -->
                     <div class="p-3 border-bottom d-flex align-items-center justify-content-between" style="border-color: var(--border) !important;">
@@ -54,6 +54,22 @@ $currentUserId = (int) $_SESSION['user_id'];
                             <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
                             <span class="d-none d-sm-inline ms-1 small">New Chat</span>
                         </button>
+                    </div>
+
+                    <!-- Search Conversations Filter -->
+                    <div class="p-2 border-bottom" style="border-color: var(--border) !important;">
+                        <div class="position-relative">
+                            <input
+                                type="search"
+                                id="conversationSearchInput"
+                                class="form-control form-control-sm"
+                                placeholder="Search conversations..."
+                                autocomplete="off"
+                                style="border-radius: 20px; padding-left: 32px; font-size: 0.82rem; background: var(--surface-input); border-color: var(--border); color: var(--fg);"
+                                aria-label="Search conversations"
+                            >
+                            <svg class="position-absolute" style="left: 10px; top: 50%; transform: translateY(-50%); pointer-events: none; opacity: 0.5; color: var(--fg-muted);" xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                        </div>
                     </div>
 
                     <!-- Conversations List -->
@@ -121,7 +137,7 @@ $currentUserId = (int) $_SESSION['user_id'];
                 </div>
 
                 <!-- ── Right Column: Active Conversation / Chat Window ─────────── -->
-                <div class="col-12 col-md-7 col-lg-8 messages-content d-flex flex-column">
+                <div class="col-12 col-md-7 col-lg-8 messages-content d-flex flex-column" id="messagesContent">
 
                     <?php if ($activePartner !== null): ?>
                         <?php
@@ -135,6 +151,10 @@ $currentUserId = (int) $_SESSION['user_id'];
                         <!-- Chat Header -->
                         <div class="chat-header p-3 border-bottom d-flex align-items-center justify-content-between" style="border-color: var(--border) !important;">
                             <div class="d-flex align-items-center gap-3">
+                                <!-- Mobile Back button -->
+                                <button type="button" class="btn btn-ghost btn-sm px-2 py-1 btn-back-to-list me-1" id="backToListBtn" aria-label="Back to conversations">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
+                                </button>
                                 <a href="/SocialNetwork/public/?url=profile&id=<?= (int)$activePartner['id'] ?>" class="text-decoration-none">
                                     <img src="<?= htmlspecialchars($partnerAvatar, ENT_QUOTES, 'UTF-8') ?>" alt="<?= htmlspecialchars($activePartner['full_name'], ENT_QUOTES, 'UTF-8') ?>" class="rounded-circle" width="38" height="38" style="object-fit: cover;">
                                 </a>
@@ -245,6 +265,22 @@ $currentUserId = (int) $_SESSION['user_id'];
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body p-0">
+                <!-- Modal User Search Filter -->
+                <div class="p-2 border-bottom" style="border-color: var(--border) !important;">
+                    <div class="position-relative">
+                        <input
+                            type="search"
+                            id="modalUserSearchInput"
+                            class="form-control form-control-sm"
+                            placeholder="Search people by name..."
+                            autocomplete="off"
+                            style="border-radius: 20px; padding-left: 32px; font-size: 0.82rem; background: var(--surface-input); border-color: var(--border); color: var(--fg);"
+                            aria-label="Search people"
+                        >
+                        <svg class="position-absolute" style="left: 10px; top: 50%; transform: translateY(-50%); pointer-events: none; opacity: 0.5; color: var(--fg-muted);" xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                    </div>
+                </div>
+
                 <?php if (empty($availableUsers)): ?>
                     <div class="p-4 text-center text-muted small">
                         No other users found on the platform yet.
@@ -282,7 +318,46 @@ $currentUserId = (int) $_SESSION['user_id'];
 document.addEventListener('DOMContentLoaded', function () {
     'use strict';
 
-    // ── 1. Clean up any leftover modal backdrops from bfcache or stalled transitions ──
+    // ── Mobile panel switching ──
+    var messagesLayout = document.getElementById('messagesLayout');
+    var backBtn        = document.getElementById('backToListBtn');
+    var chatHistory    = document.getElementById('chatHistory');
+
+    function isMobile() { return window.innerWidth < 768; }
+
+    function openChatPanel() {
+        if (messagesLayout && isMobile()) messagesLayout.classList.add('chat-open');
+    }
+    function closeChatPanel() {
+        if (messagesLayout) messagesLayout.classList.remove('chat-open');
+    }
+
+    // Auto-open chat panel on load if a conversation is already selected
+    if (chatHistory && isMobile()) openChatPanel();
+
+    // Back button returns to conversation list
+    if (backBtn) {
+        backBtn.addEventListener('click', function () { closeChatPanel(); });
+    }
+
+    // Tapping a conversation item navigates (href) and on mobile also ensures panel opens
+    document.querySelectorAll('.conversation-item').forEach(function (item) {
+        item.addEventListener('click', function () {
+            document.querySelectorAll('.conversation-item').forEach(function (ci) {
+                ci.classList.remove('active');
+            });
+            item.classList.add('active');
+            // On mobile, the href navigation triggers a page load which will auto-open the panel.
+        });
+    });
+
+    // ── 1. Relocate #newChatModal to document.body ──
+    var newChatModal = document.getElementById('newChatModal');
+    if (newChatModal && newChatModal.parentNode !== document.body) {
+        document.body.appendChild(newChatModal);
+    }
+
+    // ── 2. Clean up any leftover modal backdrops from bfcache or transitions ──
     function cleanModalBackdrops() {
         document.querySelectorAll('.modal-backdrop').forEach(function (el) {
             el.remove();
@@ -295,32 +370,47 @@ document.addEventListener('DOMContentLoaded', function () {
 
     window.addEventListener('pageshow', function () {
         cleanModalBackdrops();
-        var modalEl = document.getElementById('newChatModal');
-        if (modalEl) {
-            modalEl.classList.remove('show');
-            modalEl.style.display = 'none';
-            modalEl.setAttribute('aria-hidden', 'true');
+        if (newChatModal) {
+            newChatModal.classList.remove('show');
+            newChatModal.style.display = 'none';
+            newChatModal.setAttribute('aria-hidden', 'true');
         }
+        // Re-open chat panel if conversation still active (bfcache restore)
+        if (chatHistory && isMobile()) openChatPanel();
     });
 
-    // ── 2. Robust Vanilla JS Modal Controls for #newChatModal ──
-    var newChatModal = document.getElementById('newChatModal');
-
+    // ── 3. Robust Vanilla JS Modal Controls for #newChatModal ──
     function openNewChatModal() {
         if (!newChatModal) return;
         cleanModalBackdrops();
+
         newChatModal.style.display = 'block';
         void newChatModal.offsetHeight; // Force reflow
         newChatModal.classList.add('show');
         newChatModal.setAttribute('aria-hidden', 'false');
         document.body.classList.add('modal-open');
 
+        // Create clean backdrop
         var backdrop = document.createElement('div');
         backdrop.className = 'modal-backdrop fade show';
         backdrop.id = 'newChatModalBackdrop';
         document.body.appendChild(backdrop);
 
-        backdrop.addEventListener('click', closeNewChatModal);
+        backdrop.addEventListener('click', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            closeNewChatModal();
+        });
+
+        // Reset and focus user search input in modal if present
+        var userSearchInput = document.getElementById('modalUserSearchInput');
+        if (userSearchInput) {
+            userSearchInput.value = '';
+            filterModalUsers('');
+            setTimeout(function () {
+                userSearchInput.focus();
+            }, 100);
+        }
     }
 
     function closeNewChatModal() {
@@ -331,7 +421,7 @@ document.addEventListener('DOMContentLoaded', function () {
         cleanModalBackdrops();
     }
 
-    // Modal open buttons
+    // Modal open triggers (Buttons with data-bs-target or data-target="#newChatModal")
     document.querySelectorAll('[data-bs-target="#newChatModal"], [data-target="#newChatModal"]').forEach(function (btn) {
         btn.addEventListener('click', function (e) {
             e.preventDefault();
@@ -340,23 +430,24 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
-    // Modal close buttons & links
+    // Modal close triggers (&times; close buttons)
     if (newChatModal) {
-        newChatModal.querySelectorAll('[data-bs-dismiss="modal"], [data-dismiss="modal"]').forEach(function (btn) {
+        newChatModal.querySelectorAll('[data-bs-dismiss="modal"], [data-dismiss="modal"], .btn-close').forEach(function (btn) {
             btn.addEventListener('click', function (e) {
                 e.preventDefault();
+                e.stopPropagation();
                 closeNewChatModal();
             });
         });
 
-        // Close on clicking outside modal dialog
+        // Close on clicking outside modal dialog (on the modal container or dialog margin)
         newChatModal.addEventListener('click', function (e) {
-            if (e.target === newChatModal) {
+            if (e.target === newChatModal || e.target.classList.contains('modal-dialog')) {
                 closeNewChatModal();
             }
         });
 
-        // Close when clicking user contact link before navigating
+        // Close when clicking user contact link before navigating to avoid trapped backdrops
         newChatModal.querySelectorAll('a[href*="url=messages"]').forEach(function (link) {
             link.addEventListener('click', function () {
                 closeNewChatModal();
@@ -371,7 +462,82 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
-    // ── 3. Auto-scroll chat history helper ──
+    // ── 4. Real-time Search / Filter in Conversations List (Sidebar) ──
+    var convoSearchInput = document.getElementById('conversationSearchInput');
+    if (convoSearchInput) {
+        convoSearchInput.addEventListener('input', function () {
+            var q = this.value.trim().toLowerCase();
+            var items = document.querySelectorAll('.conversations-list .conversation-item');
+            var matchCount = 0;
+            items.forEach(function (item) {
+                var nameEl = item.querySelector('.conversation-name');
+                var textEl = item.querySelector('.conversation-snippet');
+                var name = nameEl ? nameEl.textContent.toLowerCase() : '';
+                var text = textEl ? textEl.textContent.toLowerCase() : '';
+                if (q === '' || name.indexOf(q) !== -1 || text.indexOf(q) !== -1) {
+                    item.style.display = '';
+                    matchCount++;
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+
+            var noMatchEl = document.getElementById('convoNoMatchNotice');
+            if (matchCount === 0 && q !== '') {
+                if (!noMatchEl) {
+                    noMatchEl = document.createElement('div');
+                    noMatchEl.id = 'convoNoMatchNotice';
+                    noMatchEl.className = 'p-4 text-center text-muted small';
+                    noMatchEl.textContent = 'No matching conversations found.';
+                    var list = document.querySelector('.conversations-list');
+                    if (list) list.appendChild(noMatchEl);
+                }
+                noMatchEl.style.display = '';
+            } else if (noMatchEl) {
+                noMatchEl.style.display = 'none';
+            }
+        });
+    }
+
+    // ── 5. Real-time Search / Filter in User Selector (Modal) ──
+    function filterModalUsers(q) {
+        var modalUserItems = newChatModal ? newChatModal.querySelectorAll('.list-group-item') : [];
+        var matchCount = 0;
+        var query = (q || '').trim().toLowerCase();
+        modalUserItems.forEach(function (item) {
+            var text = item.textContent.toLowerCase();
+            if (query === '' || text.indexOf(query) !== -1) {
+                item.style.display = '';
+                matchCount++;
+            } else {
+                item.style.display = 'none';
+            }
+        });
+
+        var noUserMatchEl = document.getElementById('modalNoUserMatchNotice');
+        if (matchCount === 0 && query !== '') {
+            if (!noUserMatchEl) {
+                noUserMatchEl = document.createElement('div');
+                noUserMatchEl.id = 'modalNoUserMatchNotice';
+                noUserMatchEl.className = 'p-4 text-center text-muted small';
+                noUserMatchEl.textContent = 'No people found matching your search.';
+                var container = newChatModal ? newChatModal.querySelector('.list-group') : null;
+                if (container) container.appendChild(noUserMatchEl);
+            }
+            noUserMatchEl.style.display = '';
+        } else if (noUserMatchEl) {
+            noUserMatchEl.style.display = 'none';
+        }
+    }
+
+    var modalUserSearchInput = document.getElementById('modalUserSearchInput');
+    if (modalUserSearchInput) {
+        modalUserSearchInput.addEventListener('input', function () {
+            filterModalUsers(this.value);
+        });
+    }
+
+    // ── 6. Auto-scroll Chat History Helper ──
     var chatBox = document.getElementById('chatHistory');
     function scrollToBottom(smooth) {
         if (!chatBox) return;
@@ -383,7 +549,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
     scrollToBottom(false);
 
-    // ── 4. Message Composer: Auto-grow, Enter to Send, AJAX Submission ──
+    // ── 7. Message Composer: Auto-grow, Enter to Send, AJAX Submission ──
     var msgInput   = document.getElementById('messageInput');
     var sendForm   = document.getElementById('messageSendForm');
     var sendBtn    = sendForm ? sendForm.querySelector('button[type="submit"]') : null;
@@ -400,18 +566,18 @@ document.addEventListener('DOMContentLoaded', function () {
     if (msgInput) {
         msgInput.addEventListener('input', adjustInputHeight);
 
-        // Enter key to send (Shift+Enter for newline)
+        // Enter key to send (Shift+Enter for newline, ignore during IME composition)
         msgInput.addEventListener('keydown', function (e) {
-            if (e.key === 'Enter' && !e.shiftKey) {
+            if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) {
                 e.preventDefault();
                 sendMessage();
             }
         });
 
-        // Focus input automatically when chat is open
+        // Focus input automatically when chat is loaded
         setTimeout(function () {
             if (msgInput) msgInput.focus();
-        }, 150);
+        }, 100);
     }
 
     function escapeHtml(text) {
@@ -421,7 +587,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function appendMessageBubble(messageText, timeStr, isMine, msgId) {
-        if (!chatBox) return;
+        if (!chatBox) return null;
 
         // Remove empty placeholder state if present
         var emptyPlaceholder = chatBox.querySelector('.text-muted.my-auto');
@@ -448,6 +614,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         chatBox.appendChild(row);
         scrollToBottom(true);
+        return row;
     }
 
     function updateSidebarSnippet(text, isMine) {
@@ -490,9 +657,8 @@ document.addEventListener('DOMContentLoaded', function () {
         }, 3200);
     }
 
-    var isSending = false;
     function sendMessage() {
-        if (!sendForm || !msgInput || isSending) return;
+        if (!sendForm || !msgInput) return;
 
         var messageText = msgInput.value.trim();
         if (messageText.length === 0) {
@@ -505,7 +671,12 @@ document.addEventListener('DOMContentLoaded', function () {
         var recipientInput = sendForm.querySelector('input[name="recipient_id"]');
         var recipientId = recipientInput ? recipientInput.value : partnerId;
 
-        // Current formatted time for instant optimistic display
+        if (!recipientId || recipientId === '0') {
+            showChatToast('Please select a recipient to send your message.', true);
+            return;
+        }
+
+        // Format current time
         var now = new Date();
         var hours = now.getHours();
         var minutes = now.getMinutes();
@@ -521,13 +692,11 @@ document.addEventListener('DOMContentLoaded', function () {
         adjustInputHeight();
 
         // Optimistically render bubble
-        appendMessageBubble(messageText, timeStr, true, 0);
+        var tempBubble = appendMessageBubble(messageText, timeStr, true, 'temp-' + Date.now());
         updateSidebarSnippet(messageText, true);
 
-        isSending = true;
         if (sendBtn) {
-            sendBtn.disabled = true;
-            sendBtn.style.opacity = '0.6';
+            sendBtn.style.opacity = '0.7';
         }
 
         var formData = new FormData();
@@ -561,16 +730,21 @@ document.addEventListener('DOMContentLoaded', function () {
                     lastMsgId = newId;
                     if (chatBox) chatBox.setAttribute('data-last-id', lastMsgId);
                 }
+                if (tempBubble) {
+                    tempBubble.setAttribute('data-msg-id', newId);
+                }
             }
         })
         .catch(function (err) {
             console.error('Send message error:', err);
             showChatToast(err.message || 'Unable to send message. Please try again.', true);
+            if (tempBubble) {
+                tempBubble.remove();
+            }
             msgInput.value = originalText;
             adjustInputHeight();
         })
         .finally(function () {
-            isSending = false;
             if (sendBtn) {
                 sendBtn.disabled = false;
                 sendBtn.style.opacity = '';
@@ -589,7 +763,7 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // ── 5. Real-time Incoming Message Polling (Non-blocking) ──
+    // ── 8. Real-time Incoming Message Polling (Non-blocking) ──
     if (partnerId > 0 && chatBox) {
         setInterval(function () {
             if (document.hidden) return; // Skip when browser tab is inactive
