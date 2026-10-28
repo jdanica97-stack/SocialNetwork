@@ -50,14 +50,14 @@
 
                 <!-- Welcome Hero -->
                 <div class="hero-home mb-4">
-                    <span class="badge mb-3" style="background: var(--surface-input); border: 1px solid var(--border); color: var(--fg-muted); padding: 6px 14px; font-weight: 500; font-size: 0.8rem; border-radius: var(--radius-pill);">
-                        Mini Social Network
+                    <span class="badge mb-3 hero-badge">
+                        Orbit Social Network
                     </span>
                     <h1 style="letter-spacing: -0.04em; margin-bottom: 16px;">Connect.<br>Share. Interact.</h1>
                     <p style="max-width: 500px; margin-inline: auto; margin-bottom: 28px; color: var(--fg-muted); font-size: 1rem; line-height: 1.65;">
                         A simple platform where users can create profiles, share posts, comment, and interact with other users.
                     </p>
-                    <div class="btn-group-hero d-flex justify-content-center align-items-center gap-3 flex-wrap">
+                    <div class="btn-group-hero">
                         <a href="/SocialNetwork/public/?url=auth/login" class="btn btn-primary btn-lg px-4">
                             Login
                         </a>
@@ -75,12 +75,12 @@
                             <h2 class="h5 mb-0" style="font-weight: 600; color: var(--fg);">About the Platform</h2>
                         </div>
                         <p class="text-muted mb-4" style="font-size: 0.92rem; line-height: 1.65;">
-                            Mini Social Network is a clean, distraction-free space built to share thoughts, stay connected, and engage with the community without noise or cluttered feeds.
+                            Orbit is a clean, distraction-free space built to share thoughts, stay connected, and engage with the community without noise or cluttered feeds.
                         </p>
 
                         <div class="row g-3">
                             <div class="col-12 col-md-4">
-                                <div class="p-3 rounded" style="background: var(--surface-input); border: 1px solid var(--border); height: 100%;">
+                                <div class="p-3 rounded feature-item" style="background: var(--surface-input); border: 1px solid var(--border); height: 100%;">
                                     <div class="mb-2 text-primary">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
                                     </div>
@@ -91,7 +91,7 @@
                                 </div>
                             </div>
                             <div class="col-12 col-md-4">
-                                <div class="p-3 rounded" style="background: var(--surface-input); border: 1px solid var(--border); height: 100%;">
+                                <div class="p-3 rounded feature-item" style="background: var(--surface-input); border: 1px solid var(--border); height: 100%;">
                                     <div class="mb-2 text-primary">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
                                     </div>
@@ -102,7 +102,7 @@
                                 </div>
                             </div>
                             <div class="col-12 col-md-4">
-                                <div class="p-3 rounded" style="background: var(--surface-input); border: 1px solid var(--border); height: 100%;">
+                                <div class="p-3 rounded feature-item" style="background: var(--surface-input); border: 1px solid var(--border); height: 100%;">
                                     <div class="mb-2 text-primary">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
                                     </div>

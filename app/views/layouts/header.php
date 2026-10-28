@@ -55,16 +55,6 @@ if (isset($_SESSION['user_id'])) {
     } else {
         $navUserAvatar = 'https://ui-avatars.com/api/?name=' . rawurlencode($navUserName) . '&size=120&background=111113&color=f5f5f7&rounded=true&bold=true';
     }
-
-    // Load unread counts for messages and notifications
-    require_once BASE_PATH . '/config/database.php';
-    require_once BASE_PATH . '/app/models/MessageModel.php';
-    require_once BASE_PATH . '/app/models/NotificationModel.php';
-    $navDb = getDBConnection();
-    $navMsgModel   = new MessageModel($navDb);
-    $navNotifModel = new NotificationModel($navDb);
-    $navUnreadMessages      = $navMsgModel->countUnread($currentSessionUserId);
-    $navUnreadNotifications = $navNotifModel->countUnread($currentSessionUserId);
 }
 ?>
 <!DOCTYPE html>
@@ -147,6 +137,7 @@ if (isset($_SESSION['user_id'])) {
             loading="eager"
           >
         </div>
+        <!-- "Orbit" Brand Name beside logo -->
         <span class="logo-title">Orbit</span>
       </a>
     </div>
@@ -183,29 +174,22 @@ if (isset($_SESSION['user_id'])) {
         </a>
       </li>
 
+      <!-- Theme toggle -->
+      <li>
+        <button
+          class="halo-nav-btn"
+          id="themeToggle"
+          aria-label="Toggle dark mode"
+          title="Toggle theme"
+        >
+          <!-- Moon (shown in light mode) -->
+          <svg class="icon-moon" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+          <!-- Sun (shown in dark mode) -->
+          <svg class="icon-sun" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+        </button>
+      </li>
+
       <?php if (isset($_SESSION['user_id'])): ?>
-        <!-- Messages -->
-        <li>
-          <a href="/SocialNetwork/public/?url=messages" aria-label="Messages" class="position-relative">
-            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-            <span class="nav-label">Messages</span>
-            <?php if (!empty($navUnreadMessages) && $navUnreadMessages > 0): ?>
-              <span class="nav-badge-pill"><?= $navUnreadMessages > 9 ? '9+' : $navUnreadMessages ?></span>
-            <?php endif; ?>
-          </a>
-        </li>
-
-        <!-- Notifications -->
-        <li>
-          <a href="/SocialNetwork/public/?url=notifications" aria-label="Notifications" class="position-relative">
-            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
-            <span class="nav-label">Notifications</span>
-            <?php if (!empty($navUnreadNotifications) && $navUnreadNotifications > 0): ?>
-              <span class="nav-badge-pill"><?= $navUnreadNotifications > 9 ? '9+' : $navUnreadNotifications ?></span>
-            <?php endif; ?>
-          </a>
-        </li>
-
         <!-- Profile Dropdown at Top Right (logged-in users) -->
         <li class="position-relative profile-dropdown-wrapper" id="profileDropdownWrapper">
           <button
@@ -252,27 +236,7 @@ if (isset($_SESSION['user_id'])) {
               <span>View Profile</span>
             </a>
 
-            <div class="profile-dropdown-divider"></div>
-
-            <!-- Theme Toggle -->
-            <button
-              type="button"
-              class="profile-dropdown-link w-100 text-start border-0 bg-transparent"
-              id="themeToggle"
-              role="menuitem"
-              aria-label="Toggle dark mode"
-            >
-              <div class="profile-dropdown-icon">
-                <svg class="icon-moon" xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
-                <svg class="icon-sun" xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
-              </div>
-              <span class="icon-moon-label">Dark Mode</span>
-              <span class="icon-sun-label">Light Mode</span>
-            </button>
-
-            <div class="profile-dropdown-divider"></div>
-
-            <!-- 4. Sign Out -->
+            <!-- 2. Sign Out -->
             <a href="/SocialNetwork/public/?url=auth/logout" class="profile-dropdown-link profile-dropdown-logout" role="menuitem" id="dropdownLogoutLink">
               <div class="profile-dropdown-icon text-danger">
                 <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
@@ -281,6 +245,31 @@ if (isset($_SESSION['user_id'])) {
             </a>
           </div>
         </li>
+      <?php endif; ?>
+
+      <?php if (!isset($_SESSION['user_id'])): ?>
+        <?php
+          // If we are on the landing page (home / empty url), do not show redundant login/register links in top nav
+          $currentReqUrl = trim($_GET['url'] ?? '', '/');
+          $isLandingPage = ($currentReqUrl === '' || $currentReqUrl === 'home');
+        ?>
+        <?php if (!$isLandingPage): ?>
+          <!-- Login -->
+          <li>
+            <a href="/SocialNetwork/public/?url=auth/login" aria-label="Login">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+              <span class="nav-label">Login</span>
+            </a>
+          </li>
+
+          <!-- Register -->
+          <li>
+            <a href="/SocialNetwork/public/?url=auth/register" aria-label="Register">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
+              <span class="nav-label">Register</span>
+            </a>
+          </li>
+        <?php endif; ?>
       <?php endif; ?>
 
     </ul>
