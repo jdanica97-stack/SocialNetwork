@@ -30,13 +30,17 @@
   --bg:              #E9E9EB;
   --bg-alt:          #DDDDE0;
   --surface:         rgba(255,255,255,0.55);
+  --surface-glass:   rgba(255,255,255,0.88);
   --surface-hover:   rgba(255,255,255,0.74);
   --surface-input:   rgba(255,255,255,0.60);
+  --surface-card:        rgba(255,255,255,0.88);
+  --surface-card-subtle: rgba(255,255,255,0.55);
+  --surface-card-hover:  rgba(255,255,255,0.98);
   --border:          rgba(0,0,0,0.08);
   --border-strong:   rgba(0,0,0,0.13);
   --fg:              #111113;
-  --fg-muted:        #5B5B60;
-  --fg-faint:        #8A8A92;
+  --fg-muted:        #4A4A50;
+  --fg-faint:        #72727A;
   --btn-primary-bg:  #111113;
   --btn-primary-fg:  #F5F5F7;
   --btn-ghost-bd:    rgba(0,0,0,0.18);
@@ -55,8 +59,12 @@
   --bg:              #0B0B0D;
   --bg-alt:          #111114;
   --surface:         rgba(28,28,32,0.52);
+  --surface-glass:   rgba(14,14,18,0.88);
   --surface-hover:   rgba(38,38,44,0.70);
   --surface-input:   rgba(38,38,44,0.58);
+  --surface-card:        rgba(24,24,28,0.85);
+  --surface-card-subtle: rgba(38,38,44,0.50);
+  --surface-card-hover:  rgba(46,46,54,0.90);
   --border:          rgba(255,255,255,0.07);
   --border-strong:   rgba(255,255,255,0.12);
   --fg:              #F5F5F7;
@@ -118,7 +126,7 @@ img, svg { display: block; }
   position: fixed;
   inset: 0;
   pointer-events: none;
-  z-index: 0;
+  z-index: -1;
   overflow: hidden;
 }
 .blob {
@@ -163,13 +171,13 @@ img, svg { display: block; }
 main.container {
   flex: 1;
   position: relative;
-  z-index: 1;
+  z-index: auto;
   max-width: 720px;
   padding-top: 96px;
   padding-bottom: 60px;
 }
 
-.row.justify-content-center { position: relative; z-index: 1; }
+.row.justify-content-center { position: relative; z-index: auto; }
 
 
 /* ── 6. Navigation ─────────────────────────────────────────── */
@@ -219,26 +227,29 @@ main.container {
   align-items: center;
   gap: 10px;
   background: transparent;
-  border: 1px solid transparent;
-  border-radius: var(--radius-pill);
-  padding: 3px 10px 3px 3px;
+  border: none;
+  padding: 2px;
   cursor: pointer;
-  transition: background var(--transition), border-color var(--transition), transform var(--transition);
   text-decoration: none;
   color: var(--fg);
   font-family: inherit;
   user-select: none;
   line-height: 1;
+  /* No hover effect */
+  transition: none !important;
 }
 
-.logo-panel-btn:hover {
-  background: var(--surface-hover);
-  border-color: var(--border);
+.logo-panel-btn:hover,
+.logo-panel-btn:focus,
+.logo-panel-btn:active {
+  background: transparent !important;
+  opacity: 1 !important;
 }
 
 .logo-panel-btn:focus-visible {
   outline: 2px solid var(--fg);
-  outline-offset: 2px;
+  outline-offset: 3px;
+  border-radius: 6px;
 }
 
 .logo-panel-btn[aria-expanded="true"] {
@@ -251,10 +262,10 @@ main.container {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border-radius: 8px;
+  border-radius: 9px;
   overflow: hidden;
   background: #ffffff;
-  padding: 2px 4px;
+  padding: 4px 7px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
   border: 1px solid rgba(0, 0, 0, 0.06);
 }
@@ -266,11 +277,11 @@ main.container {
 
 /* Logo image sizing & automatic light/dark switching */
 .logo-img {
-  height: 30px;
+  height: 28px;
   width: auto;
-  max-width: 58px;
+  max-width: 44px;
   object-fit: contain;
-  border-radius: 6px;
+  border-radius: 4px;
   display: block;
   transition: opacity var(--transition);
 }
@@ -292,7 +303,7 @@ main.container {
 }
 
 .logo-title {
-  font-size: 0.95rem;
+  font-size: 1.05rem;
   font-weight: 700;
   letter-spacing: -0.02em;
   color: var(--fg);
@@ -390,7 +401,7 @@ main.container {
   right: 0;
   min-width: 220px;
   max-width: 280px;
-  background: var(--surface);
+  background: rgba(255, 255, 255, 0.96);
   backdrop-filter: blur(28px) saturate(160%);
   -webkit-backdrop-filter: blur(28px) saturate(160%);
   border: 1px solid var(--border);
@@ -492,6 +503,27 @@ main.container {
 .profile-dropdown-logout:hover .profile-dropdown-icon {
   color: #ef4444 !important;
 }
+
+/* Theme toggle inside profile dropdown — ensure it looks like a normal menu item */
+button.profile-dropdown-link {
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  background: transparent !important;
+  border: none !important;
+  color: var(--fg) !important;
+}
+
+button.profile-dropdown-link:hover {
+  background: var(--surface-hover) !important;
+  color: var(--fg) !important;
+}
+
+/* Show/hide the moon/sun label text to match current theme */
+.icon-moon-label { display: inline; }
+.icon-sun-label  { display: none; }
+[data-theme="dark"] .icon-moon-label { display: none; }
+[data-theme="dark"] .icon-sun-label  { display: inline; }
 
 
 
@@ -900,19 +932,7 @@ input[type="file"].form-control {
 
 .hero-home {
   text-align: center;
-  padding: 48px 0 32px;
-}
-
-.hero-home .hero-badge {
-  background: var(--surface-input);
-  border: 1px solid var(--border);
-  color: var(--fg-muted);
-  padding: 6px 16px;
-  font-weight: 500;
-  font-size: 0.82rem;
-  letter-spacing: 0.02em;
-  border-radius: var(--radius-pill);
-  display: inline-block;
+  padding: 60px 0 40px;
 }
 
 .hero-home h1 {
@@ -928,9 +948,9 @@ input[type="file"].form-control {
   font-size: 1rem;
   color: var(--fg-muted);
   font-weight: 300;
-  max-width: 480px;
+  max-width: 440px;
   margin-inline: auto;
-  margin-bottom: 32px;
+  margin-bottom: 36px;
   line-height: 1.65;
 }
 
@@ -938,22 +958,8 @@ input[type="file"].form-control {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 14px;
+  gap: 12px;
   flex-wrap: wrap;
-}
-
-.btn-group-hero .btn {
-  min-width: 140px;
-  transition: transform var(--transition), box-shadow var(--transition), opacity var(--transition), background var(--transition);
-}
-
-.feature-item {
-  transition: transform var(--transition), border-color var(--transition);
-}
-
-.feature-item:hover {
-  transform: translateY(-2px);
-  border-color: var(--border-strong) !important;
 }
 
 
@@ -1072,8 +1078,8 @@ footer.footer.bg-primary { display: none !important; }
   z-index: 1;
   border-top: 1px solid var(--border);
   text-align: center;
-  padding: 28px 20px;
-  font-size: 0.78rem;
+  padding: 10px 16px;
+  font-size: 0.75rem;
   color: var(--fg-faint);
 }
 
@@ -1628,12 +1634,26 @@ footer.footer.bg-primary { display: none !important; }
    Bootstrap adds/removes .show; we reset pointer-events cleanly here. */
 .modal {
   z-index: 2050 !important;
+  position: fixed !important;
+}
+
+.modal:not(.show) {
+  display: none !important;
+  pointer-events: none !important;
+  visibility: hidden !important;
+}
+
+.modal.show {
+  display: block !important;
+  pointer-events: auto !important;
+  visibility: visible !important;
 }
 
 /* Prevent the glass hover from changing the modal content background or
    creating an unwanted stacking context that traps pointer events */
 .modal-content.glass:hover,
-.modal-content.glass {
+.modal-content.glass,
+.modal-content {
   background: var(--surface) !important;
   backdrop-filter: blur(24px) !important;
   -webkit-backdrop-filter: blur(24px) !important;
@@ -1641,13 +1661,31 @@ footer.footer.bg-primary { display: none !important; }
 
 .modal-backdrop {
   z-index: 2040 !important;
+  position: fixed !important;
 }
 
-/* Ensure the dialog and its content always receive pointer events */
-.modal-dialog,
+.modal-backdrop:not(.show) {
+  display: none !important;
+  pointer-events: none !important;
+  visibility: hidden !important;
+}
+
+/* Modal dialog positioning & pointer events: dialog passes through, content captures clicks */
+.modal-dialog {
+  position: relative !important;
+  pointer-events: none !important;
+  z-index: 2055 !important;
+}
+
 .modal-content {
-  position: relative;
+  position: relative !important;
   pointer-events: auto !important;
+  z-index: 2060 !important;
+}
+
+.image-lightbox-modal:not(.show) {
+  display: none !important;
+  pointer-events: none !important;
 }
 
 /* ── 24. Comment Kebab Menu ─────────────────────────────────── */
@@ -2042,12 +2080,16 @@ footer.footer.bg-primary { display: none !important; }
 .account-settings-drawer {
   border-top: 1px solid var(--border);
   border-bottom: 1px solid var(--border);
-  background: rgba(18, 18, 20, 0.7);
+  background: var(--surface-card);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   opacity: 0;
   transform: translateY(-8px);
-  transition: opacity 0.25s cubic-bezier(0.4, 0, 0.2, 1), transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: opacity 0.25s cubic-bezier(0.4, 0, 0.2, 1), transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), background var(--transition);
+}
+
+[data-theme="dark"] .account-settings-drawer {
+  background: rgba(18, 18, 20, 0.82);
 }
 
 .account-settings-drawer.visible {
@@ -2058,23 +2100,303 @@ footer.footer.bg-primary { display: none !important; }
 #manageAccountToggleBtn.active,
 #accountSettingsToggleBtn.active {
   background: var(--surface-hover) !important;
-  color: var(--primary) !important;
-  border-color: var(--primary) !important;
+  color: var(--fg) !important;
+  border-color: var(--border-strong) !important;
 }
 
 .manage-account-card {
-  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.35);
+  box-shadow: var(--shadow-md) !important;
   border-radius: var(--radius-card) !important;
+  background: var(--surface-card) !important;
+  border: 1px solid var(--border) !important;
 }
 
 .manage-account-section {
-  background: rgba(255, 255, 255, 0.02) !important;
-  border: 1px solid var(--border) !important;
-  transition: border-color var(--transition-fast), background var(--transition-fast);
+  background: var(--surface-card-subtle) !important;
+  border: 1px solid var(--border-strong) !important;
+  border-radius: var(--radius-form) !important;
+  transition: border-color var(--transition), background var(--transition);
 }
 
 .manage-account-section:hover {
-  border-color: rgba(255, 255, 255, 0.15) !important;
+  border-color: var(--fg-muted) !important;
+}
+
+.manage-account-section .form-label {
+  color: var(--fg) !important;
+  font-weight: 600;
+}
+
+.manage-account-section .form-control {
+  background: var(--surface-input) !important;
+  border: 1px solid var(--border-strong) !important;
+  color: var(--fg) !important;
+}
+
+.manage-account-section .input-group > .form-control:not(:last-child) {
+  border-top-right-radius: 0 !important;
+  border-bottom-right-radius: 0 !important;
+}
+
+.manage-account-section .toggle-password-btn {
+  border: 1px solid var(--border-strong) !important;
+  border-left: none !important;
+  border-top-right-radius: var(--radius-input) !important;
+  border-bottom-right-radius: var(--radius-input) !important;
+  border-top-left-radius: 0 !important;
+  border-bottom-left-radius: 0 !important;
+  background: var(--surface-input) !important;
+  color: var(--fg) !important;
+}
+
+.manage-account-section .toggle-password-btn:hover {
+  background: var(--surface-hover) !important;
+}
+
+/* ── Nav Badge Pill ─────────────────────────────────────────────────── */
+.nav-badge-pill {
+  position: absolute;
+  top: -4px;
+  right: -6px;
+  background: #e11d48;
+  color: #ffffff;
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 1px 5px;
+  border-radius: 999px;
+  line-height: 1.2;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.25);
+}
+
+/* ── Messages & Chat UI ─────────────────────────────────────────────── */
+.messages-main-card {
+  border-radius: var(--radius-card);
+  overflow: hidden;
+  box-shadow: var(--shadow-md);
+  background: var(--surface-card) !important;
+  border: 1px solid var(--border) !important;
+}
+
+/* ── Messages layout: desktop two-column, mobile stacked panels ── */
+.messages-layout {
+  min-height: 0;
+}
+
+.messages-sidebar {
+  display: flex;
+  flex-direction: column;
+  height: 600px;
+  max-height: 600px;
+  overflow: hidden;
+}
+
+.conversations-list {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.messages-content {
+  height: 600px;
+  max-height: 600px;
+  overflow: hidden;
+}
+
+.chat-history {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Mobile: show only one panel at a time */
+@media (max-width: 767px) {
+  .messages-main-card {
+    border-radius: 0;
+    border-left: none !important;
+    border-right: none !important;
+    margin: 0 -12px;
+  }
+
+  .messages-layout {
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* Sidebar panel */
+  .messages-sidebar {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    max-height: none;
+    border-right: none !important;
+    z-index: 1;
+    transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+    transform: translateX(0);
+    background: var(--surface-card);
+  }
+
+  /* Content (chat) panel */
+  .messages-content {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    max-height: none;
+    z-index: 2;
+    transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+    transform: translateX(100%);
+    background: var(--surface-card);
+  }
+
+  /* When a conversation is active, slide chat into view */
+  .messages-layout.chat-open .messages-sidebar {
+    transform: translateX(-100%);
+  }
+  .messages-layout.chat-open .messages-content {
+    transform: translateX(0);
+  }
+
+  /* Wrapper height in mobile mode — fit the viewport below nav */
+  .messages-layout {
+    height: calc(100dvh - 140px);
+    min-height: 520px;
+  }
+
+  .chat-history {
+    height: auto !important;
+    flex: 1 1 auto;
+  }
+
+  /* Back button shown only on mobile */
+  .btn-back-to-list {
+    display: inline-flex !important;
+  }
+
+  /* Hide desktop sidebar header "New Chat" text on very small screens */
+  .new-chat-label {
+    display: none !important;
+  }
+}
+
+/* Desktop: back button hidden */
+.btn-back-to-list {
+  display: none;
+}
+
+/* ── Conversations sidebar scrollable list ── */
+.conversation-item {
+  border-bottom: 1px solid var(--border);
+  transition: background var(--transition);
+  cursor: pointer;
+  /* Prevent tap highlight artifacts on mobile */
+  -webkit-tap-highlight-color: transparent;
+}
+
+.conversation-item:hover,
+.conversation-item:focus-visible {
+  background: var(--surface-hover);
+  outline: none;
+}
+
+.conversation-item.active {
+  background: var(--surface-hover);
+  border-left: 3px solid var(--fg);
+}
+
+/* ── Chat bubbles ── */
+.chat-bubble {
+  max-width: 78%;
+  padding: 10px 14px;
+  word-break: break-word;
+  font-size: 0.92rem;
+  line-height: 1.45;
+  box-shadow: var(--shadow-sm);
+}
+
+.chat-bubble-out {
+  background: var(--btn-primary-bg);
+  color: var(--btn-primary-fg);
+  border-radius: 18px 18px 4px 18px;
+  margin-left: auto;
+}
+
+.chat-bubble-out .chat-time {
+  color: var(--btn-primary-fg);
+  opacity: 0.7;
+  font-size: 0.7rem;
+}
+
+.chat-bubble-in {
+  background: var(--surface-input);
+  color: var(--fg);
+  border: 1px solid var(--border);
+  border-radius: 18px 18px 18px 4px;
+  margin-right: auto;
+}
+
+.chat-bubble-in .chat-time {
+  color: var(--fg-faint);
+  font-size: 0.7rem;
+}
+
+/* Mobile composer: keep above soft keyboard */
+@media (max-width: 767px) {
+  .chat-composer {
+    flex-shrink: 0;
+  }
+}
+
+/* ── Notifications UI ───────────────────────────────────────────────── */
+.notifications-card {
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-md);
+  background: var(--surface-card) !important;
+  border: 1px solid var(--border) !important;
+}
+
+.notification-item {
+  transition: background var(--transition), transform 0.15s ease;
+}
+
+.notification-unread {
+  background: var(--surface-hover) !important;
+  border-left: 3px solid var(--fg) !important;
+}
+
+.notification-read {
+  background: var(--surface-card-subtle) !important;
+}
+
+.notification-item:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
+}
+
+.notif-type-badge {
+  width: 18px;
+  height: 18px;
+  border: 2px solid var(--bg);
+}
+
+.notif-badge-message {
+  background: #2563eb;
+  color: #ffffff;
+}
+
+.notif-badge-like {
+  background: #e11d48;
+  color: #ffffff;
+}
+
+.notif-badge-comment {
+  background: #059669;
+  color: #ffffff;
+}
+
+.notif-badge-system {
+  background: #6b7280;
+  color: #ffffff;
 }
 
 /* Comment submit loading state */
