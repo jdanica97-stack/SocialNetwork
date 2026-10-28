@@ -131,19 +131,19 @@ if (isset($_SESSION['user_id'])) {
         <!-- Rounded Logo Image Container -->
         <div class="logo-img-box">
           <img
-            src="/SocialNetwork/public/assets/images/logo-light.jpg"
+            src="/SocialNetwork/public/assets/images/logo-light.png"
             alt="Orbit Logo"
             class="logo-img logo-img-light"
-            width="60"
-            height="32"
+            width="36"
+            height="36"
             loading="eager"
           >
           <img
-            src="/SocialNetwork/public/assets/images/logo-dark.jpg"
+            src="/SocialNetwork/public/assets/images/logo-dark.png"
             alt="Orbit Logo"
             class="logo-img logo-img-dark"
-            width="60"
-            height="32"
+            width="36"
+            height="36"
             loading="eager"
           >
         </div>
