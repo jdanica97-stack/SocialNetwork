@@ -3,17 +3,17 @@
 /**
  * app/controllers/SearchController.php
  *
- * Handles Search and Filtering (Step 11):
- *   - index() — Process keyword searches across users and posts with filtering
+ * Handles Search and User Discovery, Search and Filtering (Step 11):
+ *   - index() — Process keyword searches across users and posts with category filtering
  *
  * Filtering modes:
  *   - 'all'   — Searches both users and posts
  *   - 'users' — Searches only users (by username or full_name)
- *   - 'posts' — Searches only posts (by content)
+ *   - 'posts' — Searches only posts (by content keywords)
  *
  * Security contract:
- *   - Validates and sanitizes input (trim).
- *   - Empty keywords skip database queries to prevent unnecessary DB load.
+ *   - Validates and sanitizes input (trim, length limit).
+ *   - Empty keywords skip unnecessary queries.
  *   - Passes raw variables to the View which escapes output via htmlspecialchars().
  *   - Database queries are strictly handled by UserModel and PostModel using prepared statements.
  */
@@ -57,90 +57,47 @@ class SearchController
     }
 
     /**
-     * Display the search results and community statistics report page.
-     * Route: GET /SocialNetwork/public/?url=search&q=...&type=...&author_id=...&date_from=...&date_to=...&sort=...
+     * Display the search results page.
+     * Route: GET /SocialNetwork/public/?url=search&q=...&type=...
      */
     public function index(): void
     {
         $this->requireAuth();
 
-        $keyword  = trim($_GET['q'] ?? '');
+        $keyword = trim($_GET['q'] ?? '');
         if (mb_strlen($keyword) > 200) {
             $keyword = mb_substr($keyword, 0, 200);
         }
-        $type     = strtolower(trim($_GET['type'] ?? 'all'));
-        $authorId = (isset($_GET['author_id']) && is_numeric($_GET['author_id']) && (int)$_GET['author_id'] > 0) ? (int) $_GET['author_id'] : null;
-        $dateFrom = trim($_GET['date_from'] ?? '');
-        $dateTo   = trim($_GET['date_to'] ?? '');
-        $sort     = strtolower(trim($_GET['sort'] ?? 'newest'));
 
-        // Normalize filter type
+        $type = strtolower(trim($_GET['type'] ?? 'all'));
         if (!in_array($type, ['all', 'users', 'posts'], true)) {
             $type = 'all';
         }
 
-        // Validate date formats (YYYY-MM-DD)
-        if ($dateFrom !== '' && !preg_match('/^\d{4}-\d{2}-\d{2}$/', $dateFrom)) {
-            $dateFrom = '';
-        }
-        if ($dateTo !== '' && !preg_match('/^\d{4}-\d{2}-\d{2}$/', $dateTo)) {
-            $dateTo = '';
-        }
+        // Search has occurred if the query parameter 'q' is present in the URL
+        $hasSearched = isset($_GET['q']);
+        $emptyQuery  = ($hasSearched && $keyword === '');
 
-        // Normalize sort order
-        if (!in_array($sort, ['newest', 'oldest', 'most_liked', 'most_commented'], true)) {
-            $sort = 'newest';
-        }
-
-        $filterApplied = isset($_GET['filter_applied']);
-        $hasSearched   = isset($_GET['q']) || $filterApplied || ($authorId !== null) || ($dateFrom !== '') || ($dateTo !== '') || (isset($_GET['sort']) && $_GET['sort'] !== 'newest');
-
-        // Check whether the search/filter request is empty
-        if ($type === 'users') {
-            $emptyQuery = ($keyword === '');
-        } else {
-            $emptyQuery = ($keyword === '' && $authorId === null && $dateFrom === '' && $dateTo === '' && !$filterApplied);
-        }
-
-        $users           = [];
-        $posts           = [];
-        $commentsByPost  = [];
-        $hasLikedByPost  = [];
-        $summaryStats    = [
-            'total_posts'    => 0,
-            'total_authors'  => 0,
-            'total_comments' => 0,
-            'total_likes'    => 0,
-        ];
+        $users          = [];
+        $posts          = [];
+        $commentsByPost = [];
+        $hasLikedByPost = [];
 
         $currentUserId = isset($_SESSION['user_id']) ? (int) $_SESSION['user_id'] : null;
 
         try {
-            // Retrieve distinct authors for author filter dropdown
-            $authors = $this->postModel->getDistinctAuthors();
-
-            // Only query the database if search criteria was supplied
-            if (!$emptyQuery) {
-                // 1. Search Users (Step 11)
-                if (($type === 'all' || $type === 'users') && $keyword !== '') {
+            if ($hasSearched && $keyword !== '') {
+                // 1. Search Users (by username or full_name)
+                if ($type === 'all' || $type === 'users') {
                     $users = $this->userModel->searchUsers($keyword);
                 }
 
-                // 2. Search & Filter Posts with Summary Reporting (Step 11 & Step 12)
+                // 2. Search Posts (by content keywords, newest-first default)
                 if ($type === 'all' || $type === 'posts') {
-                    $filters = [
-                        'keyword'   => $keyword,
-                        'author_id' => $authorId,
-                        'date_from' => $dateFrom,
-                        'date_to'   => $dateTo,
-                        'sort'      => $sort,
-                    ];
-
-                    // Compute summary statistics without Cartesian product
-                    $summaryStats = $this->postModel->getSearchSummaryStats($filters);
-
-                    // Fetch matching posts with exact aggregated comment_count and like_count
-                    $posts = $this->postModel->searchPostsAdvanced($filters);
+                    $posts = $this->postModel->searchPostsAdvanced([
+                        'keyword' => $keyword,
+                        'sort'    => 'newest',
+                    ]);
 
                     // Fetch comment details and like state for current user
                     foreach ($posts as $p) {
@@ -153,12 +110,11 @@ class SearchController
         } catch (\Throwable $e) {
             error_log('[SearchController::index] Exception: ' . $e->getMessage());
             $flashError = 'Search service is temporarily unavailable. Please try again.';
-            $authors = $authors ?? [];
         }
 
-        $pageTitle = $emptyQuery
-            ? 'Search & Community Reports — Mini Social Network'
-            : ($keyword !== '' ? 'Search: ' . $keyword . ' — Mini Social Network' : 'Community Report — Mini Social Network');
+        $pageTitle = $hasSearched && $keyword !== ''
+            ? 'Search: ' . $keyword . ' — Orbit'
+            : 'Search — Orbit';
 
         require BASE_PATH . '/app/views/layouts/header.php';
         require BASE_PATH . '/app/views/search/results.php';

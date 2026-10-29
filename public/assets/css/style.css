@@ -1500,115 +1500,124 @@ footer.footer.bg-primary { display: none !important; }
 }
 
 
-/* ── 23. Combined Search & Reporting Dashboard (Step 11 & Step 12) ── */
-.stats-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 12px;
-  margin-bottom: 24px;
+/* ?? 23. Search Dashboard UI ??????????????????????????????????? */
+.search-unified-card {
+  border-radius: var(--radius-card) !important;
+  background: var(--surface-card, var(--surface)) !important;
+  box-shadow: var(--shadow-md);
+  overflow: hidden;
 }
 
-@media (max-width: 768px) {
-  .stats-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
+.search-unified-card .card-body {
+  padding: 24px 28px !important;
 }
 
-@media (max-width: 480px) {
-  .stats-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
-.stat-card {
-  background: var(--surface-input);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-form);
-  padding: 16px 18px;
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  transition: transform var(--transition), border-color var(--transition), box-shadow var(--transition);
-}
-
-.stat-card:hover {
-  transform: translateY(-2px);
-  border-color: var(--border-strong);
-  box-shadow: var(--shadow-sm);
-}
-
-.stat-icon-wrap {
-  width: 42px;
-  height: 42px;
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  color: var(--fg);
-  flex-shrink: 0;
-}
-
-.stat-icon-wrap.posts-icon    { color: #3b82f6; }
-.stat-icon-wrap.authors-icon  { color: #8b5cf6; }
-.stat-icon-wrap.comments-icon { color: #10b981; }
-.stat-icon-wrap.likes-icon    { color: #ef4444; }
-
-.stat-content {
-  min-width: 0;
-}
-
-.stat-value {
-  font-size: 1.5rem;
-  font-weight: 700;
-  line-height: 1.1;
-  color: var(--fg);
-  letter-spacing: -0.02em;
-}
-
-.stat-label {
-  font-size: 0.72rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--fg-muted);
-  margin-top: 3px;
-}
-
-.search-filters-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
-  gap: 10px;
-}
-
-.filter-badge {
+/* Category Filter Tabs (Segmented Pills) */
+.search-category-tabs {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 4px 10px;
+  gap: 3px;
+  padding: 3px;
   background: var(--surface-input);
   border: 1px solid var(--border);
   border-radius: var(--radius-pill);
-  font-size: 0.78rem;
-  color: var(--fg-muted);
 }
 
-.filter-badge strong {
-  color: var(--fg);
-}
-
-.report-summary-bar {
-  display: flex;
+.category-tab-btn {
+  display: inline-flex;
   align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 10px;
-  padding: 12px 18px;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: var(--radius-pill);
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--fg-muted);
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+  user-select: none;
+  transition: all var(--transition);
+  text-decoration: none;
+  line-height: 1.2;
+}
+
+.category-tab-btn:hover {
+  color: var(--fg);
+  background: var(--surface-hover);
+}
+
+.category-tab-btn.active {
+  color: var(--fg);
+  background: var(--surface);
+  border-color: var(--border-strong);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  font-weight: 600;
+}
+
+.category-tab-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  padding: 1px 6px;
+  border-radius: var(--radius-pill);
+  background: var(--surface-input);
+  color: var(--fg-muted);
+  font-weight: 600;
+}
+
+.category-tab-btn.active .category-tab-badge {
+  background: var(--btn-primary-bg);
+  color: var(--btn-primary-fg);
+}
+
+/* Custom Styled Select Dropdown (mobile & select fallback) */
+.search-custom-select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-color: var(--surface-input) !important;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238A8A92' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E") !important;
+  background-repeat: no-repeat !important;
+  background-position: right 14px center !important;
+  background-size: 11px 11px !important;
+  padding: 9px 34px 9px 14px !important;
+  border-radius: var(--radius-pill) !important;
+  border: 1px solid var(--border-strong) !important;
+  color: var(--fg) !important;
+  font-size: 0.84rem !important;
+  font-weight: 500 !important;
+  cursor: pointer;
+  transition: all var(--transition);
+}
+
+.search-custom-select:hover {
+  background-color: var(--surface-hover) !important;
+  border-color: var(--fg-muted) !important;
+}
+
+.search-custom-select:focus {
+  border-color: var(--fg) !important;
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.08) !important;
+  outline: none !important;
+}
+
+/* Unified Card Divider & Item Cards */
+.search-card-divider {
+  border-top: 1px solid var(--border);
+  margin: 22px 0 20px 0;
+}
+
+.search-item-card {
   background: var(--surface-input);
   border: 1px solid var(--border);
   border-radius: var(--radius-form);
-  margin-bottom: 20px;
+  transition: background var(--transition), border-color var(--transition);
+}
+
+.search-item-card:hover {
+  background: var(--surface-hover);
+  border-color: var(--border-strong);
 }
 
 .report-comments-toggle {
