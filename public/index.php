@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 /**
  * public/index.php
  *
@@ -321,6 +321,30 @@ if ($url === 'notifications' || str_starts_with($url, 'notifications/')) {
     }
 
     $notifCtrl->index();
+    exit;
+}
+
+// ── Friends & Follow Routes ───────────────────────────────────────────────────
+if ($url === 'friends' || $url === 'follow' || str_starts_with($url, 'follow/') || str_starts_with($url, 'friends/')) {
+    require_once BASE_PATH . '/app/controllers/FollowController.php';
+    $followCtrl = new FollowController();
+
+    if ($url === 'follow/toggle') {
+        $followCtrl->toggle();
+        exit;
+    }
+
+    if ($url === 'follow/followers') {
+        $followCtrl->followers();
+        exit;
+    }
+
+    if ($url === 'follow/following') {
+        $followCtrl->following();
+        exit;
+    }
+
+    $followCtrl->friends();
     exit;
 }
 

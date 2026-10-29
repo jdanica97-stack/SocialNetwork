@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 /**
  * app/views/profile/profile.php
@@ -634,5 +634,71 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 </script>
 <?php endif; ?>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    'use strict';
+    var csrfTokenMeta = document.querySelector('meta[name="csrf-token"]');
+    var csrfToken = csrfTokenMeta ? csrfTokenMeta.getAttribute('content') : '';
+
+    var profileFollowBtn = document.getElementById('profileFollowBtn');
+    if (profileFollowBtn) {
+        profileFollowBtn.addEventListener('click', function (e) {
+            e.preventDefault();
+            var btn = this;
+            var userId = btn.getAttribute('data-user-id');
+            if (!userId) return;
+
+            btn.disabled = true;
+            var formData = new FormData();
+            formData.append('user_id', userId);
+            if (csrfToken) formData.append('csrf_token', csrfToken);
+
+            fetch('/SocialNetwork/public/?url=follow/toggle', {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
+                },
+                body: formData
+            })
+            .then(function (res) { return res.json(); })
+            .then(function (data) {
+                btn.disabled = false;
+                if (data.success) {
+                    var newStatus = data.is_following;
+                    btn.setAttribute('data-following', newStatus ? '1' : '0');
+
+                    var label = btn.querySelector('.follow-btn-label');
+                    if (label) {
+                        label.textContent = newStatus ? 'Following' : 'Follow';
+                    } else {
+                        btn.textContent = newStatus ? 'Following' : 'Follow';
+                    }
+
+                    if (newStatus) {
+                        btn.classList.remove('btn-primary');
+                        btn.classList.add('btn-ghost');
+                    } else {
+                        btn.classList.remove('btn-ghost');
+                        btn.classList.add('btn-primary');
+                    }
+
+                    var counterEl = document.getElementById('profileFollowerCount');
+                    if (counterEl && typeof data.follower_count !== 'undefined') {
+                        counterEl.textContent = data.follower_count;
+                    }
+                } else if (data.message) {
+                    alert(data.message);
+                }
+            })
+            .catch(function () {
+                btn.disabled = false;
+                alert('An error occurred. Please try again.');
+            });
+        });
+    }
+});
+</script>
 
 <?php require_once BASE_PATH . '/app/views/layouts/footer.php'; ?>

@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 /**
  * app/views/notifications/index.php
  *

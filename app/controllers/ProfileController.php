@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 /**
  * app/controllers/ProfileController.php
@@ -25,6 +25,7 @@ require_once BASE_PATH . '/app/models/UserModel.php';
 require_once BASE_PATH . '/app/models/PostModel.php';
 require_once BASE_PATH . '/app/models/CommentModel.php';
 require_once BASE_PATH . '/app/models/LikeModel.php';
+require_once BASE_PATH . '/app/models/FollowModel.php';
 require_once BASE_PATH . '/app/controllers/PostController.php';
 require_once BASE_PATH . '/app/helpers/Csrf.php';
 require_once BASE_PATH . '/app/helpers/PasswordValidator.php';
@@ -35,6 +36,7 @@ class ProfileController
     private PostModel $postModel;
     private CommentModel $commentModel;
     private LikeModel $likeModel;
+    private FollowModel $followModel;
 
     // ── Upload settings ───────────────────────────────────────────────────────
     // Absolute server path where uploaded profile images are saved
@@ -63,6 +65,7 @@ class ProfileController
         $this->postModel    = new PostModel($db);
         $this->commentModel = new CommentModel($db);
         $this->likeModel    = new LikeModel($db);
+        $this->followModel  = new FollowModel($db);
 
         // Absolute path to the profiles upload directory
         $this->uploadDir = BASE_PATH . '/public/assets/images/profiles/';
@@ -143,7 +146,10 @@ class ProfileController
             $hasLikedByPost[$pId]     = $this->likeModel->hasLiked($pId, $currentUserId);
         }
 
-        $isOwnProfile = ($targetUserId === $currentUserId);
+        $isOwnProfile  = ($targetUserId === $currentUserId);
+        $followerCount = $this->followModel->getFollowerCount($targetUserId);
+        $followingCount = $this->followModel->getFollowingCount($targetUserId);
+        $isFollowing   = !$isOwnProfile ? $this->followModel->isFollowing($currentUserId, $targetUserId) : false;
         $pageTitle    = $isOwnProfile ? 'My Profile — Mini Social Network' : htmlspecialchars($user['full_name']) . ' — Profile';
 
         require_once BASE_PATH . '/app/views/profile/profile.php';
