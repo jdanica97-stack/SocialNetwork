@@ -324,8 +324,8 @@ if ($url === 'notifications' || str_starts_with($url, 'notifications/')) {
     exit;
 }
 
-// ── Friends & Follow Routes ───────────────────────────────────────────────────
-if ($url === 'friends' || $url === 'follow' || str_starts_with($url, 'follow/') || str_starts_with($url, 'friends/')) {
+// ── Followers & Following Routes ──────────────────────────────────────────────
+if ($url === 'followers' || $url === 'following' || $url === 'friends' || $url === 'follow' || str_starts_with($url, 'follow/') || str_starts_with($url, 'followers/') || str_starts_with($url, 'following/') || str_starts_with($url, 'friends/')) {
     require_once BASE_PATH . '/app/controllers/FollowController.php';
     $followCtrl = new FollowController();
 
@@ -334,17 +334,17 @@ if ($url === 'friends' || $url === 'follow' || str_starts_with($url, 'follow/') 
         exit;
     }
 
-    if ($url === 'follow/followers') {
+    if ($url === 'followers' || $url === 'follow/followers') {
         $followCtrl->followers();
         exit;
     }
 
-    if ($url === 'follow/following') {
+    if ($url === 'following' || $url === 'follow/following') {
         $followCtrl->following();
         exit;
     }
 
-    $followCtrl->friends();
+    $followCtrl->index();
     exit;
 }
 

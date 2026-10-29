@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 
 /**
  * app/views/profile/profile.php
@@ -73,6 +73,32 @@ if (!empty($user['profile_image'])) {
                                 Manage Account
                             </button>
                         </div>
+                    <?php else: ?>
+                        <div class="d-flex gap-2 align-items-center flex-wrap">
+                            <!-- Follow / Unfollow Button -->
+                            <button
+                                type="button"
+                                class="btn <?= !empty($isFollowing) ? 'btn-ghost' : 'btn-primary' ?> btn-sm follow-toggle-btn px-3"
+                                id="profileFollowBtn"
+                                data-user-id="<?= (int)$user['id'] ?>"
+                                data-following="<?= !empty($isFollowing) ? '1' : '0' ?>"
+                                style="border-radius: var(--radius-pill);"
+                            >
+                                <span class="follow-btn-label"><?= !empty($isFollowing) ? 'Following' : 'Follow' ?></span>
+                            </button>
+
+                            <!-- Send Message Button -->
+                            <a
+                                href="/SocialNetwork/public/?url=messages&user_id=<?= (int)$user['id'] ?>"
+                                class="btn btn-ghost btn-sm px-3"
+                                id="profileSendMessageBtn"
+                                title="Send Message to <?= htmlspecialchars($user['full_name'], ENT_QUOTES, 'UTF-8') ?>"
+                                style="border-radius: var(--radius-pill);"
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="me-1"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                                Send Message
+                            </a>
+                        </div>
                     <?php endif; ?>
                 </div>
 
@@ -97,6 +123,18 @@ if (!empty($user['profile_image'])) {
                 <div class="profile-meta">
                     <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
                     <span>Member since <?= htmlspecialchars(date('F j, Y', strtotime($user['created_at'])), ENT_QUOTES, 'UTF-8') ?></span>
+                </div>
+
+                <!-- Follower & Following Stats Links -->
+                <div class="profile-stats d-flex align-items-center gap-4 mt-3 pt-3 border-top" style="border-color: var(--border) !important;">
+                    <a href="/SocialNetwork/public/?url=followers&user_id=<?= (int)$user['id'] ?>" class="text-decoration-none d-flex align-items-baseline gap-1" style="color: var(--fg);" title="View followers">
+                        <strong id="profileFollowerCount" style="font-size: 1.05rem;"><?= (int)($followerCount ?? 0) ?></strong>
+                        <span style="color: var(--fg-muted); font-size: 0.85rem;">Followers</span>
+                    </a>
+                    <a href="/SocialNetwork/public/?url=following&user_id=<?= (int)$user['id'] ?>" class="text-decoration-none d-flex align-items-baseline gap-1" style="color: var(--fg);" title="View following">
+                        <strong id="profileFollowingCount" style="font-size: 1.05rem;"><?= (int)($followingCount ?? 0) ?></strong>
+                        <span style="color: var(--fg-muted); font-size: 0.85rem;">Following</span>
+                    </a>
                 </div>
 
             </div><!-- /.card-body -->

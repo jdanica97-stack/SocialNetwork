@@ -3,16 +3,17 @@
 /**
  * app/controllers/FollowController.php
  *
- * Handles following, unfollowing, and the Friends / Social Discovery pages:
+ * Handles following, unfollowing, and the unified Followers & Following page:
  *   - toggle()    — Toggle follow/unfollow status (POST / AJAX)
- *   - friends()   — Main Friends hub: Discover, Mutual Friends, Following, Followers (GET)
- *   - followers() — List of followers for a user (GET)
- *   - following() — List of users a user is following (GET)
+ *   - index()     — Unified Followers and Following page with tab switching (GET)
+ *   - followers() — Alias/entrypoint for followers tab (GET)
+ *   - following() — Alias/entrypoint for following tab (GET)
  *
  * Security:
- *   - Authentication required for all endpoints.
+ *   - Authentication required for all endpoints (requireAuth).
  *   - CSRF protection for mutating actions.
- *   - Prevents following oneself.
+ *   - Acting user is strictly derived from session ($_SESSION['user_id']).
+ *   - Cannot follow self.
  */
 
 require_once BASE_PATH . '/config/database.php';
@@ -61,6 +62,7 @@ class FollowController
 
     /**
      * Toggle follow/unfollow for a user.
+     * Expects POST with user_id and valid CSRF token.
      */
     public function toggle(): void
     {
@@ -77,7 +79,7 @@ class FollowController
                 echo json_encode(['success' => false, 'message' => 'Method not allowed.']);
                 exit;
             }
-            header('Location: /SocialNetwork/public/?url=friends');
+            header('Location: /SocialNetwork/public/?url=followers');
             exit;
         }
 
@@ -85,11 +87,11 @@ class FollowController
             if ($isAjax) {
                 http_response_code(403);
                 header('Content-Type: application/json; charset=UTF-8');
-                echo json_encode(['success' => false, 'message' => 'Invalid or expired security token. Please refresh.']);
+                echo json_encode(['success' => false, 'message' => 'Invalid or expired security token. Please refresh the page.']);
                 exit;
             }
             $_SESSION['flash_error'] = 'Invalid security token. Please try again.';
-            header('Location: /SocialNetwork/public/?url=friends');
+            header('Location: /SocialNetwork/public/?url=followers');
             exit;
         }
 
@@ -103,7 +105,7 @@ class FollowController
                 exit;
             }
             $_SESSION['flash_error'] = 'You cannot follow this user.';
-            header('Location: /SocialNetwork/public/?url=friends');
+            header('Location: /SocialNetwork/public/?url=followers');
             exit;
         }
 
@@ -112,11 +114,11 @@ class FollowController
             if ($isAjax) {
                 http_response_code(404);
                 header('Content-Type: application/json; charset=UTF-8');
-                echo json_encode(['success' => false, 'message' => 'User not found.']);
+                echo json_encode(['success' => false, 'message' => 'The selected user does not exist.']);
                 exit;
             }
             $_SESSION['flash_error'] = 'User not found.';
-            header('Location: /SocialNetwork/public/?url=friends');
+            header('Location: /SocialNetwork/public/?url=followers');
             exit;
         }
 
@@ -164,96 +166,79 @@ class FollowController
     }
 
     /**
-     * Display the Friends & People discovery hub.
+     * Display the unified Followers and Following page.
+     * Accessible via ?url=followers, ?url=following, or ?url=follow
      */
-    public function friends(): void
+    public function index(string $defaultTab = 'following'): void
     {
         $this->requireAuth();
         $currentUserId = (int) $_SESSION['user_id'];
 
-        $tab = trim($_GET['tab'] ?? 'discover');
-        $validTabs = ['discover', 'friends', 'following', 'followers'];
-        if (!in_array($tab, $validTabs, true)) {
-            $tab = 'discover';
+        $targetUserId = isset($_GET['user_id']) ? (int) $_GET['user_id'] : $currentUserId;
+        if ($targetUserId <= 0) {
+            $targetUserId = $currentUserId;
+        }
+
+        $profileUser = $this->userModel->findById($targetUserId);
+        if (!$profileUser) {
+            $_SESSION['flash_error'] = 'User profile not found.';
+            header('Location: /SocialNetwork/public/');
+            exit;
+        }
+
+        $isOwnNetwork = ($targetUserId === $currentUserId);
+
+        // Determine active tab
+        $tab = strtolower(trim($_GET['tab'] ?? ''));
+        if ($tab !== 'followers' && $tab !== 'following') {
+            $tab = $defaultTab;
         }
 
         $flashSuccess = $_SESSION['flash_success'] ?? null;
         $flashError   = $_SESSION['flash_error']   ?? null;
         unset($_SESSION['flash_success'], $_SESSION['flash_error']);
 
-        // Data based on active tab or overall summary
-        $mutualFriends = $this->followModel->getFriends($currentUserId);
-        $suggestions   = $this->followModel->getSuggestions($currentUserId, 20);
-        $followingList = $this->followModel->getFollowing($currentUserId, 50);
-        $followersList = $this->followModel->getFollowers($currentUserId, 50);
+        // Load followers and following lists
+        $followers = $this->followModel->getFollowers($targetUserId, 100);
+        $following = $this->followModel->getFollowing($targetUserId, 100);
 
-        $friendsCount   = count($mutualFriends);
-        $followingCount = $this->followModel->getFollowingCount($currentUserId);
-        $followersCount = $this->followModel->getFollowerCount($currentUserId);
-        $suggestCount   = count($suggestions);
+        $followerCount  = count($followers);
+        $followingCount = count($following);
 
-        $followingIds = $this->followModel->getFollowingIds($currentUserId);
+        // Current user's following list (to mark Follow / Following buttons properly)
+        $myFollowingIds = $this->followModel->getFollowingIds($currentUserId);
 
-        $pageTitle = 'Friends & People — Mini Social Network';
+        $pageTitle = $isOwnNetwork
+            ? ($tab === 'followers' ? 'My Followers' : 'People I Follow') . ' — Mini Social Network'
+            : htmlspecialchars($profileUser['full_name']) . ($tab === 'followers' ? "'s Followers" : ' — Following') . ' — Mini Social Network';
 
         require BASE_PATH . '/app/views/layouts/header.php';
-        require BASE_PATH . '/app/views/follow/friends.php';
+        require BASE_PATH . '/app/views/follow/index.php';
         require BASE_PATH . '/app/views/layouts/footer.php';
     }
 
     /**
-     * Display followers list for a user.
+     * Entrypoint for followers page.
      */
     public function followers(): void
     {
-        $this->requireAuth();
-        $currentUserId = (int) $_SESSION['user_id'];
-
-        $targetUserId = isset($_GET['user_id']) ? (int) $_GET['user_id'] : $currentUserId;
-        $profileUser  = $this->userModel->findById($targetUserId);
-
-        if (!$profileUser) {
-            $_SESSION['flash_error'] = 'User profile not found.';
-            header('Location: /SocialNetwork/public/?url=friends');
-            exit;
-        }
-
-        $users = $this->followModel->getFollowers($targetUserId, 50);
-        $followingIds = $this->followModel->getFollowingIds($currentUserId);
-        $pageMode = 'followers';
-
-        $pageTitle = ($targetUserId === $currentUserId ? 'My Followers' : htmlspecialchars($profileUser['full_name']) . "'s Followers") . ' — Mini Social Network';
-
-        require BASE_PATH . '/app/views/layouts/header.php';
-        require BASE_PATH . '/app/views/follow/list.php';
-        require BASE_PATH . '/app/views/layouts/footer.php';
+        $this->index('followers');
     }
 
     /**
-     * Display following list for a user.
+     * Entrypoint for following page.
      */
     public function following(): void
     {
-        $this->requireAuth();
-        $currentUserId = (int) $_SESSION['user_id'];
+        $this->index('following');
+    }
 
-        $targetUserId = isset($_GET['user_id']) ? (int) $_GET['user_id'] : $currentUserId;
-        $profileUser  = $this->userModel->findById($targetUserId);
-
-        if (!$profileUser) {
-            $_SESSION['flash_error'] = 'User profile not found.';
-            header('Location: /SocialNetwork/public/?url=friends');
-            exit;
-        }
-
-        $users = $this->followModel->getFollowing($targetUserId, 50);
-        $followingIds = $this->followModel->getFollowingIds($currentUserId);
-        $pageMode = 'following';
-
-        $pageTitle = ($targetUserId === $currentUserId ? 'People I Follow' : 'People ' . htmlspecialchars($profileUser['full_name']) . ' Follows') . ' — Mini Social Network';
-
-        require BASE_PATH . '/app/views/layouts/header.php';
-        require BASE_PATH . '/app/views/follow/list.php';
-        require BASE_PATH . '/app/views/layouts/footer.php';
+    /**
+     * Backward-compatibility alias for friends/people.
+     */
+    public function friends(): void
+    {
+        $tab = strtolower(trim($_GET['tab'] ?? 'following'));
+        $this->index($tab === 'followers' ? 'followers' : 'following');
     }
 }
