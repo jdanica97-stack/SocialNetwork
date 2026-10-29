@@ -1572,37 +1572,80 @@ footer.footer.bg-primary { display: none !important; }
 }
 
 /* Custom Styled Select Dropdown (mobile & select fallback) */
-.search-custom-select {
+/* Clean Filter Dropdowns for Author and Sort */
+.search-filter-select {
   appearance: none;
   -webkit-appearance: none;
   -moz-appearance: none;
   background-color: var(--surface-input) !important;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238A8A92' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E") !important;
   background-repeat: no-repeat !important;
-  background-position: right 14px center !important;
-  background-size: 11px 11px !important;
-  padding: 9px 34px 9px 14px !important;
+  background-position: right 12px center !important;
+  background-size: 10px 10px !important;
+  padding: 6px 30px 6px 12px !important;
   border-radius: var(--radius-pill) !important;
-  border: 1px solid var(--border-strong) !important;
+  border: 1px solid var(--border) !important;
   color: var(--fg) !important;
-  font-size: 0.84rem !important;
+  font-size: 0.8rem !important;
   font-weight: 500 !important;
+  cursor: pointer;
+  height: 32px;
+  line-height: 1;
+  transition: all var(--transition);
+}
+
+.search-filter-select:hover {
+  background-color: var(--surface-hover) !important;
+  border-color: var(--border-strong) !important;
+}
+
+.search-filter-select:focus {
+  border-color: var(--fg) !important;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.08) !important;
+  outline: none !important;
+}
+
+/* Filter Bar below search input */
+.search-subfilters-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding-top: 2px;
+}
+
+.search-filters-group {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* Quick Suggestion Chips on Empty State */
+.search-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border-radius: var(--radius-pill);
+  background: var(--surface-input);
+  border: 1px solid var(--border);
+  color: var(--fg-muted);
+  font-size: 0.8rem;
+  font-weight: 500;
+  text-decoration: none;
   cursor: pointer;
   transition: all var(--transition);
 }
 
-.search-custom-select:hover {
-  background-color: var(--surface-hover) !important;
-  border-color: var(--fg-muted) !important;
+.search-chip:hover {
+  background: var(--surface-hover);
+  border-color: var(--border-strong);
+  color: var(--fg);
+  transform: translateY(-1px);
 }
 
-.search-custom-select:focus {
-  border-color: var(--fg) !important;
-  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.08) !important;
-  outline: none !important;
-}
-
-/* Unified Card Divider & Item Cards */
 .search-card-divider {
   border-top: 1px solid var(--border);
   margin: 22px 0 20px 0;

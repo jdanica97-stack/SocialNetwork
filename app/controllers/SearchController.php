@@ -4,16 +4,20 @@
  * app/controllers/SearchController.php
  *
  * Handles Search and User Discovery, Search and Filtering (Step 11):
- *   - index() — Process keyword searches across users and posts with category filtering
+ *   - index() — Process keyword searches across users and posts with category, author, and sorting filters.
  *
  * Filtering modes:
  *   - 'all'   — Searches both users and posts
  *   - 'users' — Searches only users (by username or full_name)
  *   - 'posts' — Searches only posts (by content keywords)
  *
+ * Post Filters:
+ *   - author_id: filter posts by author
+ *   - sort: 'newest', 'oldest', 'most_liked', 'most_commented'
+ *
  * Security contract:
- *   - Validates and sanitizes input (trim, length limit).
- *   - Empty keywords skip unnecessary queries.
+ *   - Validates and sanitizes input (trim, length limit, type whitelist).
+ *   - Empty keywords & criteria skip unnecessary queries.
  *   - Passes raw variables to the View which escapes output via htmlspecialchars().
  *   - Database queries are strictly handled by UserModel and PostModel using prepared statements.
  */
@@ -58,7 +62,7 @@ class SearchController
 
     /**
      * Display the search results page.
-     * Route: GET /SocialNetwork/public/?url=search&q=...&type=...
+     * Route: GET /SocialNetwork/public/?url=search&q=...&type=...&author_id=...&sort=...
      */
     public function index(): void
     {
@@ -74,30 +78,46 @@ class SearchController
             $type = 'all';
         }
 
-        // Search has occurred if the query parameter 'q' is present in the URL
-        $hasSearched = isset($_GET['q']);
-        $emptyQuery  = ($hasSearched && $keyword === '');
+        $authorId = (isset($_GET['author_id']) && is_numeric($_GET['author_id']) && (int) $_GET['author_id'] > 0)
+            ? (int) $_GET['author_id']
+            : null;
+
+        $sort = strtolower(trim($_GET['sort'] ?? 'newest'));
+        if (!in_array($sort, ['newest', 'oldest', 'most_liked', 'most_commented'], true)) {
+            $sort = 'newest';
+        }
+
+        // Search has occurred if the query parameter 'q' is present in the URL, or if an author/sort filter was selected
+        $hasSearched = isset($_GET['q']) || ($authorId !== null) || (isset($_GET['sort']) && $_GET['sort'] !== 'newest');
+        $emptyQuery  = ($hasSearched && $keyword === '' && $authorId === null);
 
         $users          = [];
         $posts          = [];
+        $authors        = [];
         $commentsByPost = [];
         $hasLikedByPost = [];
 
         $currentUserId = isset($_SESSION['user_id']) ? (int) $_SESSION['user_id'] : null;
 
         try {
-            if ($hasSearched && $keyword !== '') {
+            // Retrieve distinct authors for author filter
+            $authors = $this->postModel->getDistinctAuthors();
+
+            if ($hasSearched && !$emptyQuery) {
                 // 1. Search Users (by username or full_name)
-                if ($type === 'all' || $type === 'users') {
+                if (($type === 'all' || $type === 'users') && $keyword !== '') {
                     $users = $this->userModel->searchUsers($keyword);
                 }
 
-                // 2. Search Posts (by content keywords, newest-first default)
+                // 2. Search Posts (by content keyword, author, and sort)
                 if ($type === 'all' || $type === 'posts') {
-                    $posts = $this->postModel->searchPostsAdvanced([
-                        'keyword' => $keyword,
-                        'sort'    => 'newest',
-                    ]);
+                    $postFilters = [
+                        'keyword'   => $keyword,
+                        'author_id' => $authorId,
+                        'sort'      => $sort,
+                    ];
+
+                    $posts = $this->postModel->searchPostsAdvanced($postFilters);
 
                     // Fetch comment details and like state for current user
                     foreach ($posts as $p) {
@@ -110,6 +130,7 @@ class SearchController
         } catch (\Throwable $e) {
             error_log('[SearchController::index] Exception: ' . $e->getMessage());
             $flashError = 'Search service is temporarily unavailable. Please try again.';
+            $authors = $authors ?? [];
         }
 
         $pageTitle = $hasSearched && $keyword !== ''

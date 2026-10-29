@@ -7,6 +7,9 @@
  * Variables passed from SearchController::index():
  *   - $keyword: string
  *   - $type: string ('all', 'users', 'posts')
+ *   - $authorId: int|null
+ *   - $sort: string ('newest', 'oldest', 'most_liked', 'most_commented')
+ *   - $authors: array of distinct authors
  *   - $users: array of matched users
  *   - $posts: array of matched posts with comment_count and like_count
  *   - $commentsByPost: array of comments indexed by post_id
@@ -35,11 +38,11 @@ $totalResults = $userCount + $postCount;
             </a>
         </div>
 
-        <!-- ── Main Unified Search Card (Search Form + Results All in One Card) ── -->
+        <!-- ── Main Unified Search Card ── -->
         <div class="card glass search-unified-card fade-up mb-4">
             <div class="card-body">
 
-                <!-- Header: Title & Description -->
+                <!-- Header: Title & Category Pills -->
                 <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
                     <div>
                         <h1 class="h4 mb-1" style="font-weight: 700; color: var(--fg); letter-spacing: -0.02em;">
@@ -50,7 +53,7 @@ $totalResults = $userCount + $postCount;
                         </p>
                     </div>
 
-                    <!-- Category Pills / Tabs (Quick Filter) -->
+                    <!-- Single Category Filter Tabs (Pill controls for All / Users / Posts) -->
                     <div class="search-category-tabs" role="tablist" aria-label="Search categories">
                         <button
                             type="button"
@@ -60,7 +63,7 @@ $totalResults = $userCount + $postCount;
                             aria-selected="<?= $type === 'all' ? 'true' : 'false' ?>"
                         >
                             <span>All</span>
-                            <?php if ($hasSearched && $keyword !== ''): ?>
+                            <?php if ($hasSearched && ($keyword !== '' || $authorId !== null)): ?>
                                 <span class="category-tab-badge"><?= $totalResults ?></span>
                             <?php endif; ?>
                         </button>
@@ -84,7 +87,7 @@ $totalResults = $userCount + $postCount;
                             aria-selected="<?= $type === 'posts' ? 'true' : 'false' ?>"
                         >
                             <span>Posts</span>
-                            <?php if ($hasSearched && $keyword !== ''): ?>
+                            <?php if ($hasSearched && ($keyword !== '' || $authorId !== null)): ?>
                                 <span class="category-tab-badge"><?= $postCount ?></span>
                             <?php endif; ?>
                         </button>
@@ -96,49 +99,71 @@ $totalResults = $userCount + $postCount;
                     <input type="hidden" name="url" value="search">
                     <input type="hidden" name="type" id="searchCategoryInput" value="<?= htmlspecialchars($type, ENT_QUOTES, 'UTF-8') ?>">
 
-                    <div class="row g-2 align-items-center">
-                        <div class="col-12 col-md-8">
-                            <div class="input-group">
-                                <span class="input-group-text" aria-hidden="true">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-                                </span>
-                                <input
-                                    type="search"
-                                    name="q"
-                                    id="searchInput"
-                                    class="form-control"
-                                    placeholder="Search users or posts..."
-                                    value="<?= $escapedKeyword ?>"
-                                    aria-label="Search users or posts"
-                                    maxlength="200"
-                                    autofocus
-                                >
-                            </div>
-                        </div>
-
-                        <!-- Dropdown (Synchronized with Pills, sleek custom styling) -->
-                        <div class="col-12 col-md-4">
-                            <select
-                                id="categorySelectDropdown"
-                                class="form-select search-custom-select w-100"
-                                aria-label="Search category"
-                                onchange="onCategoryDropdownChange(this.value)"
-                            >
-                                <option value="all" <?= $type === 'all' ? 'selected' : '' ?>>All (Users & Posts)</option>
-                                <option value="users" <?= $type === 'users' ? 'selected' : '' ?>>Users Only</option>
-                                <option value="posts" <?= $type === 'posts' ? 'selected' : '' ?>>Posts Only</option>
-                            </select>
-                        </div>
+                    <!-- Search Input Bar -->
+                    <div class="input-group">
+                        <span class="input-group-text" aria-hidden="true">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                        </span>
+                        <input
+                            type="search"
+                            name="q"
+                            id="searchInput"
+                            class="form-control"
+                            placeholder="Search users or posts..."
+                            value="<?= $escapedKeyword ?>"
+                            aria-label="Search users or posts"
+                            maxlength="200"
+                            autofocus
+                        >
                     </div>
 
-                    <!-- Search and Reset Actions -->
-                    <div class="d-flex align-items-center justify-content-end gap-2 pt-1">
-                        <a href="/SocialNetwork/public/?url=search" class="btn btn-ghost btn-sm px-3">
-                            Clear
-                        </a>
-                        <button type="submit" class="btn btn-primary btn-sm px-4">
-                            Search
-                        </button>
+                    <!-- Clean Filter Bar: Author + Sort on the left, Actions on the right -->
+                    <div class="search-subfilters-bar">
+                        <div class="search-filters-group">
+                            <!-- Filter by Author (for posts) -->
+                            <?php if (!empty($authors)): ?>
+                                <select
+                                    name="author_id"
+                                    id="filterAuthor"
+                                    class="search-filter-select"
+                                    aria-label="Filter by author"
+                                    onchange="document.getElementById('searchForm').submit()"
+                                >
+                                    <option value="">All Authors</option>
+                                    <?php foreach ($authors as $a): ?>
+                                        <option value="<?= (int) $a['id'] ?>" <?= $authorId === (int) $a['id'] ? 'selected' : '' ?>>
+                                            <?= htmlspecialchars($a['full_name'], ENT_QUOTES, 'UTF-8') ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
+                            <?php endif; ?>
+
+                            <!-- Sort Filter (Newest, Oldest, Most Liked, Most Commented) -->
+                            <select
+                                name="sort"
+                                id="filterSort"
+                                class="search-filter-select"
+                                aria-label="Sort order"
+                                onchange="document.getElementById('searchForm').submit()"
+                            >
+                                <option value="newest" <?= $sort === 'newest' ? 'selected' : '' ?>>Newest First</option>
+                                <option value="oldest" <?= $sort === 'oldest' ? 'selected' : '' ?>>Oldest First</option>
+                                <option value="most_liked" <?= $sort === 'most_liked' ? 'selected' : '' ?>>Most Liked</option>
+                                <option value="most_commented" <?= $sort === 'most_commented' ? 'selected' : '' ?>>Most Commented</option>
+                            </select>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="d-flex align-items-center gap-2">
+                            <?php if ($hasSearched): ?>
+                                <a href="/SocialNetwork/public/?url=search" class="btn btn-ghost btn-sm px-3">
+                                    Clear
+                                </a>
+                            <?php endif; ?>
+                            <button type="submit" class="btn btn-primary btn-sm px-4">
+                                Search
+                            </button>
+                        </div>
                     </div>
                 </form>
 
@@ -150,20 +175,36 @@ $totalResults = $userCount + $postCount;
                         <!-- Empty Keyword Warning -->
                         <div class="text-center py-4 px-3 text-muted">
                             <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="mx-auto mb-2 text-warning"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-                            <p class="mb-1" style="color: var(--fg); font-weight: 500;">Please enter a search term.</p>
+                            <p class="mb-1" style="color: var(--fg); font-weight: 500;">Please enter a search term or select a filter.</p>
                             <p class="small text-muted mb-0">Type a name, username, or post keyword in the search box above.</p>
                         </div>
 
                     <?php elseif (!$hasSearched): ?>
-                        <!-- Initial Guidance State -->
-                        <div class="text-center py-5 px-3 text-muted">
+                        <!-- Engaging Initial Guidance State with Quick Filters -->
+                        <div class="text-center py-4 px-3 text-muted">
                             <div class="stat-icon-wrap mx-auto mb-3" style="width: 48px; height: 48px; border-radius: 14px; background: var(--surface-input); display: inline-flex; align-items: center; justify-content: center; color: var(--fg-muted);">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
                             </div>
-                            <h2 class="h6 mb-1" style="font-weight: 600; color: var(--fg);">Find People and Posts</h2>
-                            <p class="small text-muted mb-0" style="max-width: 360px; margin-inline: auto;">
-                                Discover other users by their name or username, or search through post contents across the community.
+                            <h2 class="h6 mb-1" style="font-weight: 600; color: var(--fg);">Explore Orbit Community</h2>
+                            <p class="small text-muted mb-3" style="max-width: 380px; margin-inline: auto;">
+                                Search for people across the network, or explore community posts with easy author and sorting filters.
                             </p>
+
+                            <!-- Quick Discover Shortcuts -->
+                            <div class="d-flex align-items-center justify-content-center flex-wrap gap-2 pt-1">
+                                <a href="/SocialNetwork/public/?url=search&q=a&type=users" class="search-chip">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+                                    Discover People
+                                </a>
+                                <a href="/SocialNetwork/public/?url=search&q=a&type=posts&sort=newest" class="search-chip">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                                    Latest Discussions
+                                </a>
+                                <a href="/SocialNetwork/public/?url=search&q=a&type=posts&sort=most_liked" class="search-chip">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+                                    Popular Posts
+                                </a>
+                            </div>
                         </div>
 
                     <?php else: ?>
@@ -249,6 +290,9 @@ $totalResults = $userCount + $postCount;
                                     <h2 class="h6 text-uppercase text-muted fw-bold mb-0" style="letter-spacing: 0.05em; font-size: 0.78rem;">
                                         Posts (<?= $postCount ?>)
                                     </h2>
+                                    <span class="small text-muted" style="font-size: 0.75rem;">
+                                        <?= htmlspecialchars(ucwords(str_replace('_', ' ', $sort)), ENT_QUOTES, 'UTF-8') ?>
+                                    </span>
                                 </div>
 
                                 <div class="posts-stream">
@@ -453,16 +497,13 @@ $totalResults = $userCount + $postCount;
 
 <script>
 /**
- * Switch category via tabs and sync dropdown & hidden input.
- * Submits form immediately if a search keyword is already entered.
+ * Switch category via tabs and submit form if search is active
  */
 function setCategory(cat) {
     var hiddenInput = document.getElementById('searchCategoryInput');
-    var selectElem  = document.getElementById('categorySelectDropdown');
     var searchInput = document.getElementById('searchInput');
 
     if (hiddenInput) hiddenInput.value = cat;
-    if (selectElem)  selectElem.value = cat;
 
     // Update active tab buttons visual state
     document.querySelectorAll('.category-tab-btn').forEach(function(btn) {
@@ -472,33 +513,7 @@ function setCategory(cat) {
     event.currentTarget.classList.add('active');
     event.currentTarget.setAttribute('aria-selected', 'true');
 
-    // If there is already a keyword typed, auto-filter
-    if (searchInput && searchInput.value.trim().length > 0) {
-        document.getElementById('searchForm').submit();
-    }
-}
-
-/**
- * Handle change on the dropdown selector
- */
-function onCategoryDropdownChange(val) {
-    var hiddenInput = document.getElementById('searchCategoryInput');
-    if (hiddenInput) hiddenInput.value = val;
-
-    // Sync tabs
-    document.querySelectorAll('.category-tab-btn').forEach(function(btn) {
-        btn.classList.remove('active');
-        btn.setAttribute('aria-selected', 'false');
-    });
-    var targetBtn = document.querySelector('.category-tab-btn[onclick*="\'' + val + '\'"]');
-    if (targetBtn) {
-        targetBtn.classList.add('active');
-        targetBtn.setAttribute('aria-selected', 'true');
-    }
-
-    var searchInput = document.getElementById('searchInput');
-    if (searchInput && searchInput.value.trim().length > 0) {
-        document.getElementById('searchForm').submit();
-    }
+    // Submit if there's already a search term or active filter
+    document.getElementById('searchForm').submit();
 }
 </script>
