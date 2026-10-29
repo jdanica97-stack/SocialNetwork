@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 /**
  * app/views/notifications/index.php
  *
@@ -85,6 +85,8 @@ $currentUserId = (int) $_SESSION['user_id'];
                                 // Resolve target URL
                                 if ($type === 'message') {
                                     $targetUrl = '/SocialNetwork/public/?url=messages&user_id=' . (int) ($n['target_id'] ?: $n['actor_id']);
+                                } elseif ($type === 'follow') {
+                                    $targetUrl = '/SocialNetwork/public/?url=profile&id=' . (int) ($n['actor_id'] ?: $n['target_id']);
                                 } elseif ($type === 'like' || $type === 'comment') {
                                     $targetUrl = '/SocialNetwork/public/#post-' . (int) $n['target_id'];
                                 } else {
@@ -113,6 +115,8 @@ $currentUserId = (int) $_SESSION['user_id'];
                                             <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
                                         <?php elseif ($type === 'comment'): ?>
                                             <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+                                        <?php elseif ($type === 'follow'): ?>
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
                                         <?php else: ?>
                                             <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/></svg>
                                         <?php endif; ?>

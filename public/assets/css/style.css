@@ -1,4 +1,4 @@
-﻿/* ============================================================
+/* ============================================================
    public/assets/css/style.css
    Mini Social Network — Design System
    ============================================================
@@ -2444,6 +2444,11 @@ footer.footer.bg-primary { display: none !important; }
 
 .notif-badge-comment {
   background: #059669;
+  color: #ffffff;
+}
+
+.notif-badge-follow {
+  background: #7c3aed;
   color: #ffffff;
 }
 

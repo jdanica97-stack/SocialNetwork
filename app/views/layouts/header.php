@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 /**
  * app/views/layouts/header.php
  *
@@ -184,6 +184,14 @@ if (isset($_SESSION['user_id'])) {
       </li>
 
       <?php if (isset($_SESSION['user_id'])): ?>
+        <!-- Friends / People -->
+        <li>
+          <a href="/SocialNetwork/public/?url=friends" aria-label="Friends">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            <span class="nav-label">Friends</span>
+          </a>
+        </li>
+
         <!-- Messages -->
         <li>
           <a href="/SocialNetwork/public/?url=messages" aria-label="Messages" class="position-relative">
@@ -250,6 +258,14 @@ if (isset($_SESSION['user_id'])) {
                 <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
               </div>
               <span>View Profile</span>
+            </a>
+
+            <!-- 2. Friends & Following -->
+            <a href="/SocialNetwork/public/?url=friends" class="profile-dropdown-link" role="menuitem">
+              <div class="profile-dropdown-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+              </div>
+              <span>Friends & Following</span>
             </a>
 
             <div class="profile-dropdown-divider"></div>
