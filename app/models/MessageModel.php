@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 /**
  * app/models/MessageModel.php
@@ -28,12 +28,12 @@ class MessageModel
     public function sendMessage(int $senderId, int $recipientId, string $message): int|false
     {
         try {
-            $sql = 'INSERT INTO messages (sender_id, recipient_id, message, is_read, created_at)
-                    VALUES (:sender_id, :recipient_id, :message, 0, NOW())';
+            $sql = 'INSERT INTO messages (sender_id, receiver_id, message, is_read, created_at)
+                    VALUES (:sender_id, :receiver_id, :message, 0, NOW())';
 
             $stmt = $this->db->prepare($sql);
             $stmt->bindValue(':sender_id', $senderId, PDO::PARAM_INT);
-            $stmt->bindValue(':recipient_id', $recipientId, PDO::PARAM_INT);
+            $stmt->bindValue(':receiver_id', $recipientId, PDO::PARAM_INT);
             $stmt->bindValue(':message', $message, PDO::PARAM_STR);
 
             if ($stmt->execute()) {
@@ -71,14 +71,14 @@ class MessageModel
                             SELECT COUNT(*)
                             FROM messages unread_m
                             WHERE unread_m.sender_id = u.id
-                              AND unread_m.recipient_id = :user_id_sub
+                              AND unread_m.receiver_id = :user_id_sub
                               AND unread_m.is_read = 0
                         ) AS unread_count
                     FROM users u
                     INNER JOIN messages m ON m.id = (
                         SELECT id FROM messages m2
-                        WHERE (m2.sender_id = :user_id1 AND m2.recipient_id = u.id)
-                           OR (m2.sender_id = u.id AND m2.recipient_id = :user_id2)
+                        WHERE (m2.sender_id = :user_id1 AND m2.receiver_id = u.id)
+                           OR (m2.sender_id = u.id AND m2.receiver_id = :user_id2)
                         ORDER BY m2.created_at DESC, m2.id DESC
                         LIMIT 1
                     )
@@ -112,7 +112,7 @@ class MessageModel
             $sql = 'SELECT 
                         m.id,
                         m.sender_id,
-                        m.recipient_id,
+                        m.receiver_id,
                         m.message,
                         m.is_read,
                         m.created_at,
@@ -121,8 +121,8 @@ class MessageModel
                         sender.profile_image AS sender_image
                     FROM messages m
                     JOIN users sender ON m.sender_id = sender.id
-                    WHERE (m.sender_id = :u1 AND m.recipient_id = :o1)
-                       OR (m.sender_id = :o2 AND m.recipient_id = :u2)
+                    WHERE (m.sender_id = :u1 AND m.receiver_id = :o1)
+                       OR (m.sender_id = :o2 AND m.receiver_id = :u2)
                     ORDER BY m.created_at ASC, m.id ASC';
 
             $stmt = $this->db->prepare($sql);
@@ -151,7 +151,7 @@ class MessageModel
         try {
             $sql = 'UPDATE messages 
                     SET is_read = 1 
-                    WHERE recipient_id = :user_id 
+                    WHERE receiver_id = :user_id 
                       AND sender_id = :other_user_id 
                       AND is_read = 0';
 
@@ -175,7 +175,7 @@ class MessageModel
     public function countUnread(int $userId): int
     {
         try {
-            $sql = 'SELECT COUNT(*) FROM messages WHERE recipient_id = :user_id AND is_read = 0';
+            $sql = 'SELECT COUNT(*) FROM messages WHERE receiver_id = :user_id AND is_read = 0';
             $stmt = $this->db->prepare($sql);
             $stmt->bindValue(':user_id', $userId, PDO::PARAM_INT);
             $stmt->execute();
@@ -221,7 +221,7 @@ class MessageModel
     public function getMessageById(int $messageId): ?array
     {
         try {
-            $sql = 'SELECT id, sender_id, recipient_id, message, is_read, created_at
+            $sql = 'SELECT id, sender_id, receiver_id, message, is_read, created_at
                     FROM messages
                     WHERE id = :id
                     LIMIT 1';
@@ -250,13 +250,13 @@ class MessageModel
             $sql = 'SELECT 
                         m.id,
                         m.sender_id,
-                        m.recipient_id,
+                        m.receiver_id,
                         m.message,
                         m.is_read,
                         m.created_at
                     FROM messages m
-                    WHERE ((m.sender_id = :u1 AND m.recipient_id = :o1)
-                        OR (m.sender_id = :o2 AND m.recipient_id = :u2))
+                    WHERE ((m.sender_id = :u1 AND m.receiver_id = :o1)
+                        OR (m.sender_id = :o2 AND m.receiver_id = :u2))
                       AND m.id > :last_id
                     ORDER BY m.created_at ASC, m.id ASC';
             $stmt = $this->db->prepare($sql);

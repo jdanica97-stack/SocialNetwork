@@ -11,6 +11,9 @@
  *   - 'comment': A user commented on your post
  *
  * All operations use PDO prepared statements to guarantee security against SQL injection.
+ *
+ * Actual DB schema:
+ *   notifications(id, recipient_id, actor_id, type, target_type, target_id, preview, is_read, created_at)
  */
 
 class NotificationModel
@@ -29,7 +32,7 @@ class NotificationModel
      * @param int|null $actorId User performing the action
      * @param string $type Event type ('message', 'like', 'comment', etc.)
      * @param int|null $targetId Related target ID (partner user_id for message, post_id for like/comment)
-     * @param string $message Descriptive text of notification
+     * @param string $message Descriptive text of notification (stored in `preview` column)
      * @return int|false
      */
     public function createNotification(int $userId, ?int $actorId, string $type, ?int $targetId, string $message): int|false
@@ -40,11 +43,11 @@ class NotificationModel
         }
 
         try {
-            $sql = 'INSERT INTO notifications (user_id, actor_id, type, target_id, message, is_read, created_at)
-                    VALUES (:user_id, :actor_id, :type, :target_id, :message, 0, NOW())';
+            $sql = 'INSERT INTO notifications (recipient_id, actor_id, type, target_id, preview, is_read, created_at)
+                    VALUES (:recipient_id, :actor_id, :type, :target_id, :preview, 0, NOW())';
 
             $stmt = $this->db->prepare($sql);
-            $stmt->bindValue(':user_id', $userId, PDO::PARAM_INT);
+            $stmt->bindValue(':recipient_id', $userId, PDO::PARAM_INT);
             if ($actorId !== null) {
                 $stmt->bindValue(':actor_id', $actorId, PDO::PARAM_INT);
             } else {
@@ -56,7 +59,7 @@ class NotificationModel
             } else {
                 $stmt->bindValue(':target_id', null, PDO::PARAM_NULL);
             }
-            $stmt->bindValue(':message', $message, PDO::PARAM_STR);
+            $stmt->bindValue(':preview', $message, PDO::PARAM_STR);
 
             if ($stmt->execute()) {
                 return (int) $this->db->lastInsertId();
@@ -79,13 +82,13 @@ class NotificationModel
     public function getUserNotifications(int $userId, int $limit = 50): array
     {
         try {
-            $sql = 'SELECT 
+            $sql = 'SELECT
                         n.id,
-                        n.user_id,
+                        n.recipient_id,
                         n.actor_id,
                         n.type,
                         n.target_id,
-                        n.message,
+                        n.preview AS message,
                         n.is_read,
                         n.created_at,
                         actor.username AS actor_username,
@@ -93,12 +96,12 @@ class NotificationModel
                         actor.profile_image AS actor_image
                     FROM notifications n
                     LEFT JOIN users actor ON n.actor_id = actor.id
-                    WHERE n.user_id = :user_id
+                    WHERE n.recipient_id = :recipient_id
                     ORDER BY n.created_at DESC, n.id DESC
                     LIMIT :limit';
 
             $stmt = $this->db->prepare($sql);
-            $stmt->bindValue(':user_id', $userId, PDO::PARAM_INT);
+            $stmt->bindValue(':recipient_id', $userId, PDO::PARAM_INT);
             $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
             $stmt->execute();
 
@@ -118,9 +121,9 @@ class NotificationModel
     public function countUnread(int $userId): int
     {
         try {
-            $sql = 'SELECT COUNT(*) FROM notifications WHERE user_id = :user_id AND is_read = 0';
+            $sql = 'SELECT COUNT(*) FROM notifications WHERE recipient_id = :recipient_id AND is_read = 0';
             $stmt = $this->db->prepare($sql);
-            $stmt->bindValue(':user_id', $userId, PDO::PARAM_INT);
+            $stmt->bindValue(':recipient_id', $userId, PDO::PARAM_INT);
             $stmt->execute();
 
             return (int) $stmt->fetchColumn();
@@ -140,13 +143,13 @@ class NotificationModel
     public function markAsRead(int $notificationId, int $userId): bool
     {
         try {
-            $sql = 'UPDATE notifications 
-                    SET is_read = 1 
-                    WHERE id = :id AND user_id = :user_id';
+            $sql = 'UPDATE notifications
+                    SET is_read = 1
+                    WHERE id = :id AND recipient_id = :recipient_id';
 
             $stmt = $this->db->prepare($sql);
             $stmt->bindValue(':id', $notificationId, PDO::PARAM_INT);
-            $stmt->bindValue(':user_id', $userId, PDO::PARAM_INT);
+            $stmt->bindValue(':recipient_id', $userId, PDO::PARAM_INT);
 
             return $stmt->execute();
         } catch (PDOException $e) {
@@ -164,12 +167,12 @@ class NotificationModel
     public function markAllAsRead(int $userId): bool
     {
         try {
-            $sql = 'UPDATE notifications 
-                    SET is_read = 1 
-                    WHERE user_id = :user_id AND is_read = 0';
+            $sql = 'UPDATE notifications
+                    SET is_read = 1
+                    WHERE recipient_id = :recipient_id AND is_read = 0';
 
             $stmt = $this->db->prepare($sql);
-            $stmt->bindValue(':user_id', $userId, PDO::PARAM_INT);
+            $stmt->bindValue(':recipient_id', $userId, PDO::PARAM_INT);
 
             return $stmt->execute();
         } catch (PDOException $e) {
@@ -188,10 +191,10 @@ class NotificationModel
     public function deleteNotification(int $notificationId, int $userId): bool
     {
         try {
-            $sql = 'DELETE FROM notifications WHERE id = :id AND user_id = :user_id';
+            $sql = 'DELETE FROM notifications WHERE id = :id AND recipient_id = :recipient_id';
             $stmt = $this->db->prepare($sql);
             $stmt->bindValue(':id', $notificationId, PDO::PARAM_INT);
-            $stmt->bindValue(':user_id', $userId, PDO::PARAM_INT);
+            $stmt->bindValue(':recipient_id', $userId, PDO::PARAM_INT);
 
             return $stmt->execute();
         } catch (PDOException $e) {
