@@ -104,6 +104,7 @@ if (!empty($user['profile_image'])) {
                             >
                         </div>
 
+                        <input type="hidden" id="profile_image_data" name="profile_image_data" value="">
                         <input
                             type="file"
                             class="form-control"
@@ -118,7 +119,7 @@ if (!empty($user['profile_image'])) {
 
                     <!-- Action Buttons -->
                     <div class="d-flex gap-2">
-                        <button type="submit" class="btn btn-primary">
+                        <button type="submit" class="btn btn-primary" id="saveProfileBtn">
                             Save Changes
                         </button>
                         <a href="/SocialNetwork/public/?url=profile" class="btn btn-ghost">
@@ -137,7 +138,28 @@ if (!empty($user['profile_image'])) {
     </div>
 </div>
 
-<!-- Inline script for character counter and live image preview -->
+<!-- ── Avatar Cropper Modal ─────────────────────────────────────────── -->
+<div id="avatarCropModal" style="display:none;position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,0.75);align-items:center;justify-content:center;" role="dialog" aria-modal="true" aria-label="Crop profile picture">
+    <div style="background:var(--surface-card);border-radius:16px;padding:24px;max-width:520px;width:95%;max-height:90vh;overflow:auto;box-shadow:0 12px 32px rgba(0,0,0,0.35);border:1px solid var(--border);">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+            <h3 style="margin:0;font-size:1.05rem;font-weight:600;color:var(--fg);">Crop Profile Picture</h3>
+            <button type="button" id="avatarCropClose" style="background:none;border:none;cursor:pointer;color:var(--fg-muted);font-size:1.3rem;line-height:1;" aria-label="Close">&times;</button>
+        </div>
+        <div style="max-height:380px;overflow:hidden;border-radius:8px;background:#000;">
+            <img id="avatarCropImage" src="" alt="Profile picture to crop" style="max-width:100%;display:block;">
+        </div>
+        <div style="display:flex;gap:10px;margin-top:16px;justify-content:flex-end;">
+            <button type="button" id="avatarCropCancel" class="btn btn-ghost btn-sm">Cancel</button>
+            <button type="button" id="avatarCropApply" class="btn btn-primary btn-sm">Crop &amp; Apply</button>
+        </div>
+    </div>
+</div>
+
+<!-- Cropper.js CDN -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css" integrity="sha512-hvNR0F/e2J7zPPfLC9auFe3/zuAVFs9mTeKgMNyHOKa74hjFO3UfqYEDCGKOgSK0E4QQgmXX2REkEAqMBzqMQ==" crossorigin="anonymous">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js" integrity="sha512-9KkIqdfN7ipEW6B6k+Aq20PV31bjODg4AA52W+tYtAE0jE0kMx49bjJ3WyfVF09uAuXNcqe+AHKnicS5GuFNQ==" crossorigin="anonymous"></script>
+
+<!-- Inline script for character counter and Cropper.js live image preview -->
 <script>
 (function () {
     'use strict';
@@ -156,20 +178,109 @@ if (!empty($user['profile_image'])) {
         bioTextarea.addEventListener('input', updateBioCount);
     }
 
-    var fileInput  = document.getElementById('profile_image');
-    var imgPreview = document.getElementById('imagePreview');
+    var fileInput       = document.getElementById('profile_image');
+    var hiddenDataInput = document.getElementById('profile_image_data');
+    var imgPreview      = document.getElementById('imagePreview');
+    var modal           = document.getElementById('avatarCropModal');
+    var cropImage       = document.getElementById('avatarCropImage');
+    var closeBtn        = document.getElementById('avatarCropClose');
+    var cancelBtn       = document.getElementById('avatarCropCancel');
+    var applyBtn        = document.getElementById('avatarCropApply');
+    var cropper         = null;
 
-    if (fileInput && imgPreview) {
+    function openModal() {
+        if (modal) modal.style.display = 'flex';
+    }
+
+    function closeModal() {
+        if (modal) modal.style.display = 'none';
+        if (cropper) {
+            cropper.destroy();
+            cropper = null;
+        }
+        if (cropImage) cropImage.src = '';
+    }
+
+    if (fileInput) {
         fileInput.addEventListener('change', function () {
-            if (fileInput.files && fileInput.files[0]) {
-                var reader = new FileReader();
-                reader.onload = function (e) {
-                    imgPreview.src = e.target.result;
-                };
-                reader.readAsDataURL(fileInput.files[0]);
+            var file = this.files && this.files[0];
+            if (!file) return;
+
+            var allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+            if (!allowedTypes.includes(file.type)) {
+                alert('Only JPEG, PNG, GIF, and WebP images are allowed.');
+                this.value = '';
+                return;
             }
+
+            if (file.size > 10 * 1024 * 1024) {
+                alert('Selected image must be 10 MB or smaller.');
+                this.value = '';
+                return;
+            }
+
+            var reader = new FileReader();
+            reader.onload = function (e) {
+                if (cropImage) cropImage.src = e.target.result;
+                openModal();
+
+                if (cropper) {
+                    cropper.destroy();
+                    cropper = null;
+                }
+
+                // 1:1 square crop for profile avatar
+                cropper = new Cropper(cropImage, {
+                    aspectRatio: 1,
+                    viewMode: 1,
+                    autoCropArea: 1,
+                    movable: true,
+                    zoomable: true,
+                    rotatable: false,
+                    scalable: true,
+                    cropBoxResizable: true,
+                });
+            };
+            reader.readAsDataURL(file);
         });
     }
+
+    if (applyBtn) {
+        applyBtn.addEventListener('click', function () {
+            if (!cropper) return;
+
+            var canvas = cropper.getCroppedCanvas({ width: 400, height: 400 });
+            if (!canvas) {
+                alert('Failed to crop image.');
+                return;
+            }
+
+            var base64Data = canvas.toDataURL('image/jpeg', 0.9);
+            if (hiddenDataInput) {
+                hiddenDataInput.value = base64Data;
+            }
+            if (imgPreview) {
+                imgPreview.src = base64Data;
+            }
+
+            closeModal();
+        });
+    }
+
+    if (closeBtn) closeBtn.addEventListener('click', closeModal);
+    if (cancelBtn) cancelBtn.addEventListener('click', closeModal);
+
+    if (modal) {
+        modal.addEventListener('click', function (e) {
+            if (e.target === modal) closeModal();
+        });
+    }
+
+    document.addEventListener('keydown', function (e) {
+        if ((e.key === 'Escape' || e.key === 'Esc') && modal && modal.style.display === 'flex') {
+            closeModal();
+        }
+    });
 }());
 </script>
 

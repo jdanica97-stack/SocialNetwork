@@ -607,9 +607,237 @@
     });
   }
 
+
+  // ── 8. AJAX Post Composer Submission ──
+  function initAjaxPostSubmit() {
+    var postForm = document.getElementById('createPostForm');
+    if (!postForm) return;
+
+    postForm.addEventListener('submit', function (e) {
+      e.preventDefault();
+
+      var textarea = document.getElementById('composerTextarea');
+      var submitBtn = document.getElementById('composerSubmitBtn');
+      var content = textarea ? textarea.value.trim() : '';
+
+      if (!content) return;
+
+      // Prevent double-submit
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Posting…';
+      }
+
+      var formData = new FormData(postForm);
+
+      fetch('/SocialNetwork/public/?url=posts/create', {
+        method: 'POST',
+        headers: {
+          'X-Requested-With': 'XMLHttpRequest',
+          'Accept': 'application/json'
+        },
+        body: formData
+      })
+        .then(function (res) {
+          return res.json().then(function (data) {
+            return { ok: res.ok, status: res.status, data: data };
+          });
+        })
+        .then(function (res) {
+          if (!res.ok || !res.data || !res.data.success) {
+            var msg = res.data && res.data.message ? res.data.message : 'Could not create post. Please try again.';
+            throw new Error(msg);
+          }
+
+          var post = res.data.post;
+
+          // Clear form & reset inputs
+          if (textarea) {
+            textarea.value = '';
+            textarea.style.height = 'auto';
+          }
+          var fileInput = document.getElementById('postImageInput');
+          if (fileInput) fileInput.value = '';
+          var previewWrap = document.getElementById('composerImagePreviewWrap');
+          if (previewWrap) {
+            previewWrap.classList.add('d-none');
+            var previewGrid = document.getElementById('composerPreviewGrid');
+            if (previewGrid) previewGrid.innerHTML = '';
+          }
+          var fileNameSpan = document.getElementById('imageFileName');
+          if (fileNameSpan) fileNameSpan.textContent = '';
+          postForm.dispatchEvent(new Event('reset'));
+
+          // Build and prepend new post card to feed
+          var feed = document.getElementById('newsfeed-stream') || document.querySelector('.posts-stream');
+          if (feed && post) {
+            // Remove empty feed placeholder if present
+            var emptyFeedCard = feed.querySelector('.empty-feed-card, .card.text-center');
+            if (emptyFeedCard) emptyFeedCard.remove();
+
+            var newCard = buildPostCard(post);
+            if (newCard) {
+              feed.insertBefore(newCard, feed.firstChild);
+              // Animate in
+              newCard.style.opacity = '0';
+              newCard.style.transform = 'translateY(-10px)';
+              requestAnimationFrame(function () {
+                newCard.style.transition = 'opacity 0.35s, transform 0.35s';
+                newCard.style.opacity = '1';
+                newCard.style.transform = 'translateY(0)';
+              });
+            }
+          }
+
+          // Update newsfeed count text if present
+          var countEl = document.querySelector('.newsfeed-header-count');
+          if (countEl) {
+            var currentCount = parseInt(countEl.textContent, 10) || 0;
+            var newCount = currentCount + 1;
+            countEl.textContent = newCount + ' ' + (newCount === 1 ? 'post' : 'posts');
+          }
+
+          // Show success toast
+          showPostToast('Post published!', 'success');
+        })
+        .catch(function (err) {
+          showPostToast(err.message || 'An error occurred.', 'error');
+        })
+        .finally(function () {
+          if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Post';
+          }
+        });
+    });
+  }
+
+  /**
+   * Build a post card DOM element from post JSON data.
+   * Exactly matches the server-rendered template in app/views/posts/feed.php.
+   */
+  function buildPostCard(post) {
+    if (!post) return null;
+
+    var avatarSrc = post.profile_image
+      ? '/SocialNetwork/public/assets/images/profiles/' + encodeURIComponent(post.profile_image)
+      : 'https://ui-avatars.com/api/?name=' + encodeURIComponent(post.full_name) + '&size=80&background=111113&color=f5f5f7&rounded=true&bold=true';
+
+    var profileUrl = post.user_id ? '/SocialNetwork/public/?url=profile&id=' + post.user_id : '/SocialNetwork/public/?url=profile';
+
+    // Build images HTML
+    var imagesHtml = '';
+    if (post.images && post.images.length > 0) {
+      if (post.images.length === 1) {
+        imagesHtml = '<div class="post-image-single mb-3"><img src="/SocialNetwork/public/assets/images/' + esc(post.images[0]) + '" alt="Post image" class="post-single-img" loading="lazy" style="max-width:100%;border-radius:12px;cursor:pointer;"></div>';
+      } else {
+        var galleryUrls = post.images.map(function(img) { return '/SocialNetwork/public/assets/images/' + img; });
+        imagesHtml = '<div class="post-gallery-container mb-3" data-gallery-images=\'' + esc(JSON.stringify(galleryUrls)) + '\'>';
+        post.images.forEach(function(img, idx) {
+          imagesHtml += '<div class="post-gallery-item" data-gallery-index="' + idx + '"><img src="/SocialNetwork/public/assets/images/' + esc(img) + '" alt="Post image ' + (idx+1) + '" class="post-gallery-img" loading="lazy"></div>';
+        });
+        imagesHtml += '</div>';
+      }
+    }
+
+    var article = document.createElement('article');
+    article.className = 'card post-card glass fade-up mb-4';
+    article.id = 'post-' + post.id;
+
+    article.innerHTML =
+      '<div class="card-body">' +
+        '<div class="d-flex align-items-center justify-content-between mb-3">' +
+          '<div class="d-flex align-items-center gap-2">' +
+            '<a href="' + esc(profileUrl) + '" title="View ' + esc(post.full_name) + '\'s profile">' +
+              '<img src="' + esc(avatarSrc) + '" alt="' + esc(post.full_name) + '" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 1px solid var(--border); display: block;" loading="lazy">' +
+            '</a>' +
+            '<div>' +
+              '<a href="' + esc(profileUrl) + '" style="font-weight: 600; font-size: 0.92rem; color: var(--fg); text-decoration: none;" class="post-author-link">' + esc(post.full_name) + '</a>' +
+              '<div style="font-size: 0.75rem; color: var(--fg-faint);">' +
+                '@' + esc(post.username) + ' &bull; ' +
+                '<time datetime="' + esc(post.created_at) + '" title="' + esc(post.created_at) + '">' + esc(post.relative_time || 'Just now') + '</time>' +
+              '</div>' +
+            '</div>' +
+          '</div>' +
+          '<div class="post-menu-wrap position-relative">' +
+            '<button type="button" class="post-menu-btn" aria-label="Post options" aria-expanded="false" title="More options">' +
+              '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="1.75"/><circle cx="12" cy="12" r="1.75"/><circle cx="12" cy="19" r="1.75"/></svg>' +
+            '</button>' +
+            '<div class="post-menu-dropdown glass" role="menu">' +
+              '<a href="/SocialNetwork/public/?url=posts/edit&id=' + post.id + '" class="post-menu-item" role="menuitem">' +
+                '<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>' +
+                '<span>Edit Post</span>' +
+              '</a>' +
+              '<form method="POST" action="/SocialNetwork/public/?url=posts/delete" class="m-0 p-0" onsubmit="return confirm(\'Are you sure you want to delete this post?\');">' +
+                '<input type="hidden" name="csrf_token" value="' + esc(getCsrfToken()) + '">' +
+                '<input type="hidden" name="id" value="' + post.id + '">' +
+                '<button type="submit" class="post-menu-item delete-item w-100 border-0 bg-transparent text-start" role="menuitem">' +
+                  '<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>' +
+                  '<span>Delete Post</span>' +
+                '</button>' +
+              '</form>' +
+            '</div>' +
+          '</div>' +
+        '</div>' +
+        '<div class="post-content-body" style="font-size: 0.95rem; line-height: 1.6; color: var(--fg); margin-bottom: 16px; word-break: break-word; overflow-wrap: anywhere;">' + nl2brEsc(post.content) + '</div>' +
+        imagesHtml +
+        '<div class="post-interactions">' +
+          '<button type="button" class="like-btn like-button" data-post-id="' + post.id + '" data-liked="0" title="Like this post">' +
+            '<span class="like-icon" aria-hidden="true">' +
+              '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>' +
+            '</span>' +
+            '<span class="like-text">Like</span>' +
+            '<span class="like-count">0</span>' +
+          '</button>' +
+          '<span class="d-inline-flex align-items-center gap-1 text-muted" style="font-size: 0.82rem;">' +
+            '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>' +
+            '<span class="post-comment-count-text" id="post-comment-count-' + post.id + '">0 comments</span>' +
+          '</span>' +
+        '</div>' +
+      '</div>' +
+      '<section class="comments-section" aria-label="Comments on post ' + post.id + '">' +
+        '<div class="comments-list" id="comments-list-' + post.id + '"></div>' +
+        '<div class="comment-form-wrap">' +
+          '<form method="POST" action="/SocialNetwork/public/?url=comments/create">' +
+            '<input type="hidden" name="csrf_token" value="' + esc(getCsrfToken()) + '">' +
+            '<input type="hidden" name="post_id" value="' + post.id + '">' +
+            '<div class="d-flex gap-2 align-items-center">' +
+              '<textarea name="content" class="form-control comment-input" rows="1" placeholder="Write a comment..." maxlength="1000" required></textarea>' +
+              '<button type="submit" class="btn btn-ghost btn-sm comment-submit-btn">' +
+                '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>' +
+                '<span class="visually-hidden">Post comment</span>' +
+              '</button>' +
+            '</div>' +
+          '</form>' +
+        '</div>' +
+      '</section>';
+
+    return article;
+  }
+
+  function showPostToast(msg, type) {
+    var banner = document.getElementById('post-toast-alert');
+    if (!banner) {
+      banner = document.createElement('div');
+      banner.id = 'post-toast-alert';
+      banner.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);padding:10px 20px;border-radius:999px;font-size:0.85rem;font-weight:500;z-index:9999;box-shadow:0 4px 14px rgba(0,0,0,0.25);transition:opacity 0.3s;pointer-events:none;';
+      document.body.appendChild(banner);
+    }
+    if (type === 'success') {
+      banner.style.background = 'rgba(34,197,94,0.92)';
+    } else {
+      banner.style.background = 'rgba(239,68,68,0.92)';
+    }
+    banner.style.color = '#fff';
+    banner.textContent = msg;
+    banner.style.opacity = '1';
+    setTimeout(function () { banner.style.opacity = '0'; }, 3200);
+  }
+
   function init() {
     initComposer();
     initLightbox();
+    initAjaxPostSubmit();
   }
 
   if (document.readyState === 'loading') {

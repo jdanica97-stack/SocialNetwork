@@ -198,15 +198,15 @@
                 <h2 class="h5 mb-0" style="font-weight: 700; color: var(--fg); letter-spacing: -0.01em;">
                     Newsfeed
                 </h2>
-                <span class="small text-muted">
+                <span class="small text-muted newsfeed-header-count">
                     <?= count($posts) ?> <?= count($posts) === 1 ? 'post' : 'posts' ?>
                 </span>
             </div>
 
             <!-- Posts Stream (Newsfeed) -->
-            <div class="posts-stream">
+            <div class="posts-stream" id="newsfeed-stream">
                 <?php if (empty($posts)): ?>
-                    <div class="card glass text-center py-5 text-muted fade-up">
+                    <div class="card glass text-center py-5 text-muted fade-up empty-feed-card">
                         <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="mx-auto mb-2" style="opacity: 0.6;"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
                         <p class="mt-2 mb-0">No posts yet. Be the first to share something!</p>
                     </div>

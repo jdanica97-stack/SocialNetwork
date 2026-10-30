@@ -24,6 +24,12 @@ if (!empty($user['profile_image'])) {
     $avatarSrc = 'https://ui-avatars.com/api/?name=' . $initials
                . '&size=180&background=111113&color=f5f5f7&rounded=true&bold=true';
 }
+
+// Cover photo
+$coverPhotoSrc = null;
+if (!empty($user['cover_photo']) && file_exists(BASE_PATH . '/public/assets/images/profiles/' . $user['cover_photo'])) {
+    $coverPhotoSrc = $profileImageWebPath . rawurlencode($user['cover_photo']);
+}
 ?>
 
 <div class="row justify-content-center">
@@ -50,7 +56,18 @@ if (!empty($user['profile_image'])) {
         <div class="card profile-card glass fade-up">
 
             <!-- Subtle monochrome banner -->
-            <div class="profile-banner"></div>
+            <div class="profile-banner" id="coverPhotoBanner" style="position:relative;overflow:hidden;">
+                <?php if ($coverPhotoSrc): ?>
+                    <img src="<?= htmlspecialchars($coverPhotoSrc, ENT_QUOTES, 'UTF-8') ?>" alt="Cover photo" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;">
+                <?php endif; ?>
+                <?php if (!empty($isOwnProfile)): ?>
+                    <label for="coverPhotoInput" class="cover-photo-upload-btn" title="Change cover photo" style="position:absolute;bottom:10px;right:12px;cursor:pointer;background:rgba(0,0,0,0.5);color:#fff;border-radius:8px;padding:5px 12px;font-size:0.78rem;display:flex;align-items:center;gap:5px;backdrop-filter:blur(4px);z-index:2;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                        Edit Cover
+                    </label>
+                    <input type="file" id="coverPhotoInput" accept="image/jpeg,image/png,image/gif,image/webp" class="d-none" aria-label="Upload cover photo">
+                <?php endif; ?>
+            </div>
 
             <div class="card-body pt-0" style="padding: 0 28px 28px !important;">
 
@@ -739,4 +756,200 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 </script>
 
+
+<?php if (!empty($isOwnProfile)): ?>
+<!-- ── Cover Photo Cropper Modal ─────────────────────────────────────── -->
+<div id="coverCropModal" style="display:none;position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,0.75);align-items:center;justify-content:center;" role="dialog" aria-modal="true" aria-label="Crop cover photo">
+    <div style="background:var(--surface-card);border-radius:16px;padding:24px;max-width:700px;width:95%;max-height:90vh;overflow:auto;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+            <h3 style="margin:0;font-size:1rem;font-weight:600;color:var(--fg);">Crop Cover Photo</h3>
+            <button type="button" id="coverCropClose" style="background:none;border:none;cursor:pointer;color:var(--fg-muted);font-size:1.3rem;line-height:1;" aria-label="Close">&times;</button>
+        </div>
+        <div style="max-height:400px;overflow:hidden;border-radius:8px;background:#000;">
+            <img id="coverCropImage" src="" alt="Cover photo to crop" style="max-width:100%;display:block;">
+        </div>
+        <div style="display:flex;gap:10px;margin-top:16px;justify-content:flex-end;">
+            <button type="button" id="coverCropCancel" class="btn btn-ghost btn-sm">Cancel</button>
+            <button type="button" id="coverCropApply" class="btn btn-primary btn-sm">Apply &amp; Upload</button>
+        </div>
+        <p id="coverCropStatus" style="font-size:0.8rem;color:var(--fg-muted);margin-top:8px;text-align:center;min-height:1em;"></p>
+    </div>
+</div>
+
+<!-- Cropper.js CDN -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css" integrity="sha512-hvNR0F/e2J7zPPfLC9auFe3/zuAVFs9mTeKgMNyHOKa74hjFO3UfqYEDCGKOgSK0E4QQgmXX2REkEAqMBzqMQ==" crossorigin="anonymous">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js" integrity="sha512-9KkIqdfN7ipEW6B6k+Aq20PV31bjODg4AA52W+tYtAE0jE0kMx49bjJ3WyfVF09uAuXNcqe+AHKnicS5GuFNQ==" crossorigin="anonymous"></script>
+
+<script>
+(function () {
+    'use strict';
+
+    var coverInput    = document.getElementById('coverPhotoInput');
+    var modal         = document.getElementById('coverCropModal');
+    var cropImage     = document.getElementById('coverCropImage');
+    var closeBtn      = document.getElementById('coverCropClose');
+    var cancelBtn     = document.getElementById('coverCropCancel');
+    var applyBtn      = document.getElementById('coverCropApply');
+    var statusEl      = document.getElementById('coverCropStatus');
+    var bannerEl      = document.getElementById('coverPhotoBanner');
+    var bannerImg     = bannerEl ? bannerEl.querySelector('img') : null;
+    var cropper       = null;
+
+    function getCsrfToken() {
+        var meta = document.querySelector('meta[name="csrf-token"]');
+        return meta ? meta.getAttribute('content') : '';
+    }
+
+    function openModal() {
+        if (modal) {
+            modal.style.display = 'flex';
+            if (statusEl) statusEl.textContent = '';
+        }
+    }
+
+    function closeModal() {
+        if (modal) modal.style.display = 'none';
+        if (cropper) { cropper.destroy(); cropper = null; }
+        if (cropImage) cropImage.src = '';
+        if (coverInput) coverInput.value = '';
+    }
+
+    if (coverInput) {
+        coverInput.addEventListener('change', function () {
+            var file = this.files && this.files[0];
+            if (!file) return;
+
+            var allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+            if (!allowedTypes.includes(file.type)) {
+                alert('Only JPEG, PNG, GIF, and WebP images are allowed.');
+                this.value = '';
+                return;
+            }
+            if (file.size > 10 * 1024 * 1024) {
+                alert('Image must be 10 MB or smaller.');
+                this.value = '';
+                return;
+            }
+
+            var reader = new FileReader();
+            reader.onload = function (e) {
+                if (cropImage) cropImage.src = e.target.result;
+                openModal();
+
+                // Destroy previous cropper instance
+                if (cropper) { cropper.destroy(); cropper = null; }
+
+                // Init Cropper.js: 16:9 aspect ratio for cover photo
+                cropper = new Cropper(cropImage, {
+                    aspectRatio: 16 / 9,
+                    viewMode: 1,
+                    autoCropArea: 1,
+                    movable: true,
+                    zoomable: true,
+                    rotatable: false,
+                    scalable: true,
+                    cropBoxResizable: true,
+                });
+            };
+            reader.readAsDataURL(file);
+        });
+    }
+
+    if (closeBtn) closeBtn.addEventListener('click', closeModal);
+    if (cancelBtn) cancelBtn.addEventListener('click', closeModal);
+
+    if (applyBtn) {
+        applyBtn.addEventListener('click', function () {
+            if (!cropper) return;
+
+            applyBtn.disabled = true;
+            applyBtn.textContent = 'Uploading…';
+            if (statusEl) statusEl.textContent = '';
+
+            // Get cropped canvas and convert to base64
+            var canvas = cropper.getCroppedCanvas({ maxWidth: 1200, maxHeight: 675 });
+            if (!canvas) {
+                if (statusEl) statusEl.textContent = 'Failed to crop image.';
+                applyBtn.disabled = false;
+                applyBtn.textContent = 'Apply & Upload';
+                return;
+            }
+
+            var base64Data = canvas.toDataURL('image/jpeg', 0.85);
+            var csrfToken  = getCsrfToken();
+
+            var formData = new FormData();
+            formData.append('csrf_token', csrfToken);
+            formData.append('cover_photo_data', base64Data);
+
+            fetch('/SocialNetwork/public/?url=profile/cover', {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
+                },
+                body: formData
+            })
+            .then(function (res) { return res.json(); })
+            .then(function (data) {
+                if (data.success) {
+                    // Update banner background image
+                    if (bannerEl) {
+                        // Remove old img if any
+                        var oldImg = bannerEl.querySelector('img');
+                        if (oldImg) oldImg.remove();
+                        var newImg = document.createElement('img');
+                        newImg.src = data.cover_url;
+                        newImg.alt = 'Cover photo';
+                        newImg.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;';
+                        bannerEl.insertBefore(newImg, bannerEl.firstChild);
+                    }
+                    closeModal();
+                    // Show success toast
+                    showCoverToast('Cover photo updated!', 'success');
+                } else {
+                    if (statusEl) statusEl.textContent = data.message || 'Upload failed.';
+                }
+            })
+            .catch(function () {
+                if (statusEl) statusEl.textContent = 'Network error. Please try again.';
+            })
+            .finally(function () {
+                applyBtn.disabled = false;
+                applyBtn.textContent = 'Apply & Upload';
+            });
+        });
+    }
+
+    // Close modal on backdrop click
+    if (modal) {
+        modal.addEventListener('click', function (e) {
+            if (e.target === modal) closeModal();
+        });
+    }
+
+    // Close on Escape
+    document.addEventListener('keydown', function (e) {
+        if ((e.key === 'Escape' || e.key === 'Esc') && modal && modal.style.display === 'flex') {
+            closeModal();
+        }
+    });
+
+    function showCoverToast(msg, type) {
+        var banner = document.getElementById('cover-toast-alert');
+        if (!banner) {
+            banner = document.createElement('div');
+            banner.id = 'cover-toast-alert';
+            banner.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);padding:10px 20px;border-radius:999px;font-size:0.85rem;font-weight:500;z-index:9999;box-shadow:0 4px 14px rgba(0,0,0,0.25);transition:opacity 0.3s;pointer-events:none;';
+            document.body.appendChild(banner);
+        }
+        banner.style.background = type === 'success' ? 'rgba(34,197,94,0.92)' : 'rgba(239,68,68,0.92)';
+        banner.style.color = '#fff';
+        banner.textContent = msg;
+        banner.style.opacity = '1';
+        setTimeout(function () { banner.style.opacity = '0'; }, 3200);
+    }
+}());
+</script>
+<?php endif; ?>
 <?php require_once BASE_PATH . '/app/views/layouts/footer.php'; ?>

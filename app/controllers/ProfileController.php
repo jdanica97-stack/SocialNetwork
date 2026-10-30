@@ -236,7 +236,15 @@ class ProfileController
         // ── Handle profile image upload (optional) ────────────────────────────
         $newImageFilename = null; // will stay null if no file was chosen
 
-        if (!empty($_FILES['profile_image']['name'])) {
+        $croppedData = trim($_POST['profile_image_data'] ?? '');
+        if (!empty($croppedData)) {
+            $cropResult = $this->handleBase64ImageUpload($croppedData, $this->maxFileSize);
+            if ($cropResult['success']) {
+                $newImageFilename = $cropResult['filename'];
+            } else {
+                $errors = array_merge($errors, $cropResult['errors']);
+            }
+        } elseif (!empty($_FILES['profile_image']['name'])) {
             $uploadResult = $this->handleImageUpload($_FILES['profile_image']);
 
             if ($uploadResult['success']) {
@@ -332,6 +340,18 @@ class ProfileController
             return ['success' => false, 'errors' => $errors];
         }
 
+        // 3b. Verify image integrity and dimensions using getimagesize
+        $imageInfo = @getimagesize($file['tmp_name']);
+        if ($imageInfo === false) {
+            $errors[] = 'The uploaded file is not a valid or readable image.';
+            return ['success' => false, 'errors' => $errors];
+        }
+
+        if ($imageInfo[0] > 8000 || $imageInfo[1] > 8000) {
+            $errors[] = 'Image dimensions exceed the allowed limit (maximum 8000x8000 pixels).';
+            return ['success' => false, 'errors' => $errors];
+        }
+
         // 4. Derive a safe file extension from the MIME type
         $extensionMap = [
             'image/jpeg' => 'jpg',
@@ -353,6 +373,73 @@ class ProfileController
         // 7. Move the file from the PHP temp directory to the upload folder
         if (!move_uploaded_file($file['tmp_name'], $destination)) {
             $errors[] = 'Could not save the uploaded image. Please try again.';
+            return ['success' => false, 'errors' => $errors];
+        }
+
+        return ['success' => true, 'filename' => $filename];
+    }
+
+    /**
+     * Validate and save a base64 encoded image (e.g. from Cropper.js).
+     *
+     * @param string $base64Data Data URL string
+     * @param int $maxBytes Maximum byte size allowed
+     * @return array ['success' => bool, 'filename' => string, 'errors' => array]
+     */
+    private function handleBase64ImageUpload(string $base64Data, int $maxBytes = 2097152): array
+    {
+        $errors = [];
+
+        if (!preg_match('/^data:(image\/(jpeg|png|gif|webp));base64,(.+)$/i', trim($base64Data), $matches)) {
+            $errors[] = 'Invalid image data format.';
+            return ['success' => false, 'errors' => $errors];
+        }
+
+        $base64Payload = $matches[3];
+        $imageData = base64_decode($base64Payload, true);
+        if ($imageData === false) {
+            $errors[] = 'Could not decode image data.';
+            return ['success' => false, 'errors' => $errors];
+        }
+
+        if (strlen($imageData) > $maxBytes) {
+            $errors[] = 'Image size exceeds the allowed limit (' . round($maxBytes / 1048576, 1) . ' MB).';
+            return ['success' => false, 'errors' => $errors];
+        }
+
+        $finfo = new finfo(FILEINFO_MIME_TYPE);
+        $detectedMime = $finfo->buffer($imageData);
+        if (!in_array($detectedMime, $this->allowedMimeTypes, true)) {
+            $errors[] = 'Invalid image format. Only JPEG, PNG, GIF, and WebP are allowed.';
+            return ['success' => false, 'errors' => $errors];
+        }
+
+        $imageInfo = @getimagesizefromstring($imageData);
+        if ($imageInfo === false) {
+            $errors[] = 'The image data is corrupted or invalid.';
+            return ['success' => false, 'errors' => $errors];
+        }
+
+        if ($imageInfo[0] > 8000 || $imageInfo[1] > 8000) {
+            $errors[] = 'Image dimensions exceed the allowed limit (maximum 8000x8000 pixels).';
+            return ['success' => false, 'errors' => $errors];
+        }
+
+        $extMap = [
+            'image/jpeg' => 'jpg',
+            'image/png'  => 'png',
+            'image/gif'  => 'gif',
+            'image/webp' => 'webp',
+        ];
+        $ext = $extMap[$detectedMime] ?? 'jpg';
+        $filename = bin2hex(random_bytes(16)) . '.' . $ext;
+
+        if (!is_dir($this->uploadDir)) {
+            mkdir($this->uploadDir, 0755, true);
+        }
+
+        if (file_put_contents($this->uploadDir . $filename, $imageData) === false) {
+            $errors[] = 'Failed to save the image to disk.';
             return ['success' => false, 'errors' => $errors];
         }
 
@@ -512,6 +599,122 @@ class ProfileController
             $_SESSION['flash_error'] = 'Failed to update username due to a server error. Please try again.';
         }
 
+        header('Location: /SocialNetwork/public/?url=profile');
+        exit;
+    }
+
+
+    // ─── Update Cover Photo (POST) ────────────────────────────────────────────
+
+    /**
+     * Process uploading or removing the cover photo.
+     * Accepts base64-encoded cropped image data OR a regular file upload.
+     * Route: POST /SocialNetwork/public/?url=profile/cover
+     */
+    public function updateCover(): void
+    {
+        $this->requireAuth();
+        $userId = (int) $_SESSION['user_id'];
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: /SocialNetwork/public/?url=profile');
+            exit;
+        }
+
+        $isAjax = (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest')
+            || (isset($_SERVER['HTTP_ACCEPT']) && str_contains(strtolower($_SERVER['HTTP_ACCEPT']), 'application/json'));
+
+        if (!Csrf::check()) {
+            if ($isAjax) {
+                http_response_code(403);
+                header('Content-Type: application/json; charset=UTF-8');
+                echo json_encode(['success' => false, 'message' => 'Security verification failed (invalid CSRF token). Please refresh and try again.']);
+                exit;
+            }
+            $_SESSION['flash_error'] = 'Security verification failed (invalid CSRF token). Please try again.';
+            header('Location: /SocialNetwork/public/?url=profile');
+            exit;
+        }
+
+        $user = $this->userModel->findById($userId);
+        if (!$user) {
+            header('Location: /SocialNetwork/public/');
+            exit;
+        }
+
+        $newFilename = null;
+
+        // Check for base64 cropped image data
+        $base64Data = $_POST['cover_photo_data'] ?? '';
+        if (!empty($base64Data)) {
+            $uploadResult = $this->handleBase64ImageUpload($base64Data, 10485760);
+            if ($uploadResult['success']) {
+                $newFilename = $uploadResult['filename'];
+            } else {
+                $this->respondError($isAjax, implode(' ', $uploadResult['errors']));
+                return;
+            }
+        } elseif (!empty($_FILES['cover_photo']['name'])) {
+            // Standard file upload fallback
+            $uploadResult = $this->handleImageUpload($_FILES['cover_photo']);
+            if ($uploadResult['success']) {
+                $newFilename = $uploadResult['filename'];
+            } else {
+                $errorMsg = implode(' ', $uploadResult['errors']);
+                $this->respondError($isAjax, $errorMsg);
+                return;
+            }
+        } else {
+            $this->respondError($isAjax, 'No cover photo provided.');
+            return;
+        }
+
+        // Delete old cover photo if present
+        if (!empty($user['cover_photo'])) {
+            $oldFile = $this->uploadDir . $user['cover_photo'];
+            if (file_exists($oldFile)) {
+                @unlink($oldFile);
+            }
+        }
+
+        $updated = $this->userModel->updateCoverPhoto($userId, $newFilename);
+
+        if ($isAjax) {
+            header('Content-Type: application/json; charset=UTF-8');
+            if ($updated) {
+                echo json_encode([
+                    'success'   => true,
+                    'message'   => 'Cover photo updated successfully.',
+                    'cover_url' => '/SocialNetwork/public/assets/images/profiles/' . rawurlencode($newFilename),
+                ]);
+            } else {
+                http_response_code(500);
+                echo json_encode(['success' => false, 'message' => 'Failed to update cover photo due to a server error.']);
+            }
+            exit;
+        }
+
+        if ($updated) {
+            $_SESSION['flash_success'] = 'Cover photo updated successfully.';
+        } else {
+            $_SESSION['flash_error'] = 'Failed to update cover photo due to a server error.';
+        }
+        header('Location: /SocialNetwork/public/?url=profile');
+        exit;
+    }
+
+    /**
+     * Helper to send error response (AJAX JSON or flash redirect).
+     */
+    private function respondError(bool $isAjax, string $message): void
+    {
+        if ($isAjax) {
+            http_response_code(400);
+            header('Content-Type: application/json; charset=UTF-8');
+            echo json_encode(['success' => false, 'message' => $message]);
+            exit;
+        }
+        $_SESSION['flash_error'] = $message;
         header('Location: /SocialNetwork/public/?url=profile');
         exit;
     }

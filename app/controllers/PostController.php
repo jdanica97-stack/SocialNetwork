@@ -133,17 +133,33 @@ class PostController
     /**
      * Create a new post.
      * Validates text content and optional image upload.
+     * Supports both standard form POST and AJAX/JSON requests.
      */
     public function create(): void
     {
         $this->requireAuth();
 
+        $isAjax = (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest')
+            || (isset($_SERVER['HTTP_ACCEPT']) && str_contains(strtolower($_SERVER['HTTP_ACCEPT']), 'application/json'));
+
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            if ($isAjax) {
+                http_response_code(405);
+                header('Content-Type: application/json; charset=UTF-8');
+                echo json_encode(['success' => false, 'message' => 'Method not allowed.']);
+                exit;
+            }
             header('Location: /SocialNetwork/public/');
             exit;
         }
 
         if (!Csrf::check()) {
+            if ($isAjax) {
+                http_response_code(403);
+                header('Content-Type: application/json; charset=UTF-8');
+                echo json_encode(['success' => false, 'message' => 'Security verification failed (invalid CSRF token). Please refresh and try again.']);
+                exit;
+            }
             $_SESSION['flash_error'] = 'Security verification failed (invalid CSRF token). Please try again.';
             header('Location: /SocialNetwork/public/');
             exit;
@@ -154,12 +170,24 @@ class PostController
         $imageName = null;
 
         if ($content === '') {
+            if ($isAjax) {
+                http_response_code(400);
+                header('Content-Type: application/json; charset=UTF-8');
+                echo json_encode(['success' => false, 'message' => 'Post content cannot be empty.']);
+                exit;
+            }
             $_SESSION['flash_error'] = 'Post content cannot be empty.';
             header('Location: /SocialNetwork/public/');
             exit;
         }
 
         if (mb_strlen($content) > 5000) {
+            if ($isAjax) {
+                http_response_code(400);
+                header('Content-Type: application/json; charset=UTF-8');
+                echo json_encode(['success' => false, 'message' => 'Post content exceeds the 5,000 character limit.']);
+                exit;
+            }
             $_SESSION['flash_error'] = 'Post content exceeds the 5,000 character limit.';
             header('Location: /SocialNetwork/public/');
             exit;
@@ -170,6 +198,12 @@ class PostController
         try {
             $imagePaths = $this->processUploadedImages();
         } catch (RuntimeException $e) {
+            if ($isAjax) {
+                http_response_code(400);
+                header('Content-Type: application/json; charset=UTF-8');
+                echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+                exit;
+            }
             $_SESSION['flash_error'] = $e->getMessage();
             header('Location: /SocialNetwork/public/');
             exit;
@@ -178,10 +212,41 @@ class PostController
         $newPostId = $this->postModel->create($userId, $content, $imagePaths);
 
         if ($newPostId) {
+            if ($isAjax) {
+                // Return JSON with new post data for front-end rendering
+                $currentUser = $this->userModel->findById($userId);
+                $displayName = !empty($currentUser['full_name']) ? $currentUser['full_name'] : ($_SESSION['user_full_name'] ?? 'User');
+                $hasAvatar = !empty($currentUser['profile_image']) && file_exists(BASE_PATH . '/public/assets/images/profiles/' . $currentUser['profile_image']);
+
+                http_response_code(200);
+                header('Content-Type: application/json; charset=UTF-8');
+                echo json_encode([
+                    'success'  => true,
+                    'message'  => 'Post created successfully!',
+                    'post'     => [
+                        'id'            => $newPostId,
+                        'user_id'       => $userId,
+                        'content'       => $content,
+                        'images'        => $imagePaths,
+                        'created_at'    => date('Y-m-d H:i:s'),
+                        'relative_time' => 'Just now',
+                        'full_name'     => $displayName,
+                        'username'      => $currentUser['username'] ?? ($_SESSION['user_username'] ?? 'user'),
+                        'profile_image' => $hasAvatar ? $currentUser['profile_image'] : null,
+                    ],
+                ]);
+                exit;
+            }
             $_SESSION['flash_success'] = 'Post created successfully!';
             header('Location: /SocialNetwork/public/#post-' . $newPostId);
         } else {
             $this->cleanupFiles($imagePaths);
+            if ($isAjax) {
+                http_response_code(500);
+                header('Content-Type: application/json; charset=UTF-8');
+                echo json_encode(['success' => false, 'message' => 'Failed to create post. Please try again.']);
+                exit;
+            }
             $_SESSION['flash_error'] = 'Failed to create post. Please try again.';
             header('Location: /SocialNetwork/public/');
         }
@@ -496,6 +561,18 @@ class PostController
             if (!in_array($mimeType, $this->allowedMimeTypes, true)) {
                 $this->cleanupFiles($uploadedPaths);
                 throw new RuntimeException('Invalid image format. Allowed formats: JPG, PNG, GIF, WebP.');
+            }
+
+            // Image integrity verification via getimagesize
+            $imageInfo = @getimagesize($file['tmp_name']);
+            if ($imageInfo === false) {
+                $this->cleanupFiles($uploadedPaths);
+                throw new RuntimeException('Uploaded file is not a valid or readable image.');
+            }
+
+            if ($imageInfo[0] > 8000 || $imageInfo[1] > 8000) {
+                $this->cleanupFiles($uploadedPaths);
+                throw new RuntimeException('Image dimensions exceed the allowed limit (maximum 8000x8000 pixels).');
             }
 
             $ext = $mimeToExt[$mimeType] ?? 'jpg';

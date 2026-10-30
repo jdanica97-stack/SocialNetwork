@@ -52,7 +52,7 @@ class UserModel
     public function findByUsername(string $username): array|false
     {
         try {
-            $sql  = 'SELECT id, username, password, full_name, bio, profile_image, created_at
+            $sql  = 'SELECT id, username, password, full_name, bio, profile_image, cover_photo, created_at
                      FROM users
                      WHERE username = :username
                      LIMIT 1';
@@ -138,7 +138,7 @@ class UserModel
     {
         try {
             // Deliberately exclude `password` — it must never appear in profile views.
-            $sql = 'SELECT id, username, full_name, bio, profile_image, created_at
+            $sql = 'SELECT id, username, full_name, bio, profile_image, cover_photo, created_at
                     FROM users
                     WHERE id = :id
                     LIMIT 1';
@@ -286,7 +286,7 @@ class UserModel
                 return [];
             }
 
-            $sql = 'SELECT id, username, full_name, bio, profile_image, created_at
+            $sql = 'SELECT id, username, full_name, bio, profile_image, cover_photo, created_at
                     FROM users
                     WHERE username LIKE :kw_username
                        OR full_name LIKE :kw_name
@@ -324,7 +324,7 @@ class UserModel
     public function getAllUsers(int $limit = 100): array
     {
         try {
-            $sql = 'SELECT id, username, full_name, bio, profile_image, created_at
+            $sql = 'SELECT id, username, full_name, bio, profile_image, cover_photo, created_at
                     FROM users
                     ORDER BY full_name ASC, username ASC
                     LIMIT :limit';
@@ -413,6 +413,33 @@ class UserModel
      * @param string $newPasswordHash
      * @return bool
      */
+
+    /**
+     * Update only the cover_photo column for a given user.
+     *
+     * @param  int    $id        The user's primary-key ID (from session).
+     * @param  string|null $filename  The stored filename or null to clear.
+     * @return bool              true on success, false on DB failure.
+     */
+    public function updateCoverPhoto(int $id, ?string $filename): bool
+    {
+        try {
+            $sql = 'UPDATE users
+                    SET cover_photo = :cover_photo
+                    WHERE id = :id';
+
+            $stmt = $this->db->prepare($sql);
+
+            return $stmt->execute([
+                ':cover_photo' => $filename,
+                ':id'          => $id,
+            ]);
+        } catch (PDOException $e) {
+            error_log('UserModel::updateCoverPhoto database error: ' . $e->getMessage());
+            return false;
+        }
+    }
+
     public function updatePassword(int $id, string $newPasswordHash): bool
     {
         try {

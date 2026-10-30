@@ -136,7 +136,8 @@ if ($url === 'auth/login' || $url === 'auth/register' || $url === 'auth/logout')
 
 // ── Profile Routes ────────────────────────────────────────────────────────────
 if ($url === 'profile' || $url === 'profile/edit' || $url === 'profile/update'
-    || $url === 'profile/account' || $url === 'profile/username' || $url === 'profile/password') {
+    || $url === 'profile/account' || $url === 'profile/username' || $url === 'profile/password'
+    || $url === 'profile/cover') {
     require_once BASE_PATH . '/app/controllers/ProfileController.php';
     $profile = new ProfileController();
 
@@ -171,6 +172,15 @@ if ($url === 'profile' || $url === 'profile/edit' || $url === 'profile/update'
     if ($url === 'profile/username') {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $profile->updateUsername();
+        } else {
+            header('Location: /SocialNetwork/public/?url=profile');
+        }
+        exit;
+    }
+
+    if ($url === 'profile/cover') {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $profile->updateCover();
         } else {
             header('Location: /SocialNetwork/public/?url=profile');
         }

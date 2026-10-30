@@ -983,10 +983,12 @@ input[type="file"].form-control {
 
 /* ── 13. Profile Page ──────────────────────────────────────── */
 .profile-banner {
-  height: 80px;
+  height: 180px;
   background: var(--surface-hover);
   border-radius: var(--radius-card) var(--radius-card) 0 0;
   border-bottom: 1px solid var(--border);
+  position: relative;
+  overflow: hidden;
 }
 
 .profile-card {
@@ -1174,7 +1176,7 @@ footer.footer.bg-primary { display: none !important; }
 
   .profile-avatar-wrap { padding: 0 16px; }
   .profile-avatar { width: 72px; height: 72px; margin-top: -36px; }
-  .profile-banner { height: 64px; }
+  .profile-banner { height: 130px; }
 
   .card-body { padding: 18px !important; }
 
