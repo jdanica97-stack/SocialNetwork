@@ -37,23 +37,29 @@
   'use strict';
   var STORAGE_KEY = 'sn-theme';
   var root        = document.documentElement;
-  var btn         = document.getElementById('themeToggle');
+  var buttons     = document.querySelectorAll('#themeToggle, #themeToggleGuest, .theme-toggle-btn');
 
   function apply(theme) {
     root.setAttribute('data-theme', theme);
-    if (btn) {
-      btn.setAttribute('aria-label',
-        theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode');
-    }
+    var label = theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode';
+    buttons.forEach(function (b) {
+      b.setAttribute('aria-label', label);
+      b.setAttribute('title', label);
+    });
   }
 
-  if (btn) {
-    btn.addEventListener('click', function () {
+  // Set initial aria-label and title based on active theme
+  var initialTheme = root.getAttribute('data-theme') || (localStorage.getItem(STORAGE_KEY) || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
+  apply(initialTheme);
+
+  buttons.forEach(function (btn) {
+    btn.addEventListener('click', function (e) {
+      e.preventDefault();
       var next = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
       localStorage.setItem(STORAGE_KEY, next);
       apply(next);
     });
-  }
+  });
 
   window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function (e) {
     if (!localStorage.getItem(STORAGE_KEY)) {

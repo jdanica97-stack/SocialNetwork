@@ -206,6 +206,22 @@ if (isset($_SESSION['user_id'])) {
           </a>
         </li>
 
+        <!-- Theme Toggle (Authenticated) -->
+        <li>
+          <button
+            type="button"
+            class="halo-nav-btn theme-toggle-btn"
+            id="themeToggle"
+            aria-label="Toggle dark mode"
+            title="Toggle dark mode"
+          >
+            <!-- Moon (shown in light mode) -->
+            <svg class="icon-moon" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+            <!-- Sun (shown in dark mode) -->
+            <svg class="icon-sun" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+          </button>
+        </li>
+
         <!-- Profile Dropdown at Top Right (logged-in users) -->
         <li class="position-relative profile-dropdown-wrapper" id="profileDropdownWrapper">
           <button
@@ -260,23 +276,7 @@ if (isset($_SESSION['user_id'])) {
               <span>Friends</span>
             </a>
 
-            <div class="profile-dropdown-divider"></div>
 
-            <!-- Theme Toggle -->
-            <button
-              type="button"
-              class="profile-dropdown-link w-100 text-start border-0 bg-transparent"
-              id="themeToggle"
-              role="menuitem"
-              aria-label="Toggle dark mode"
-            >
-              <div class="profile-dropdown-icon">
-                <svg class="icon-moon" xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
-                <svg class="icon-sun" xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
-              </div>
-              <span class="icon-moon-label">Dark Mode</span>
-              <span class="icon-sun-label">Light Mode</span>
-            </button>
 
             <div class="profile-dropdown-divider"></div>
 
@@ -288,6 +288,37 @@ if (isset($_SESSION['user_id'])) {
               <span class="text-danger">Sign Out</span>
             </a>
           </div>
+        </li>
+      <?php else: ?>
+        <!-- Guest Visitors (Landing, Login, Register) -->
+        <li>
+          <a href="/SocialNetwork/public/?url=auth/login" aria-label="Login">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+            <span class="nav-label">Login</span>
+          </a>
+        </li>
+
+        <li>
+          <a href="/SocialNetwork/public/?url=auth/register" aria-label="Register">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
+            <span class="nav-label">Register</span>
+          </a>
+        </li>
+
+        <!-- Theme Toggle (Public / Guest) -->
+        <li>
+          <button
+            type="button"
+            class="halo-nav-btn theme-toggle-btn"
+            id="themeToggleGuest"
+            aria-label="Toggle dark mode"
+            title="Toggle dark mode"
+          >
+            <!-- Moon (shown in light mode) -->
+            <svg class="icon-moon" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+            <!-- Sun (shown in dark mode) -->
+            <svg class="icon-sun" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+          </button>
         </li>
       <?php endif; ?>
 

@@ -561,6 +561,11 @@ button.profile-dropdown-link:hover {
   background: var(--surface-hover);
   opacity: 1;
 }
+.halo-nav-links a:focus-visible,
+.halo-nav-btn:focus-visible {
+  outline: 2px solid var(--fg);
+  outline-offset: 1px;
+}
 
 
 /* Theme toggle icons */
@@ -934,6 +939,18 @@ input[type="file"].form-control {
 .hero-home {
   text-align: center;
   padding: 60px 0 40px;
+}
+
+.hero-badge {
+  background: var(--surface-card);
+  color: var(--fg);
+  border: 1px solid var(--border);
+  padding: 6px 16px;
+  border-radius: var(--radius-pill);
+  font-weight: 500;
+  font-size: 0.82rem;
+  letter-spacing: 0.01em;
+  display: inline-block;
 }
 
 .hero-home h1 {
