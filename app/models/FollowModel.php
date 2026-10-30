@@ -205,13 +205,37 @@ class FollowModel
     }
 
     /**
-     * Get mutual friends (users where both follow each other).
+     * Get mutual friends count (users where both follow each other).
+     *
+     * @param int $userId
+     * @return int
+     */
+    public function getFriendsCount(int $userId): int
+    {
+        try {
+            $sql = 'SELECT COUNT(*)
+                    FROM follows f1
+                    INNER JOIN follows f2 ON f2.follower_id = f1.following_id AND f2.following_id = f1.follower_id
+                    WHERE f1.follower_id = :userId';
+            $stmt = $this->db->prepare($sql);
+            $stmt->bindValue(':userId', $userId, PDO::PARAM_INT);
+            $stmt->execute();
+            return (int) $stmt->fetchColumn();
+        } catch (PDOException $e) {
+            error_log('FollowModel::getFriendsCount error: ' . $e->getMessage());
+            return 0;
+        }
+    }
+
+    /**
+     * Get mutual friends (users where both follow each other), with optional search.
      *
      * @param int $userId
      * @param int $limit
+     * @param string $search
      * @return array
      */
-    public function getFriends(int $userId, int $limit = 50): array
+    public function getFriends(int $userId, int $limit = 50, string $search = ''): array
     {
         try {
             $sql = 'SELECT 
@@ -219,17 +243,25 @@ class FollowModel
                         u.username, 
                         u.full_name, 
                         u.bio, 
-                        u.profile_image,
+                        u.profile_image, 
                         f1.created_at AS friendship_date,
                         (SELECT COUNT(*) FROM follows WHERE following_id = u.id) AS followers_count
                     FROM users u
                     INNER JOIN follows f1 ON f1.following_id = u.id AND f1.follower_id = :u1
-                    INNER JOIN follows f2 ON f2.follower_id = u.id AND f2.following_id = :u2
-                    ORDER BY f1.created_at DESC
-                    LIMIT :limit';
+                    INNER JOIN follows f2 ON f2.follower_id = u.id AND f2.following_id = :u2';
+
+            if ($search !== '') {
+                $sql .= ' WHERE (u.full_name LIKE :search OR u.username LIKE :search)';
+            }
+
+            $sql .= ' ORDER BY f1.created_at DESC LIMIT :limit';
+
             $stmt = $this->db->prepare($sql);
             $stmt->bindValue(':u1', $userId, PDO::PARAM_INT);
             $stmt->bindValue(':u2', $userId, PDO::PARAM_INT);
+            if ($search !== '') {
+                $stmt->bindValue(':search', '%' . $search . '%', PDO::PARAM_STR);
+            }
             $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
             $stmt->execute();
             return $stmt->fetchAll(PDO::FETCH_ASSOC);

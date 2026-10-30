@@ -234,11 +234,30 @@ class FollowController
     }
 
     /**
-     * Backward-compatibility alias for friends/people.
+     * Dedicated Friends page — displays mutual connections.
      */
     public function friends(): void
     {
-        $tab = strtolower(trim($_GET['tab'] ?? 'following'));
-        $this->index($tab === 'followers' ? 'followers' : 'following');
+        $this->requireAuth();
+        $currentUserId = (int) $_SESSION['user_id'];
+
+        $flashSuccess = $_SESSION['flash_success'] ?? null;
+        $flashError   = $_SESSION['flash_error']   ?? null;
+        unset($_SESSION['flash_success'], $_SESSION['flash_error']);
+
+        $searchQuery = trim($_GET['q'] ?? '');
+
+        // Fetch mutual friends (both users follow each other)
+        $friends = $this->followModel->getFriends($currentUserId, 100, $searchQuery);
+        $friendsTotalCount = $this->followModel->getFriendsCount($currentUserId);
+
+        // Current user's following list (for button state)
+        $myFollowingIds = $this->followModel->getFollowingIds($currentUserId);
+
+        $pageTitle = 'Friends — Mini Social Network';
+
+        require BASE_PATH . '/app/views/layouts/header.php';
+        require BASE_PATH . '/app/views/follow/friends.php';
+        require BASE_PATH . '/app/views/layouts/footer.php';
     }
 }

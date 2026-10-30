@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 /**
  * public/index.php
  *
@@ -331,6 +331,11 @@ if ($url === 'followers' || $url === 'following' || $url === 'friends' || $url =
 
     if ($url === 'follow/toggle') {
         $followCtrl->toggle();
+        exit;
+    }
+
+    if ($url === 'friends' || str_starts_with($url, 'friends/')) {
+        $followCtrl->friends();
         exit;
     }
 
