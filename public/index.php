@@ -164,7 +164,7 @@ if ($url === 'profile' || $url === 'profile/edit' || $url === 'profile/update'
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $profile->updateAccount();
         } else {
-            header('Location: /SocialNetwork/public/?url=profile');
+            $profile->showAccount();
         }
         exit;
     }

@@ -3,22 +3,30 @@
 /**
  * app/controllers/SearchController.php
  *
- * Handles Search and User Discovery, Search and Filtering (Step 11):
- *   - index() — Process keyword searches across users and posts with category, author, and sorting filters.
+ * Handles Search and User Discovery, Search and Filtering:
+ *   - index() — Process keyword searches across people and posts with Content Type, Post Type, and Date Posted filters.
  *
- * Filtering modes:
- *   - 'all'   — Searches both users and posts
- *   - 'users' — Searches only users (by username or full_name)
- *   - 'posts' — Searches only posts (by content keywords)
+ * Content Type filters:
+ *   - 'all'           — Searches both people and community posts
+ *   - 'posts'         — Searches only posts
+ *   - 'people'        — Searches only users/people (supports 'users' as alias)
+ *   - 'announcements' — Announcements content type (reports limitation if not configured)
  *
- * Post Filters:
- *   - author_id: filter posts by author
- *   - sort: 'newest', 'oldest', 'most_liked', 'most_commented'
+ * Post Type filters:
+ *   - 'all'   — All posts
+ *   - 'text'  — Text posts only (no images)
+ *   - 'photo' — Photo posts only (contains one or more images)
+ *
+ * Date Posted filters:
+ *   - 'any'   — Any time
+ *   - 'today' — Posts created today
+ *   - 'week'  — Posts created this week
+ *   - 'month' — Posts created this month
  *
  * Security contract:
- *   - Validates and sanitizes input (trim, length limit, type whitelist).
- *   - Empty keywords & criteria skip unnecessary queries.
- *   - Passes raw variables to the View which escapes output via htmlspecialchars().
+ *   - Validates and sanitizes input (trim, length limit, parameter whitelist).
+ *   - Empty queries skip unnecessary work.
+ *   - Views escape output via htmlspecialchars().
  *   - Database queries are strictly handled by UserModel and PostModel using prepared statements.
  */
 
@@ -62,59 +70,72 @@ class SearchController
 
     /**
      * Display the search results page.
-     * Route: GET /SocialNetwork/public/?url=search&q=...&type=...&author_id=...&sort=...
+     * Route: GET /SocialNetwork/public/?url=search&q=...&type=...&post_type=...&date=...
      */
     public function index(): void
     {
         $this->requireAuth();
 
+        // 1. Search keyword
         $keyword = trim($_GET['q'] ?? '');
         if (mb_strlen($keyword) > 200) {
             $keyword = mb_substr($keyword, 0, 200);
         }
 
-        $type = strtolower(trim($_GET['type'] ?? 'all'));
-        if (!in_array($type, ['all', 'users', 'posts'], true)) {
-            $type = 'all';
+        // 2. Content Type filter: all, posts, people, announcements
+        $rawType = strtolower(trim($_GET['type'] ?? 'all'));
+        if ($rawType === 'users') {
+            $rawType = 'people';
         }
+        $allowedTypes = ['all', 'posts', 'people', 'announcements'];
+        $type = in_array($rawType, $allowedTypes, true) ? $rawType : 'all';
 
-        $authorId = (isset($_GET['author_id']) && is_numeric($_GET['author_id']) && (int) $_GET['author_id'] > 0)
-            ? (int) $_GET['author_id']
-            : null;
+        // 3. Post Type filter: all, text, photo
+        $rawPostType = strtolower(trim($_GET['post_type'] ?? 'all'));
+        $allowedPostTypes = ['all', 'text', 'photo'];
+        $postType = in_array($rawPostType, $allowedPostTypes, true) ? $rawPostType : 'all';
 
-        $sort = strtolower(trim($_GET['sort'] ?? 'newest'));
-        if (!in_array($sort, ['newest', 'oldest', 'most_liked', 'most_commented'], true)) {
-            $sort = 'newest';
-        }
+        // 4. Date Posted filter: any, today, week, month
+        $rawDate = strtolower(trim($_GET['date'] ?? 'any'));
+        $allowedDates = ['any', 'today', 'week', 'month'];
+        $dateRange = in_array($rawDate, $allowedDates, true) ? $rawDate : 'any';
 
-        // Search has occurred if the query parameter 'q' is present in the URL, or if an author/sort filter was selected
-        $hasSearched = isset($_GET['q']) || ($authorId !== null) || (isset($_GET['sort']) && $_GET['sort'] !== 'newest');
-        $emptyQuery  = ($hasSearched && $keyword === '' && $authorId === null);
+        // Check whether search or filter action was submitted
+        $hasSearched = isset($_GET['q']) ||
+            (isset($_GET['type']) && $_GET['type'] !== 'all') ||
+            (isset($_GET['post_type']) && $_GET['post_type'] !== 'all') ||
+            (isset($_GET['date']) && $_GET['date'] !== 'any');
 
-        $users          = [];
-        $posts          = [];
-        $authors        = [];
-        $commentsByPost = [];
-        $hasLikedByPost = [];
+        $emptyQuery = ($hasSearched && $keyword === '' && $postType === 'all' && $dateRange === 'any' && $type === 'all');
+
+        $users                  = [];
+        $posts                  = [];
+        $announcements          = [];
+        $announcementsSupported = false;
+        $commentsByPost         = [];
+        $hasLikedByPost         = [];
 
         $currentUserId = isset($_SESSION['user_id']) ? (int) $_SESSION['user_id'] : null;
 
         try {
-            // Retrieve distinct authors for author filter
-            $authors = $this->postModel->getDistinctAuthors();
-
             if ($hasSearched && !$emptyQuery) {
-                // 1. Search Users (by username or full_name)
-                if (($type === 'all' || $type === 'users') && $keyword !== '') {
+                // Announcements handling: check if announcements type requested
+                if ($type === 'announcements') {
+                    $announcementsSupported = false;
+                    $announcements = [];
+                }
+
+                // 1. Search People (by username or full_name)
+                if (($type === 'all' || $type === 'people') && $keyword !== '') {
                     $users = $this->userModel->searchUsers($keyword);
                 }
 
-                // 2. Search Posts (by content keyword, author, and sort)
+                // 2. Search Posts (by content keyword, post_type, and date_posted)
                 if ($type === 'all' || $type === 'posts') {
                     $postFilters = [
-                        'keyword'   => $keyword,
-                        'author_id' => $authorId,
-                        'sort'      => $sort,
+                        'keyword'     => $keyword,
+                        'post_type'   => $postType,
+                        'date_posted' => $dateRange,
                     ];
 
                     $posts = $this->postModel->searchPostsAdvanced($postFilters);
@@ -130,7 +151,6 @@ class SearchController
         } catch (\Throwable $e) {
             error_log('[SearchController::index] Exception: ' . $e->getMessage());
             $flashError = 'Search service is temporarily unavailable. Please try again.';
-            $authors = $authors ?? [];
         }
 
         $pageTitle = $hasSearched && $keyword !== ''

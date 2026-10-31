@@ -522,6 +522,30 @@ class ProfileController
         return $this->uploadWebPath . rawurlencode($filename);
     }
 
+    // ─── Manage Account (GET) ────────────────────────────────────────────────
+    /**
+     * Display the dedicated Manage Account page (Full Name, Username, Password).
+     * Route: GET /SocialNetwork/public/?url=profile/account
+     */
+    public function showAccount(): void
+    {
+        $this->requireAuth();
+        $userId = (int) $_SESSION['user_id'];
+        $user   = $this->userModel->findById($userId);
+
+        if ($user === false) {
+            header('Location: /SocialNetwork/public/');
+            exit;
+        }
+
+        $flashSuccess = $_SESSION['flash_success'] ?? null;
+        $flashError   = $_SESSION['flash_error']   ?? null;
+        unset($_SESSION['flash_success'], $_SESSION['flash_error']);
+
+        $pageTitle = 'Manage Account — Mini Social Network';
+        require_once BASE_PATH . '/app/views/profile/account.php';
+    }
+
     // ─── Update Account Information (Full Name + Username) (POST) ──────────────
 
     /**
@@ -534,13 +558,13 @@ class ProfileController
         $userId = (int) $_SESSION['user_id'];
 
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            header('Location: /SocialNetwork/public/?url=profile');
+            header('Location: /SocialNetwork/public/?url=profile/account');
             exit;
         }
 
         if (!Csrf::check()) {
             $_SESSION['flash_error'] = 'Security verification failed (invalid CSRF token). Please try again.';
-            header('Location: /SocialNetwork/public/?url=profile');
+            header('Location: /SocialNetwork/public/?url=profile/account');
             exit;
         }
 
@@ -550,31 +574,31 @@ class ProfileController
         // ── Validate Full Name ────────────────────────────────────────────────
         if ($fullName === '') {
             $_SESSION['flash_error'] = 'Full name is required.';
-            header('Location: /SocialNetwork/public/?url=profile');
+            header('Location: /SocialNetwork/public/?url=profile/account');
             exit;
         }
         if (mb_strlen($fullName) > 100) {
             $_SESSION['flash_error'] = 'Full name must not exceed 100 characters.';
-            header('Location: /SocialNetwork/public/?url=profile');
+            header('Location: /SocialNetwork/public/?url=profile/account');
             exit;
         }
 
         // ── Validate Username ─────────────────────────────────────────────────
         if ($username === '') {
             $_SESSION['flash_error'] = 'Username cannot be empty.';
-            header('Location: /SocialNetwork/public/?url=profile');
+            header('Location: /SocialNetwork/public/?url=profile/account');
             exit;
         }
         if (!preg_match('/^[a-zA-Z0-9_]{3,50}$/', $username)) {
             $_SESSION['flash_error'] = 'Username must be 3–50 characters and may only contain letters, numbers, and underscores.';
-            header('Location: /SocialNetwork/public/?url=profile');
+            header('Location: /SocialNetwork/public/?url=profile/account');
             exit;
         }
 
         // ── Check if username is taken by another user ────────────────────────
         if ($this->userModel->usernameExistsExcludingUser($username, $userId)) {
             $_SESSION['flash_error'] = 'That username is already taken. Please choose another.';
-            header('Location: /SocialNetwork/public/?url=profile');
+            header('Location: /SocialNetwork/public/?url=profile/account');
             exit;
         }
 
@@ -588,7 +612,7 @@ class ProfileController
             $_SESSION['flash_error'] = 'Failed to update account information due to a server error. Please try again.';
         }
 
-        header('Location: /SocialNetwork/public/?url=profile');
+        header('Location: /SocialNetwork/public/?url=profile/account');
         exit;
     }
 
@@ -916,13 +940,13 @@ class ProfileController
         $userId = (int) $_SESSION['user_id'];
 
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            header('Location: /SocialNetwork/public/?url=profile');
+            header('Location: /SocialNetwork/public/?url=profile/account');
             exit;
         }
 
         if (!Csrf::check()) {
             $_SESSION['flash_error'] = 'Security verification failed (invalid CSRF token). Please try again.';
-            header('Location: /SocialNetwork/public/?url=profile');
+            header('Location: /SocialNetwork/public/?url=profile/account');
             exit;
         }
 
@@ -932,27 +956,27 @@ class ProfileController
 
         if ($currentPassword === '' || $newPassword === '' || $confirmPassword === '') {
             $_SESSION['flash_error'] = 'Please fill in all password fields.';
-            header('Location: /SocialNetwork/public/?url=profile');
+            header('Location: /SocialNetwork/public/?url=profile/account');
             exit;
         }
 
         $storedHash = $this->userModel->getUserPasswordHash($userId);
         if (!$storedHash || !password_verify($currentPassword, $storedHash)) {
             $_SESSION['flash_error'] = 'Your current password is incorrect.';
-            header('Location: /SocialNetwork/public/?url=profile');
+            header('Location: /SocialNetwork/public/?url=profile/account');
             exit;
         }
 
         $pwErrors = PasswordValidator::validate($newPassword, $confirmPassword, 'New password');
         if (!empty($pwErrors)) {
             $_SESSION['flash_error'] = implode(' ', $pwErrors);
-            header('Location: /SocialNetwork/public/?url=profile');
+            header('Location: /SocialNetwork/public/?url=profile/account');
             exit;
         }
 
         if (password_verify($newPassword, $storedHash)) {
             $_SESSION['flash_error'] = 'Your new password cannot be the same as your current password.';
-            header('Location: /SocialNetwork/public/?url=profile');
+            header('Location: /SocialNetwork/public/?url=profile/account');
             exit;
         }
 
@@ -965,7 +989,7 @@ class ProfileController
             $_SESSION['flash_error'] = 'Failed to update password due to a server error. Please try again.';
         }
 
-        header('Location: /SocialNetwork/public/?url=profile');
+        header('Location: /SocialNetwork/public/?url=profile/account');
         exit;
     }
 }

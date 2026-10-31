@@ -513,11 +513,13 @@ class PostModel
             $where  = [];
             $params = [];
 
-            $keyword  = trim($filters['keyword'] ?? '');
-            $authorId = isset($filters['author_id']) && $filters['author_id'] !== '' ? (int) $filters['author_id'] : null;
-            $dateFrom = trim($filters['date_from'] ?? '');
-            $dateTo   = trim($filters['date_to'] ?? '');
-            $sort     = strtolower(trim($filters['sort'] ?? 'newest'));
+            $keyword    = trim($filters['keyword'] ?? '');
+            $authorId   = isset($filters['author_id']) && $filters['author_id'] !== '' ? (int) $filters['author_id'] : null;
+            $postType   = strtolower(trim($filters['post_type'] ?? 'all'));
+            $datePosted = strtolower(trim($filters['date_posted'] ?? ($filters['date'] ?? 'any')));
+            $dateFrom   = trim($filters['date_from'] ?? '');
+            $dateTo     = trim($filters['date_to'] ?? '');
+            $sort       = strtolower(trim($filters['sort'] ?? 'newest'));
 
             if ($keyword !== '') {
                 $where[] = 'p.content LIKE :keyword';
@@ -527,6 +529,22 @@ class PostModel
             if ($authorId !== null && $authorId > 0) {
                 $where[] = 'p.user_id = :author_id';
                 $params[':author_id'] = $authorId;
+            }
+
+            // Post type filter: text vs photo
+            if ($postType === 'text') {
+                $where[] = "(p.image IS NULL OR p.image = '') AND NOT EXISTS (SELECT 1 FROM post_images pi WHERE pi.post_id = p.id)";
+            } elseif ($postType === 'photo') {
+                $where[] = "((p.image IS NOT NULL AND p.image != '') OR EXISTS (SELECT 1 FROM post_images pi WHERE pi.post_id = p.id))";
+            }
+
+            // Date posted filter: today, week, month
+            if ($datePosted === 'today') {
+                $where[] = 'p.created_at >= CURDATE()';
+            } elseif ($datePosted === 'week') {
+                $where[] = 'p.created_at >= DATE_SUB(CURDATE(), INTERVAL WEEKDAY(CURDATE()) DAY)';
+            } elseif ($datePosted === 'month') {
+                $where[] = 'p.created_at >= DATE_FORMAT(CURDATE(), \'%Y-%m-01 00:00:00\')';
             }
 
             if ($dateFrom !== '') {
@@ -614,10 +632,12 @@ class PostModel
             $where  = [];
             $params = [];
 
-            $keyword  = trim($filters['keyword'] ?? '');
-            $authorId = isset($filters['author_id']) && $filters['author_id'] !== '' ? (int) $filters['author_id'] : null;
-            $dateFrom = trim($filters['date_from'] ?? '');
-            $dateTo   = trim($filters['date_to'] ?? '');
+            $keyword    = trim($filters['keyword'] ?? '');
+            $authorId   = isset($filters['author_id']) && $filters['author_id'] !== '' ? (int) $filters['author_id'] : null;
+            $postType   = strtolower(trim($filters['post_type'] ?? 'all'));
+            $datePosted = strtolower(trim($filters['date_posted'] ?? ($filters['date'] ?? 'any')));
+            $dateFrom   = trim($filters['date_from'] ?? '');
+            $dateTo     = trim($filters['date_to'] ?? '');
 
             if ($keyword !== '') {
                 $where[] = 'p.content LIKE :keyword';
@@ -627,6 +647,22 @@ class PostModel
             if ($authorId !== null && $authorId > 0) {
                 $where[] = 'p.user_id = :author_id';
                 $params[':author_id'] = $authorId;
+            }
+
+            // Post type filter: text vs photo
+            if ($postType === 'text') {
+                $where[] = "(p.image IS NULL OR p.image = '') AND NOT EXISTS (SELECT 1 FROM post_images pi WHERE pi.post_id = p.id)";
+            } elseif ($postType === 'photo') {
+                $where[] = "((p.image IS NOT NULL AND p.image != '') OR EXISTS (SELECT 1 FROM post_images pi WHERE pi.post_id = p.id))";
+            }
+
+            // Date posted filter: today, week, month
+            if ($datePosted === 'today') {
+                $where[] = 'p.created_at >= CURDATE()';
+            } elseif ($datePosted === 'week') {
+                $where[] = 'p.created_at >= DATE_SUB(CURDATE(), INTERVAL WEEKDAY(CURDATE()) DAY)';
+            } elseif ($datePosted === 'month') {
+                $where[] = 'p.created_at >= DATE_FORMAT(CURDATE(), \'%Y-%m-01 00:00:00\')';
             }
 
             if ($dateFrom !== '') {
