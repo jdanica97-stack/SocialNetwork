@@ -137,7 +137,7 @@ if ($url === 'auth/login' || $url === 'auth/register' || $url === 'auth/logout')
 // ── Profile Routes ────────────────────────────────────────────────────────────
 if ($url === 'profile' || $url === 'profile/edit' || $url === 'profile/update'
     || $url === 'profile/account' || $url === 'profile/username' || $url === 'profile/password'
-    || $url === 'profile/cover') {
+    || $url === 'profile/cover' || $url === 'profile/remove-avatar' || $url === 'profile/remove-cover') {
     require_once BASE_PATH . '/app/controllers/ProfileController.php';
     $profile = new ProfileController();
 
@@ -181,6 +181,24 @@ if ($url === 'profile' || $url === 'profile/edit' || $url === 'profile/update'
     if ($url === 'profile/cover') {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $profile->updateCover();
+        } else {
+            header('Location: /SocialNetwork/public/?url=profile');
+        }
+        exit;
+    }
+
+    if ($url === 'profile/remove-avatar') {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $profile->removeAvatar();
+        } else {
+            header('Location: /SocialNetwork/public/?url=profile');
+        }
+        exit;
+    }
+
+    if ($url === 'profile/remove-cover') {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $profile->removeCover();
         } else {
             header('Location: /SocialNetwork/public/?url=profile');
         }

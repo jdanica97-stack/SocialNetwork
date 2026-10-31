@@ -3385,3 +3385,256 @@ img, video {
     padding: 8px 10px !important;
   }
 }
+
+
+/* ── 27. Profile Banner & Avatar Action Dropdowns ──────────────────────── */
+.profile-banner {
+  height: 200px;
+  background: var(--surface-hover);
+  border-radius: var(--radius-card) var(--radius-card) 0 0;
+  position: relative;
+  overflow: visible !important;
+  z-index: 5;
+}
+
+.profile-banner-media {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: var(--radius-card) var(--radius-card) 0 0;
+  z-index: 1;
+  background: var(--surface-hover);
+}
+
+.profile-banner-media img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.profile-cover-actions {
+  position: absolute;
+  bottom: 12px;
+  right: 16px;
+  z-index: 25;
+}
+
+.cover-dropdown-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+.cover-edit-btn {
+  background: rgba(18, 18, 22, 0.72) !important;
+  color: #fff !important;
+  border: 1px solid rgba(255, 255, 255, 0.18) !important;
+  border-radius: var(--radius-sm);
+  padding: 6px 14px;
+  font-size: 0.82rem;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.28);
+  transition: background 0.15s ease, transform 0.15s ease, border-color 0.15s ease;
+  user-select: none;
+}
+
+.cover-edit-btn:hover {
+  background: rgba(28, 28, 34, 0.88) !important;
+  border-color: rgba(255, 255, 255, 0.3) !important;
+  transform: translateY(-1px);
+}
+
+.cover-edit-btn:active {
+  transform: scale(0.97);
+}
+
+/* Dropdown menus for cover & avatar */
+.cover-dropdown-menu,
+.avatar-dropdown-menu {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 8px);
+  background: var(--surface-card);
+  border: 1px solid var(--border);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
+  border-radius: 12px;
+  padding: 6px;
+  min-width: 195px;
+  z-index: 100;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  display: none;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.cover-dropdown-menu.show,
+.avatar-dropdown-menu.show {
+  display: flex !important;
+  animation: dropdownFadeIn 0.15s ease-out;
+}
+
+@keyframes dropdownFadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.cover-dropdown-item,
+.avatar-dropdown-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 8px 12px;
+  border: none;
+  background: transparent;
+  color: var(--fg);
+  font-size: 0.82rem;
+  font-weight: 500;
+  border-radius: 8px;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.12s ease, color 0.12s ease;
+  text-decoration: none;
+}
+
+.cover-dropdown-item:hover,
+.avatar-dropdown-item:hover {
+  background: var(--surface-hover);
+  color: var(--fg);
+}
+
+.cover-dropdown-item.item-danger,
+.avatar-dropdown-item.item-danger {
+  color: #f87171 !important;
+}
+
+.cover-dropdown-item.item-danger:hover,
+.avatar-dropdown-item.item-danger:hover {
+  background: rgba(239, 68, 68, 0.12) !important;
+  color: #ef4444 !important;
+}
+
+.cover-dropdown-divider,
+.avatar-dropdown-divider {
+  height: 1px;
+  background: var(--border);
+  margin: 4px 6px;
+}
+
+/* Avatar edit floating badge */
+.profile-avatar-container {
+  position: relative;
+  display: inline-block;
+}
+
+.avatar-action-dropdown {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  z-index: 10;
+}
+
+.avatar-edit-badge {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--surface-card);
+  border: 2px solid var(--surface-card);
+  color: var(--fg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.22);
+  transition: background 0.15s ease, transform 0.15s ease;
+  padding: 0;
+}
+
+.avatar-edit-badge:hover {
+  background: var(--surface-hover);
+  transform: scale(1.08);
+}
+
+.avatar-dropdown-menu {
+  left: 0;
+  right: auto;
+  bottom: calc(100% + 8px);
+}
+
+/* Custom Confirmation Modal */
+.custom-confirm-modal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 10001;
+  background: rgba(0, 0, 0, 0.72);
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  padding: 16px;
+}
+
+.confirm-modal-dialog {
+  background: var(--surface-card);
+  border-radius: 16px;
+  padding: 24px;
+  max-width: 440px;
+  width: 100%;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.45);
+  border: 1px solid var(--border);
+  animation: confirmPop 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes confirmPop {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@media (max-width: 576px) {
+  .profile-banner {
+    overflow: visible !important;
+  }
+  
+  .profile-cover-actions {
+    bottom: 8px;
+    right: 10px;
+  }
+
+  .cover-edit-btn {
+    padding: 5px 10px;
+    font-size: 0.75rem;
+  }
+
+  .cover-dropdown-menu {
+    right: 0;
+    max-width: calc(100vw - 24px);
+    min-width: 175px;
+  }
+
+  .avatar-dropdown-menu {
+    left: 0;
+    max-width: calc(100vw - 24px);
+    min-width: 175px;
+  }
+
+  .cover-dropdown-item,
+  .avatar-dropdown-item {
+    padding: 10px 12px;
+    font-size: 0.8rem;
+  }
+
+  .confirm-modal-dialog {
+    padding: 20px 16px;
+  }
+}

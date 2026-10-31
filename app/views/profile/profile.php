@@ -56,16 +56,47 @@ if (!empty($user['cover_photo']) && file_exists(BASE_PATH . '/public/assets/imag
         <div class="card profile-card glass fade-up">
 
             <!-- Subtle monochrome banner -->
-            <div class="profile-banner" id="coverPhotoBanner" style="position:relative;overflow:hidden;">
-                <?php if ($coverPhotoSrc): ?>
-                    <img src="<?= htmlspecialchars($coverPhotoSrc, ENT_QUOTES, 'UTF-8') ?>" alt="Cover photo" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;">
-                <?php endif; ?>
+            <div class="profile-banner" id="coverPhotoBanner">
+                <div class="profile-banner-media" id="coverPhotoMedia">
+                    <?php if ($coverPhotoSrc): ?>
+                        <img src="<?= htmlspecialchars($coverPhotoSrc, ENT_QUOTES, 'UTF-8') ?>" alt="Cover photo" id="coverPhotoImg">
+                    <?php endif; ?>
+                </div>
+
                 <?php if (!empty($isOwnProfile)): ?>
-                    <label for="coverPhotoInput" class="cover-photo-upload-btn" title="Change cover photo" style="position:absolute;bottom:10px;right:12px;cursor:pointer;background:rgba(0,0,0,0.5);color:#fff;border-radius:8px;padding:5px 12px;font-size:0.78rem;display:flex;align-items:center;gap:5px;backdrop-filter:blur(4px);z-index:2;">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-                        Edit Cover
-                    </label>
-                    <input type="file" id="coverPhotoInput" accept="image/jpeg,image/png,image/gif,image/webp" class="d-none" aria-label="Upload cover photo">
+                    <div class="profile-cover-actions">
+                        <div class="cover-dropdown-wrapper" id="coverDropdownWrapper">
+                            <button
+                                type="button"
+                                class="cover-edit-btn"
+                                id="editCoverDropdownBtn"
+                                aria-expanded="false"
+                                aria-haspopup="true"
+                                aria-controls="coverDropdownMenu"
+                                title="Edit cover photo"
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                                <span class="cover-btn-label">Edit Cover Photo</span>
+                            </button>
+                            <div class="cover-dropdown-menu" id="coverDropdownMenu" role="menu">
+                                <button type="button" class="cover-dropdown-item" id="btnUploadCover" role="menuitem">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                                    <span id="coverUploadActionText"><?= $coverPhotoSrc ? 'Change Cover Photo' : 'Upload Cover Photo' ?></span>
+                                </button>
+                                <button
+                                    type="button"
+                                    class="cover-dropdown-item item-danger"
+                                    id="btnRemoveCover"
+                                    role="menuitem"
+                                    style="display: <?= $coverPhotoSrc ? 'flex' : 'none' ?>;"
+                                >
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+                                    <span>Remove Cover Photo</span>
+                                </button>
+                            </div>
+                        </div>
+                        <input type="file" id="coverPhotoInput" accept="image/jpeg,image/png,image/gif,image/webp" class="d-none" aria-label="Upload cover photo">
+                    </div>
                 <?php endif; ?>
             </div>
 
@@ -78,7 +109,40 @@ if (!empty($user['cover_photo']) && file_exists(BASE_PATH . '/public/assets/imag
                             src="<?= htmlspecialchars($avatarSrc, ENT_QUOTES, 'UTF-8') ?>"
                             alt="Profile picture of <?= htmlspecialchars($user['full_name'], ENT_QUOTES, 'UTF-8') ?>"
                             class="profile-avatar"
+                            id="profileAvatarImg"
                         >
+                        <?php if (!empty($isOwnProfile)): ?>
+                            <div class="avatar-action-dropdown" id="avatarDropdownWrapper">
+                                <button
+                                    type="button"
+                                    class="avatar-edit-badge"
+                                    id="editAvatarDropdownBtn"
+                                    title="Manage profile picture"
+                                    aria-expanded="false"
+                                    aria-haspopup="true"
+                                    aria-controls="avatarDropdownMenu"
+                                >
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                                </button>
+                                <div class="avatar-dropdown-menu" id="avatarDropdownMenu" role="menu">
+                                    <button type="button" class="avatar-dropdown-item" id="btnChangeAvatar" role="menuitem">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                                        <span id="avatarChangeActionText"><?= !empty($user['profile_image']) ? 'Change Profile Picture' : 'Upload Profile Picture' ?></span>
+                                    </button>
+                                    <button
+                                        type="button"
+                                        class="avatar-dropdown-item item-danger"
+                                        id="btnRemoveAvatar"
+                                        role="menuitem"
+                                        style="display: <?= !empty($user['profile_image']) ? 'flex' : 'none' ?>;"
+                                    >
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+                                        <span>Remove Profile Picture</span>
+                                    </button>
+                                </div>
+                            </div>
+                            <input type="file" id="avatarPhotoInput" accept="image/jpeg,image/png,image/gif,image/webp" class="d-none" aria-label="Upload profile picture">
+                        <?php endif; ?>
                     </div>
 
                     <?php if (!empty($isOwnProfile)): ?>
@@ -798,6 +862,83 @@ document.addEventListener('DOMContentLoaded', function () {
     </div>
 </div>
 
+<!-- ── Avatar Cropper Modal (Direct on Profile) ────────────────────────── -->
+<div id="avatarCropModal" style="display:none;position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,0.78);align-items:center;justify-content:center;backdrop-filter:blur(6px);" role="dialog" aria-modal="true" aria-label="Crop profile picture">
+    <div class="cropper-modal-dialog" style="background:var(--surface-card);border-radius:18px;padding:22px;max-width:540px;width:95%;max-height:92vh;overflow:auto;box-shadow:0 18px 48px rgba(0,0,0,0.45);border:1px solid var(--border);">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+            <div class="d-flex align-items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--fg);"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/></svg>
+                <h3 style="margin:0;font-size:1.05rem;font-weight:600;color:var(--fg);">Crop Profile Picture</h3>
+            </div>
+            <button type="button" id="avatarCropClose" style="background:none;border:none;cursor:pointer;color:var(--fg-muted);font-size:1.4rem;line-height:1;" aria-label="Close">&times;</button>
+        </div>
+
+        <div class="crop-image-container cropper-circular" style="max-height:360px;overflow:hidden;border-radius:10px;background:#0d0d10;">
+            <img id="avatarCropImage" src="" alt="Profile picture to crop" style="max-width:100%;display:block;">
+        </div>
+
+        <!-- Zoom & Positioning Toolbar -->
+        <div class="cropper-toolbar">
+            <button type="button" class="cropper-tool-btn" id="avatarZoomIn" title="Zoom In">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+                Zoom In
+            </button>
+            <button type="button" class="cropper-tool-btn" id="avatarZoomOut" title="Zoom Out">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+                Zoom Out
+            </button>
+            <button type="button" class="cropper-tool-btn" id="avatarReset" title="Reset Crop">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+                Reset
+            </button>
+        </div>
+
+        <div style="display:flex;gap:10px;margin-top:16px;justify-content:flex-end;">
+            <button type="button" id="avatarCropCancel" class="btn btn-ghost btn-sm px-3">Cancel</button>
+            <button type="button" id="avatarCropApply" class="btn btn-primary btn-sm px-4">Apply &amp; Upload</button>
+        </div>
+        <p id="avatarCropStatus" style="font-size:0.8rem;color:var(--fg-muted);margin-top:8px;text-align:center;min-height:1em;"></p>
+    </div>
+</div>
+
+<!-- ── Confirmation Modal: Remove Cover Photo ────────────────────────── -->
+<div id="confirmRemoveCoverModal" class="custom-confirm-modal" role="dialog" aria-modal="true" aria-labelledby="removeCoverModalTitle">
+    <div class="confirm-modal-dialog">
+        <div class="d-flex align-items-center gap-2 mb-2">
+            <div style="width:34px;height:34px;border-radius:10px;background:rgba(239,68,68,0.12);color:#ef4444;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+            </div>
+            <h4 id="removeCoverModalTitle" style="margin:0;font-size:1.05rem;font-weight:600;color:var(--fg);">Remove Cover Photo?</h4>
+        </div>
+        <p style="font-size:0.85rem;color:var(--fg-muted);margin-bottom:20px;line-height:1.5;">
+            Are you sure you want to remove your cover photo? Your profile will revert to the default background theme.
+        </p>
+        <div class="d-flex justify-content-end gap-2">
+            <button type="button" class="btn btn-ghost btn-sm px-3" id="cancelRemoveCoverBtn">Cancel</button>
+            <button type="button" class="btn btn-danger btn-sm px-4" id="confirmRemoveCoverBtn">Remove</button>
+        </div>
+    </div>
+</div>
+
+<!-- ── Confirmation Modal: Remove Profile Picture ───────────────────── -->
+<div id="confirmRemoveAvatarModal" class="custom-confirm-modal" role="dialog" aria-modal="true" aria-labelledby="removeAvatarModalTitle">
+    <div class="confirm-modal-dialog">
+        <div class="d-flex align-items-center gap-2 mb-2">
+            <div style="width:34px;height:34px;border-radius:10px;background:rgba(239,68,68,0.12);color:#ef4444;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+            </div>
+            <h4 id="removeAvatarModalTitle" style="margin:0;font-size:1.05rem;font-weight:600;color:var(--fg);">Remove Profile Picture?</h4>
+        </div>
+        <p style="font-size:0.85rem;color:var(--fg-muted);margin-bottom:20px;line-height:1.5;">
+            Are you sure you want to remove your profile picture? Your profile will revert to your default initials avatar.
+        </p>
+        <div class="d-flex justify-content-end gap-2">
+            <button type="button" class="btn btn-ghost btn-sm px-3" id="cancelRemoveAvatarBtn">Cancel</button>
+            <button type="button" class="btn btn-danger btn-sm px-4" id="confirmRemoveAvatarBtn">Remove</button>
+        </div>
+    </div>
+</div>
+<?php endif; ?>
 <!-- Local Cropper.js Stylesheet & Script -->
 <link rel="stylesheet" href="/SocialNetwork/public/assets/css/cropper.min.css">
 <script src="/SocialNetwork/public/assets/js/cropper.min.js"></script>
@@ -806,34 +947,97 @@ document.addEventListener('DOMContentLoaded', function () {
 (function () {
     'use strict';
 
-    var coverInput    = document.getElementById('coverPhotoInput');
-    var modal         = document.getElementById('coverCropModal');
-    var cropImage     = document.getElementById('coverCropImage');
-    var closeBtn      = document.getElementById('coverCropClose');
-    var cancelBtn     = document.getElementById('coverCropCancel');
-    var applyBtn      = document.getElementById('coverCropApply');
-    var statusEl      = document.getElementById('coverCropStatus');
-    var bannerEl      = document.getElementById('coverPhotoBanner');
-    var bannerImg     = bannerEl ? bannerEl.querySelector('img') : null;
-    var cropper       = null;
-
     function getCsrfToken() {
         var meta = document.querySelector('meta[name="csrf-token"]');
         return meta ? meta.getAttribute('content') : '';
     }
 
-    function openModal() {
-        if (modal) {
-            modal.style.display = 'flex';
-            if (statusEl) statusEl.textContent = '';
+    function showToast(msg, type) {
+        var toast = document.getElementById('profile-action-toast');
+        if (!toast) {
+            toast = document.createElement('div');
+            toast.id = 'profile-action-toast';
+            toast.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);padding:10px 22px;border-radius:999px;font-size:0.85rem;font-weight:500;z-index:99999;box-shadow:0 6px 20px rgba(0,0,0,0.3);transition:opacity 0.25s ease,transform 0.25s ease;pointer-events:none;';
+            document.body.appendChild(toast);
         }
+        toast.style.background = type === 'success' ? 'rgba(34,197,94,0.94)' : 'rgba(239,68,68,0.94)';
+        toast.style.color = '#fff';
+        toast.textContent = msg;
+        toast.style.opacity = '1';
+        toast.style.transform = 'translateX(-50%) translateY(0)';
+        setTimeout(function () {
+            toast.style.opacity = '0';
+            toast.style.transform = 'translateX(-50%) translateY(8px)';
+        }, 3200);
     }
 
-    function closeModal() {
-        if (modal) modal.style.display = 'none';
-        if (cropper) { cropper.destroy(); cropper = null; }
-        if (cropImage) cropImage.src = '';
-        if (coverInput) coverInput.value = '';
+    // ── Dropdown Menus ────────────────────────────────────────────────────────
+    var coverDropdownBtn  = document.getElementById('editCoverDropdownBtn');
+    var coverDropdownMenu = document.getElementById('coverDropdownMenu');
+    var avatarDropdownBtn = document.getElementById('editAvatarDropdownBtn');
+    var avatarDropdownMenu = document.getElementById('avatarDropdownMenu');
+
+    function closeAllDropdowns() {
+        if (coverDropdownMenu) coverDropdownMenu.classList.remove('show');
+        if (coverDropdownBtn) coverDropdownBtn.setAttribute('aria-expanded', 'false');
+        if (avatarDropdownMenu) avatarDropdownMenu.classList.remove('show');
+        if (avatarDropdownBtn) avatarDropdownBtn.setAttribute('aria-expanded', 'false');
+    }
+
+    if (coverDropdownBtn && coverDropdownMenu) {
+        coverDropdownBtn.addEventListener('click', function (e) {
+            e.stopPropagation();
+            var isOpen = coverDropdownMenu.classList.contains('show');
+            closeAllDropdowns();
+            if (!isOpen) {
+                coverDropdownMenu.classList.add('show');
+                coverDropdownBtn.setAttribute('aria-expanded', 'true');
+            }
+        });
+    }
+
+    if (avatarDropdownBtn && avatarDropdownMenu) {
+        avatarDropdownBtn.addEventListener('click', function (e) {
+            e.stopPropagation();
+            var isOpen = avatarDropdownMenu.classList.contains('show');
+            closeAllDropdowns();
+            if (!isOpen) {
+                avatarDropdownMenu.classList.add('show');
+                avatarDropdownBtn.setAttribute('aria-expanded', 'true');
+            }
+        });
+    }
+
+    document.addEventListener('click', function (e) {
+        if (coverDropdownMenu && !coverDropdownMenu.contains(e.target) && e.target !== coverDropdownBtn) {
+            coverDropdownMenu.classList.remove('show');
+            if (coverDropdownBtn) coverDropdownBtn.setAttribute('aria-expanded', 'false');
+        }
+        if (avatarDropdownMenu && !avatarDropdownMenu.contains(e.target) && e.target !== avatarDropdownBtn) {
+            avatarDropdownMenu.classList.remove('show');
+            if (avatarDropdownBtn) avatarDropdownBtn.setAttribute('aria-expanded', 'false');
+        }
+    });
+
+    // ── 1. Cover Photo Management ─────────────────────────────────────────────
+    var coverInput      = document.getElementById('coverPhotoInput');
+    var btnUploadCover  = document.getElementById('btnUploadCover');
+    var btnRemoveCover  = document.getElementById('btnRemoveCover');
+    var coverActionText = document.getElementById('coverUploadActionText');
+    var coverMediaWrap  = document.getElementById('coverPhotoMedia');
+    var coverCropModal  = document.getElementById('coverCropModal');
+    var coverCropImage  = document.getElementById('coverCropImage');
+    var coverCropClose  = document.getElementById('coverCropClose');
+    var coverCropCancel = document.getElementById('coverCropCancel');
+    var coverCropApply  = document.getElementById('coverCropApply');
+    var coverCropStatus = document.getElementById('coverCropStatus');
+    var coverCropper    = null;
+
+    if (btnUploadCover && coverInput) {
+        btnUploadCover.addEventListener('click', function () {
+            closeAllDropdowns();
+            coverInput.click();
+        });
     }
 
     if (coverInput) {
@@ -855,14 +1059,14 @@ document.addEventListener('DOMContentLoaded', function () {
 
             var reader = new FileReader();
             reader.onload = function (e) {
-                if (cropImage) cropImage.src = e.target.result;
-                openModal();
+                if (coverCropImage) coverCropImage.src = e.target.result;
+                if (coverCropModal) {
+                    coverCropModal.style.display = 'flex';
+                    if (coverCropStatus) coverCropStatus.textContent = '';
+                }
+                if (coverCropper) { coverCropper.destroy(); coverCropper = null; }
 
-                // Destroy previous cropper instance
-                if (cropper) { cropper.destroy(); cropper = null; }
-
-                // Init Cropper.js: 16:7 aspect ratio for cover photo
-                cropper = new Cropper(cropImage, {
+                coverCropper = new Cropper(coverCropImage, {
                     aspectRatio: 16 / 7,
                     viewMode: 1,
                     autoCropArea: 1,
@@ -878,121 +1082,339 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    var zoomInBtn  = document.getElementById('coverZoomIn');
-    var zoomOutBtn = document.getElementById('coverZoomOut');
-    var resetBtn   = document.getElementById('coverReset');
-
-    if (zoomInBtn) {
-        zoomInBtn.addEventListener('click', function () {
-            if (cropper) cropper.zoom(0.1);
-        });
-    }
-    if (zoomOutBtn) {
-        zoomOutBtn.addEventListener('click', function () {
-            if (cropper) cropper.zoom(-0.1);
-        });
-    }
-    if (resetBtn) {
-        resetBtn.addEventListener('click', function () {
-            if (cropper) cropper.reset();
-        });
+    function closeCoverModal() {
+        if (coverCropModal) coverCropModal.style.display = 'none';
+        if (coverCropper) { coverCropper.destroy(); coverCropper = null; }
+        if (coverCropImage) coverCropImage.src = '';
+        if (coverInput) coverInput.value = '';
     }
 
-    if (closeBtn) closeBtn.addEventListener('click', closeModal);
-    if (cancelBtn) cancelBtn.addEventListener('click', closeModal);
+    if (coverCropClose) coverCropClose.addEventListener('click', closeCoverModal);
+    if (coverCropCancel) coverCropCancel.addEventListener('click', closeCoverModal);
 
-    if (applyBtn) {
-        applyBtn.addEventListener('click', function () {
-            if (!cropper) return;
+    var coverZoomIn  = document.getElementById('coverZoomIn');
+    var coverZoomOut = document.getElementById('coverZoomOut');
+    var coverReset   = document.getElementById('coverReset');
 
-            applyBtn.disabled = true;
-            applyBtn.textContent = 'Uploading…';
-            if (statusEl) statusEl.textContent = '';
+    if (coverZoomIn)  coverZoomIn.addEventListener('click', function () { if (coverCropper) coverCropper.zoom(0.1); });
+    if (coverZoomOut) coverZoomOut.addEventListener('click', function () { if (coverCropper) coverCropper.zoom(-0.1); });
+    if (coverReset)   coverReset.addEventListener('click', function () { if (coverCropper) coverCropper.reset(); });
 
-            // Get cropped canvas and convert to base64
-            var canvas = cropper.getCroppedCanvas({ maxWidth: 1200, maxHeight: 525 });
+    if (coverCropApply) {
+        coverCropApply.addEventListener('click', function () {
+            if (!coverCropper) return;
+
+            coverCropApply.disabled = true;
+            coverCropApply.textContent = 'Uploading…';
+            if (coverCropStatus) coverCropStatus.textContent = '';
+
+            var canvas = coverCropper.getCroppedCanvas({ maxWidth: 1200, maxHeight: 525 });
             if (!canvas) {
-                if (statusEl) statusEl.textContent = 'Failed to crop image.';
-                applyBtn.disabled = false;
-                applyBtn.textContent = 'Apply & Upload';
+                if (coverCropStatus) coverCropStatus.textContent = 'Failed to crop image.';
+                coverCropApply.disabled = false;
+                coverCropApply.textContent = 'Apply & Upload';
                 return;
             }
 
             var base64Data = canvas.toDataURL('image/jpeg', 0.85);
-            var csrfToken  = getCsrfToken();
-
             var formData = new FormData();
-            formData.append('csrf_token', csrfToken);
+            formData.append('csrf_token', getCsrfToken());
             formData.append('cover_photo_data', base64Data);
 
             fetch('/SocialNetwork/public/?url=profile/cover', {
                 method: 'POST',
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'Accept': 'application/json'
-                },
+                headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' },
                 body: formData
             })
             .then(function (res) { return res.json(); })
             .then(function (data) {
                 if (data.success) {
-                    // Update banner background image
-                    if (bannerEl) {
-                        // Remove old img if any
-                        var oldImg = bannerEl.querySelector('img');
-                        if (oldImg) oldImg.remove();
-                        var newImg = document.createElement('img');
-                        newImg.src = data.cover_url;
-                        newImg.alt = 'Cover photo';
-                        newImg.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;';
-                        bannerEl.insertBefore(newImg, bannerEl.firstChild);
+                    if (coverMediaWrap) {
+                        coverMediaWrap.innerHTML = '<img src="' + data.cover_url + '" alt="Cover photo" id="coverPhotoImg">';
                     }
-                    closeModal();
-                    // Show success toast
-                    showCoverToast('Cover photo updated!', 'success');
+                    if (btnRemoveCover) btnRemoveCover.style.display = 'flex';
+                    if (coverActionText) coverActionText.textContent = 'Change Cover Photo';
+                    closeCoverModal();
+                    showToast('Cover photo updated successfully!', 'success');
                 } else {
-                    if (statusEl) statusEl.textContent = data.message || 'Upload failed.';
+                    if (coverCropStatus) coverCropStatus.textContent = data.message || 'Upload failed.';
                 }
             })
             .catch(function () {
-                if (statusEl) statusEl.textContent = 'Network error. Please try again.';
+                if (coverCropStatus) coverCropStatus.textContent = 'Network error. Please try again.';
             })
             .finally(function () {
-                applyBtn.disabled = false;
-                applyBtn.textContent = 'Apply & Upload';
+                coverCropApply.disabled = false;
+                coverCropApply.textContent = 'Apply & Upload';
             });
         });
     }
 
-    // Close modal on backdrop click
-    if (modal) {
-        modal.addEventListener('click', function (e) {
-            if (e.target === modal) closeModal();
+    // Remove Cover Photo Confirmation
+    var removeCoverModal   = document.getElementById('confirmRemoveCoverModal');
+    var cancelRemoveCover  = document.getElementById('cancelRemoveCoverBtn');
+    var confirmRemoveCover = document.getElementById('confirmRemoveCoverBtn');
+
+    if (btnRemoveCover && removeCoverModal) {
+        btnRemoveCover.addEventListener('click', function () {
+            closeAllDropdowns();
+            removeCoverModal.style.display = 'flex';
         });
     }
 
-    // Close on Escape
+    if (cancelRemoveCover && removeCoverModal) {
+        cancelRemoveCover.addEventListener('click', function () {
+            removeCoverModal.style.display = 'none';
+        });
+    }
+
+    if (confirmRemoveCover && removeCoverModal) {
+        confirmRemoveCover.addEventListener('click', function () {
+            confirmRemoveCover.disabled = true;
+            confirmRemoveCover.textContent = 'Removing…';
+
+            var formData = new FormData();
+            formData.append('csrf_token', getCsrfToken());
+
+            fetch('/SocialNetwork/public/?url=profile/remove-cover', {
+                method: 'POST',
+                headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' },
+                body: formData
+            })
+            .then(function (res) { return res.json(); })
+            .then(function (data) {
+                if (data.success) {
+                    if (coverMediaWrap) {
+                        coverMediaWrap.innerHTML = '';
+                    }
+                    if (btnRemoveCover) btnRemoveCover.style.display = 'none';
+                    if (coverActionText) coverActionText.textContent = 'Upload Cover Photo';
+                    removeCoverModal.style.display = 'none';
+                    showToast('Cover photo removed successfully.', 'success');
+                } else {
+                    alert(data.message || 'Failed to remove cover photo.');
+                }
+            })
+            .catch(function () {
+                alert('Network error. Please try again.');
+            })
+            .finally(function () {
+                confirmRemoveCover.disabled = false;
+                confirmRemoveCover.textContent = 'Remove';
+            });
+        });
+    }
+
+    // ── 2. Profile Picture Management ─────────────────────────────────────────
+    var avatarInput       = document.getElementById('avatarPhotoInput');
+    var btnChangeAvatar   = document.getElementById('btnChangeAvatar');
+    var btnRemoveAvatar   = document.getElementById('btnRemoveAvatar');
+    var avatarChangeText  = document.getElementById('avatarChangeActionText');
+    var profileAvatarImg  = document.getElementById('profileAvatarImg');
+    var avatarCropModal   = document.getElementById('avatarCropModal');
+    var avatarCropImage   = document.getElementById('avatarCropImage');
+    var avatarCropClose   = document.getElementById('avatarCropClose');
+    var avatarCropCancel  = document.getElementById('avatarCropCancel');
+    var avatarCropApply   = document.getElementById('avatarCropApply');
+    var avatarCropStatus  = document.getElementById('avatarCropStatus');
+    var avatarCropper     = null;
+
+    if (btnChangeAvatar && avatarInput) {
+        btnChangeAvatar.addEventListener('click', function () {
+            closeAllDropdowns();
+            avatarInput.click();
+        });
+    }
+
+    if (avatarInput) {
+        avatarInput.addEventListener('change', function () {
+            var file = this.files && this.files[0];
+            if (!file) return;
+
+            var allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+            if (!allowedTypes.includes(file.type)) {
+                alert('Only JPEG, PNG, GIF, and WebP images are allowed.');
+                this.value = '';
+                return;
+            }
+            if (file.size > 5 * 1024 * 1024) {
+                alert('Image must be 5 MB or smaller.');
+                this.value = '';
+                return;
+            }
+
+            var reader = new FileReader();
+            reader.onload = function (e) {
+                if (avatarCropImage) avatarCropImage.src = e.target.result;
+                if (avatarCropModal) {
+                    avatarCropModal.style.display = 'flex';
+                    if (avatarCropStatus) avatarCropStatus.textContent = '';
+                }
+                if (avatarCropper) { avatarCropper.destroy(); avatarCropper = null; }
+
+                avatarCropper = new Cropper(avatarCropImage, {
+                    aspectRatio: 1,
+                    viewMode: 1,
+                    autoCropArea: 0.95,
+                    movable: true,
+                    zoomable: true,
+                    rotatable: false,
+                    scalable: true,
+                    cropBoxResizable: true,
+                    dragMode: 'move'
+                });
+            };
+            reader.readAsDataURL(file);
+        });
+    }
+
+    function closeAvatarModal() {
+        if (avatarCropModal) avatarCropModal.style.display = 'none';
+        if (avatarCropper) { avatarCropper.destroy(); avatarCropper = null; }
+        if (avatarCropImage) avatarCropImage.src = '';
+        if (avatarInput) avatarInput.value = '';
+    }
+
+    if (avatarCropClose) avatarCropClose.addEventListener('click', closeAvatarModal);
+    if (avatarCropCancel) avatarCropCancel.addEventListener('click', closeAvatarModal);
+
+    var avatarZoomIn  = document.getElementById('avatarZoomIn');
+    var avatarZoomOut = document.getElementById('avatarZoomOut');
+    var avatarReset   = document.getElementById('avatarReset');
+
+    if (avatarZoomIn)  avatarZoomIn.addEventListener('click', function () { if (avatarCropper) avatarCropper.zoom(0.1); });
+    if (avatarZoomOut) avatarZoomOut.addEventListener('click', function () { if (avatarCropper) avatarCropper.zoom(-0.1); });
+    if (avatarReset)   avatarReset.addEventListener('click', function () { if (avatarCropper) avatarCropper.reset(); });
+
+    if (avatarCropApply) {
+        avatarCropApply.addEventListener('click', function () {
+            if (!avatarCropper) return;
+
+            avatarCropApply.disabled = true;
+            avatarCropApply.textContent = 'Uploading…';
+            if (avatarCropStatus) avatarCropStatus.textContent = '';
+
+            var canvas = avatarCropper.getCroppedCanvas({ width: 400, height: 400 });
+            if (!canvas) {
+                if (avatarCropStatus) avatarCropStatus.textContent = 'Failed to crop image.';
+                avatarCropApply.disabled = false;
+                avatarCropApply.textContent = 'Apply & Upload';
+                return;
+            }
+
+            var base64Data = canvas.toDataURL('image/jpeg', 0.88);
+            var formData = new FormData();
+            formData.append('csrf_token', getCsrfToken());
+            formData.append('profile_image_data', base64Data);
+
+            fetch('/SocialNetwork/public/?url=profile/update', {
+                method: 'POST',
+                headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' },
+                body: formData
+            })
+            .then(function (res) {
+                // If update redirected, reload or update DOM
+                if (res.ok) {
+                    if (profileAvatarImg) profileAvatarImg.src = base64Data;
+                    var navAvatars = document.querySelectorAll('.nav-user-avatar');
+                    navAvatars.forEach(function (el) { el.src = base64Data; });
+                    if (btnRemoveAvatar) btnRemoveAvatar.style.display = 'flex';
+                    if (avatarChangeText) avatarChangeText.textContent = 'Change Profile Picture';
+                    closeAvatarModal();
+                    showToast('Profile picture updated successfully!', 'success');
+                } else {
+                    if (avatarCropStatus) avatarCropStatus.textContent = 'Upload failed. Please try again.';
+                }
+            })
+            .catch(function () {
+                if (avatarCropStatus) avatarCropStatus.textContent = 'Network error. Please try again.';
+            })
+            .finally(function () {
+                avatarCropApply.disabled = false;
+                avatarCropApply.textContent = 'Apply & Upload';
+            });
+        });
+    }
+
+    // Remove Profile Picture Confirmation
+    var removeAvatarModal   = document.getElementById('confirmRemoveAvatarModal');
+    var cancelRemoveAvatar  = document.getElementById('cancelRemoveAvatarBtn');
+    var confirmRemoveAvatar = document.getElementById('confirmRemoveAvatarBtn');
+
+    if (btnRemoveAvatar && removeAvatarModal) {
+        btnRemoveAvatar.addEventListener('click', function () {
+            closeAllDropdowns();
+            removeAvatarModal.style.display = 'flex';
+        });
+    }
+
+    if (cancelRemoveAvatar && removeAvatarModal) {
+        cancelRemoveAvatar.addEventListener('click', function () {
+            removeAvatarModal.style.display = 'none';
+        });
+    }
+
+    if (confirmRemoveAvatar && removeAvatarModal) {
+        confirmRemoveAvatar.addEventListener('click', function () {
+            confirmRemoveAvatar.disabled = true;
+            confirmRemoveAvatar.textContent = 'Removing…';
+
+            var formData = new FormData();
+            formData.append('csrf_token', getCsrfToken());
+
+            fetch('/SocialNetwork/public/?url=profile/remove-avatar', {
+                method: 'POST',
+                headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' },
+                body: formData
+            })
+            .then(function (res) { return res.json(); })
+            .then(function (data) {
+                if (data.success) {
+                    if (profileAvatarImg && data.avatar_url) {
+                        profileAvatarImg.src = data.avatar_url;
+                    }
+                    var navAvatars = document.querySelectorAll('.nav-user-avatar');
+                    navAvatars.forEach(function (el) { el.src = data.avatar_url; });
+                    if (btnRemoveAvatar) btnRemoveAvatar.style.display = 'none';
+                    if (avatarChangeText) avatarChangeText.textContent = 'Upload Profile Picture';
+                    removeAvatarModal.style.display = 'none';
+                    showToast('Profile picture removed successfully.', 'success');
+                } else {
+                    alert(data.message || 'Failed to remove profile picture.');
+                }
+            })
+            .catch(function () {
+                alert('Network error. Please try again.');
+            })
+            .finally(function () {
+                confirmRemoveAvatar.disabled = false;
+                confirmRemoveAvatar.textContent = 'Remove';
+            });
+        });
+    }
+
+    // Close Modals on Backdrop Click or Escape
+    [coverCropModal, avatarCropModal, removeCoverModal, removeAvatarModal].forEach(function (m) {
+        if (!m) return;
+        m.addEventListener('click', function (e) {
+            if (e.target === m) {
+                m.style.display = 'none';
+                if (m === coverCropModal && coverCropper) { coverCropper.destroy(); coverCropper = null; }
+                if (m === avatarCropModal && avatarCropper) { avatarCropper.destroy(); avatarCropper = null; }
+            }
+        });
+    });
+
     document.addEventListener('keydown', function (e) {
-        if ((e.key === 'Escape' || e.key === 'Esc') && modal && modal.style.display === 'flex') {
-            closeModal();
+        if (e.key === 'Escape' || e.key === 'Esc') {
+            closeAllDropdowns();
+            if (coverCropModal && coverCropModal.style.display === 'flex') closeCoverModal();
+            if (avatarCropModal && avatarCropModal.style.display === 'flex') closeAvatarModal();
+            if (removeCoverModal && removeCoverModal.style.display === 'flex') removeCoverModal.style.display = 'none';
+            if (removeAvatarModal && removeAvatarModal.style.display === 'flex') removeAvatarModal.style.display = 'none';
         }
     });
 
-    function showCoverToast(msg, type) {
-        var banner = document.getElementById('cover-toast-alert');
-        if (!banner) {
-            banner = document.createElement('div');
-            banner.id = 'cover-toast-alert';
-            banner.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);padding:10px 20px;border-radius:999px;font-size:0.85rem;font-weight:500;z-index:9999;box-shadow:0 4px 14px rgba(0,0,0,0.25);transition:opacity 0.3s;pointer-events:none;';
-            document.body.appendChild(banner);
-        }
-        banner.style.background = type === 'success' ? 'rgba(34,197,94,0.92)' : 'rgba(239,68,68,0.92)';
-        banner.style.color = '#fff';
-        banner.textContent = msg;
-        banner.style.opacity = '1';
-        setTimeout(function () { banner.style.opacity = '0'; }, 3200);
-    }
 }());
 </script>
-<?php endif; ?>
 <?php require_once BASE_PATH . '/app/views/layouts/footer.php'; ?>

@@ -286,25 +286,47 @@ class ProfileController
         // ── Persist bio ───────────────────────────────────────────────────────
         $textUpdated = $this->userModel->updateBio($userId, $bio);
 
-        // ── Persist new profile image (if one was uploaded) ───────────────────
+        // ── Persist new profile image or handle removal ───────────────────────
         $imgUpdated = true;
-        if ($newImageFilename !== null) {
+        $removeAvatar = !empty($_POST['remove_profile_image']) && $_POST['remove_profile_image'] === '1';
+
+        if ($removeAvatar) {
+            if (!empty($user['profile_image'])) {
+                $oldFile = $this->uploadDir . basename($user['profile_image']);
+                if (file_exists($oldFile)) {
+                    @unlink($oldFile);
+                }
+            }
+            $imgUpdated = $this->userModel->updateProfileImage($userId, null);
+            $_SESSION['user_profile_image'] = '';
+        } elseif ($newImageFilename !== null) {
             // Delete the old image file to avoid orphaned files accumulating
             if (!empty($user['profile_image'])) {
-                $oldFile = $this->uploadDir . $user['profile_image'];
+                $oldFile = $this->uploadDir . basename($user['profile_image']);
                 if (file_exists($oldFile)) {
                     @unlink($oldFile);
                 }
             }
             $imgUpdated = $this->userModel->updateProfileImage($userId, $newImageFilename);
+            $_SESSION['user_profile_image'] = $newImageFilename;
         }
 
-        // ── Persist new cover photo (if one was uploaded) ─────────────────────
+        // ── Persist new cover photo or handle removal ─────────────────────────
         $coverUpdated = true;
-        if ($newCoverFilename !== null) {
+        $removeCover = !empty($_POST['remove_cover_photo']) && $_POST['remove_cover_photo'] === '1';
+
+        if ($removeCover) {
+            if (!empty($user['cover_photo'])) {
+                $oldCoverFile = $this->uploadDir . basename($user['cover_photo']);
+                if (file_exists($oldCoverFile)) {
+                    @unlink($oldCoverFile);
+                }
+            }
+            $coverUpdated = $this->userModel->updateCoverPhoto($userId, null);
+        } elseif ($newCoverFilename !== null) {
             // Delete the old cover photo file to avoid orphaned files accumulating
             if (!empty($user['cover_photo'])) {
-                $oldCoverFile = $this->uploadDir . $user['cover_photo'];
+                $oldCoverFile = $this->uploadDir . basename($user['cover_photo']);
                 if (file_exists($oldCoverFile)) {
                     @unlink($oldCoverFile);
                 }
@@ -749,6 +771,135 @@ class ProfileController
             exit;
         }
         $_SESSION['flash_error'] = $message;
+        header('Location: /SocialNetwork/public/?url=profile');
+        exit;
+    }
+
+    // ─── Remove Avatar (POST) ─────────────────────────────────────────────────
+
+    /**
+     * Remove the current user's profile picture and revert to default.
+     * Route: POST /SocialNetwork/public/?url=profile/remove-avatar
+     */
+    public function removeAvatar(): void
+    {
+        $this->requireAuth();
+        $userId = (int) $_SESSION['user_id'];
+
+        $isAjax = (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest')
+            || (isset($_SERVER['HTTP_ACCEPT']) && str_contains(strtolower($_SERVER['HTTP_ACCEPT']), 'application/json'));
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $this->respondError($isAjax, 'Invalid request method.');
+            return;
+        }
+
+        if (!Csrf::check()) {
+            $this->respondError($isAjax, 'Security verification failed (invalid CSRF token). Please try again.');
+            return;
+        }
+
+        $user = $this->userModel->findById($userId);
+        if ($user === false) {
+            $this->respondError($isAjax, 'User account not found.');
+            return;
+        }
+
+        if (!empty($user['profile_image'])) {
+            $oldFile = $this->uploadDir . basename($user['profile_image']);
+            if (file_exists($oldFile)) {
+                @unlink($oldFile);
+            }
+        }
+
+        $updated = $this->userModel->updateProfileImage($userId, null);
+        $_SESSION['user_profile_image'] = '';
+
+        $defaultAvatar = 'https://ui-avatars.com/api/?name=' . rawurlencode($user['full_name'] ?? 'User')
+                       . '&size=180&background=111113&color=f5f5f7&rounded=true&bold=true';
+
+        if ($isAjax) {
+            header('Content-Type: application/json; charset=UTF-8');
+            if ($updated) {
+                echo json_encode([
+                    'success'    => true,
+                    'message'    => 'Profile picture removed successfully.',
+                    'avatar_url' => $defaultAvatar,
+                ]);
+            } else {
+                http_response_code(500);
+                echo json_encode(['success' => false, 'message' => 'Failed to remove profile picture due to a server error.']);
+            }
+            exit;
+        }
+
+        if ($updated) {
+            $_SESSION['flash_success'] = 'Profile picture removed successfully.';
+        } else {
+            $_SESSION['flash_error'] = 'Failed to remove profile picture due to a server error.';
+        }
+        header('Location: /SocialNetwork/public/?url=profile');
+        exit;
+    }
+
+    // ─── Remove Cover Photo (POST) ───────────────────────────────────────────
+
+    /**
+     * Remove the current user's cover photo and revert to default.
+     * Route: POST /SocialNetwork/public/?url=profile/remove-cover
+     */
+    public function removeCover(): void
+    {
+        $this->requireAuth();
+        $userId = (int) $_SESSION['user_id'];
+
+        $isAjax = (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest')
+            || (isset($_SERVER['HTTP_ACCEPT']) && str_contains(strtolower($_SERVER['HTTP_ACCEPT']), 'application/json'));
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $this->respondError($isAjax, 'Invalid request method.');
+            return;
+        }
+
+        if (!Csrf::check()) {
+            $this->respondError($isAjax, 'Security verification failed (invalid CSRF token). Please try again.');
+            return;
+        }
+
+        $user = $this->userModel->findById($userId);
+        if ($user === false) {
+            $this->respondError($isAjax, 'User account not found.');
+            return;
+        }
+
+        if (!empty($user['cover_photo'])) {
+            $oldCoverFile = $this->uploadDir . basename($user['cover_photo']);
+            if (file_exists($oldCoverFile)) {
+                @unlink($oldCoverFile);
+            }
+        }
+
+        $updated = $this->userModel->updateCoverPhoto($userId, null);
+
+        if ($isAjax) {
+            header('Content-Type: application/json; charset=UTF-8');
+            if ($updated) {
+                echo json_encode([
+                    'success' => true,
+                    'message' => 'Cover photo removed successfully.',
+                ]);
+            } else {
+                http_response_code(500);
+                echo json_encode(['success' => false, 'message' => 'Failed to remove cover photo due to a server error.']);
+            }
+            exit;
+        }
+
+        if ($updated) {
+            $_SESSION['flash_success'] = 'Cover photo removed successfully.';
+        } else {
+            $_SESSION['flash_error'] = 'Failed to remove cover photo due to a server error.';
+        }
         header('Location: /SocialNetwork/public/?url=profile');
         exit;
     }

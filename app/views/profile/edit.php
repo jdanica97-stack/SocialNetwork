@@ -103,6 +103,7 @@ if (!empty($user['cover_photo']) && file_exists(BASE_PATH . '/public/assets/imag
 
                         <!-- Hidden Cropped Data & File Input -->
                         <input type="hidden" id="cover_photo_data" name="cover_photo_data" value="">
+                        <input type="hidden" id="remove_cover_photo" name="remove_cover_photo" value="0">
                         <input
                             type="file"
                             class="form-control form-control-sm"
@@ -110,8 +111,19 @@ if (!empty($user['cover_photo']) && file_exists(BASE_PATH . '/public/assets/imag
                             name="cover_photo"
                             accept="image/jpeg,image/png,image/gif,image/webp"
                         >
-                        <div class="form-text" style="font-size: 0.76rem;">
-                            Accepted: JPEG, PNG, GIF, WebP &mdash; maximum 10 MB. High-resolution photos can be cropped and adjusted before saving.
+                        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mt-2">
+                            <div class="form-text mb-0" style="font-size: 0.76rem;">
+                                Accepted: JPEG, PNG, GIF, WebP &mdash; maximum 10 MB. High-resolution photos can be cropped and adjusted before saving.
+                            </div>
+                            <button
+                                type="button"
+                                class="btn btn-outline-danger btn-sm px-3"
+                                id="btnRemoveCoverEdit"
+                                style="font-size: 0.78rem; display: <?= $coverPhotoSrc ? 'inline-flex' : 'none' ?>; align-items: center; gap: 5px;"
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+                                Remove Cover Photo
+                            </button>
                         </div>
                     </div>
 
@@ -135,6 +147,7 @@ if (!empty($user['cover_photo']) && file_exists(BASE_PATH . '/public/assets/imag
                             >
                             <div class="flex-grow-1">
                                 <input type="hidden" id="profile_image_data" name="profile_image_data" value="">
+                                <input type="hidden" id="remove_profile_image" name="remove_profile_image" value="0">
                                 <input
                                     type="file"
                                     class="form-control form-control-sm"
@@ -142,8 +155,19 @@ if (!empty($user['cover_photo']) && file_exists(BASE_PATH . '/public/assets/imag
                                     name="profile_image"
                                     accept="image/jpeg,image/png,image/gif,image/webp"
                                 >
-                                <div class="form-text" style="font-size: 0.76rem;">
-                                    Accepted: JPEG, PNG, GIF, WebP &mdash; maximum 2 MB. Square 1:1 circular crop.
+                                <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mt-2">
+                                    <div class="form-text mb-0" style="font-size: 0.76rem;">
+                                        Accepted: JPEG, PNG, GIF, WebP &mdash; maximum 2 MB. Square 1:1 circular crop.
+                                    </div>
+                                    <button
+                                        type="button"
+                                        class="btn btn-outline-danger btn-sm px-3"
+                                        id="btnRemoveAvatarEdit"
+                                        style="font-size: 0.78rem; display: <?= !empty($user['profile_image']) ? 'inline-flex' : 'none' ?>; align-items: center; gap: 5px;"
+                                    >
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+                                        Remove Profile Picture
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -267,6 +291,43 @@ if (!empty($user['cover_photo']) && file_exists(BASE_PATH . '/public/assets/imag
 </div>
 
 <!-- Local Cropper.js Script -->
+<!-- ── Confirmation Modal: Remove Cover Photo (Edit View) ─────────────── -->
+<div id="confirmRemoveCoverModalEdit" class="custom-confirm-modal" role="dialog" aria-modal="true" aria-labelledby="removeCoverModalTitleEdit">
+    <div class="confirm-modal-dialog">
+        <div class="d-flex align-items-center gap-2 mb-2">
+            <div style="width:34px;height:34px;border-radius:10px;background:rgba(239,68,68,0.12);color:#ef4444;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+            </div>
+            <h4 id="removeCoverModalTitleEdit" style="margin:0;font-size:1.05rem;font-weight:600;color:var(--fg);">Remove Cover Photo?</h4>
+        </div>
+        <p style="font-size:0.85rem;color:var(--fg-muted);margin-bottom:20px;line-height:1.5;">
+            Are you sure you want to remove your cover photo? Your profile will revert to the default background theme.
+        </p>
+        <div class="d-flex justify-content-end gap-2">
+            <button type="button" class="btn btn-ghost btn-sm px-3" id="cancelRemoveCoverEditBtn">Cancel</button>
+            <button type="button" class="btn btn-danger btn-sm px-4" id="confirmRemoveCoverEditBtn">Remove</button>
+        </div>
+    </div>
+</div>
+
+<!-- ── Confirmation Modal: Remove Profile Picture (Edit View) ─────────── -->
+<div id="confirmRemoveAvatarModalEdit" class="custom-confirm-modal" role="dialog" aria-modal="true" aria-labelledby="removeAvatarModalTitleEdit">
+    <div class="confirm-modal-dialog">
+        <div class="d-flex align-items-center gap-2 mb-2">
+            <div style="width:34px;height:34px;border-radius:10px;background:rgba(239,68,68,0.12);color:#ef4444;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+            </div>
+            <h4 id="removeAvatarModalTitleEdit" style="margin:0;font-size:1.05rem;font-weight:600;color:var(--fg);">Remove Profile Picture?</h4>
+        </div>
+        <p style="font-size:0.85rem;color:var(--fg-muted);margin-bottom:20px;line-height:1.5;">
+            Are you sure you want to remove your profile picture? Your profile will revert to your default initials avatar.
+        </p>
+        <div class="d-flex justify-content-end gap-2">
+            <button type="button" class="btn btn-ghost btn-sm px-3" id="cancelRemoveAvatarEditBtn">Cancel</button>
+            <button type="button" class="btn btn-danger btn-sm px-4" id="confirmRemoveAvatarEditBtn">Remove</button>
+        </div>
+    </div>
+</div>
 <script src="/SocialNetwork/public/assets/js/cropper.min.js"></script>
 
 <script>
@@ -535,11 +596,148 @@ if (!empty($user['cover_photo']) && file_exists(BASE_PATH . '/public/assets/imag
         });
     }
 
+    // ── Remove Cover Photo Logic (Edit View) ──────────────────────────────────
+    var btnRemoveCoverEdit     = document.getElementById('btnRemoveCoverEdit');
+    var removeCoverModalEdit   = document.getElementById('confirmRemoveCoverModalEdit');
+    var cancelRemoveCoverEdit  = document.getElementById('cancelRemoveCoverEditBtn');
+    var confirmRemoveCoverEdit = document.getElementById('confirmRemoveCoverEditBtn');
+    var removeCoverFlag        = document.getElementById('remove_cover_photo');
+
+    if (btnRemoveCoverEdit && removeCoverModalEdit) {
+        btnRemoveCoverEdit.addEventListener('click', function () {
+            removeCoverModalEdit.style.display = 'flex';
+        });
+    }
+
+    if (cancelRemoveCoverEdit && removeCoverModalEdit) {
+        cancelRemoveCoverEdit.addEventListener('click', function () {
+            removeCoverModalEdit.style.display = 'none';
+        });
+    }
+
+    if (confirmRemoveCoverEdit && removeCoverModalEdit) {
+        confirmRemoveCoverEdit.addEventListener('click', function () {
+            confirmRemoveCoverEdit.disabled = true;
+            confirmRemoveCoverEdit.textContent = 'Removing…';
+
+            var formData = new FormData();
+            var csrfMeta = document.querySelector('meta[name="csrf-token"]');
+            var csrf = csrfMeta ? csrfMeta.getAttribute('content') : '';
+            formData.append('csrf_token', csrf);
+
+            fetch('/SocialNetwork/public/?url=profile/remove-cover', {
+                method: 'POST',
+                headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' },
+                body: formData
+            })
+            .then(function (res) { return res.json(); })
+            .then(function (data) {
+                if (data.success) {
+                    if (removeCoverFlag) removeCoverFlag.value = '1';
+                    if (coverDataInput) coverDataInput.value = '';
+                    if (coverPreview) {
+                        coverPreview.src = '';
+                        coverPreview.style.display = 'none';
+                    }
+                    if (coverPlaceholder) {
+                        coverPlaceholder.style.setProperty('display', 'flex', 'important');
+                    }
+                    if (btnRemoveCoverEdit) btnRemoveCoverEdit.style.display = 'none';
+                    removeCoverModalEdit.style.display = 'none';
+                } else {
+                    alert(data.message || 'Failed to remove cover photo.');
+                }
+            })
+            .catch(function () {
+                // Fallback: set form flag
+                if (removeCoverFlag) removeCoverFlag.value = '1';
+                if (coverPreview) coverPreview.style.display = 'none';
+                if (coverPlaceholder) coverPlaceholder.style.setProperty('display', 'flex', 'important');
+                if (btnRemoveCoverEdit) btnRemoveCoverEdit.style.display = 'none';
+                removeCoverModalEdit.style.display = 'none';
+            })
+            .finally(function () {
+                confirmRemoveCoverEdit.disabled = false;
+                confirmRemoveCoverEdit.textContent = 'Remove';
+            });
+        });
+    }
+
+    // ── Remove Profile Picture Logic (Edit View) ──────────────────────────────
+    var btnRemoveAvatarEdit     = document.getElementById('btnRemoveAvatarEdit');
+    var removeAvatarModalEdit   = document.getElementById('confirmRemoveAvatarModalEdit');
+    var cancelRemoveAvatarEdit  = document.getElementById('cancelRemoveAvatarEditBtn');
+    var confirmRemoveAvatarEdit = document.getElementById('confirmRemoveAvatarEditBtn');
+    var removeAvatarFlag        = document.getElementById('remove_profile_image');
+
+    if (btnRemoveAvatarEdit && removeAvatarModalEdit) {
+        btnRemoveAvatarEdit.addEventListener('click', function () {
+            removeAvatarModalEdit.style.display = 'flex';
+        });
+    }
+
+    if (cancelRemoveAvatarEdit && removeAvatarModalEdit) {
+        cancelRemoveAvatarEdit.addEventListener('click', function () {
+            removeAvatarModalEdit.style.display = 'none';
+        });
+    }
+
+    if (confirmRemoveAvatarEdit && removeAvatarModalEdit) {
+        confirmRemoveAvatarEdit.addEventListener('click', function () {
+            confirmRemoveAvatarEdit.disabled = true;
+            confirmRemoveAvatarEdit.textContent = 'Removing…';
+
+            var formData = new FormData();
+            var csrfMeta = document.querySelector('meta[name="csrf-token"]');
+            var csrf = csrfMeta ? csrfMeta.getAttribute('content') : '';
+            formData.append('csrf_token', csrf);
+
+            fetch('/SocialNetwork/public/?url=profile/remove-avatar', {
+                method: 'POST',
+                headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' },
+                body: formData
+            })
+            .then(function (res) { return res.json(); })
+            .then(function (data) {
+                if (data.success) {
+                    if (removeAvatarFlag) removeAvatarFlag.value = '1';
+                    if (avatarDataInput) avatarDataInput.value = '';
+                    if (previewImg) previewImg.src = data.avatar_url || 'https://ui-avatars.com/api/?name=User&size=180&background=111113&color=f5f5f7&rounded=true&bold=true';
+                    if (btnRemoveAvatarEdit) btnRemoveAvatarEdit.style.display = 'none';
+                    removeAvatarModalEdit.style.display = 'none';
+                } else {
+                    alert(data.message || 'Failed to remove profile picture.');
+                }
+            })
+            .catch(function () {
+                // Fallback: set form flag
+                if (removeAvatarFlag) removeAvatarFlag.value = '1';
+                if (previewImg) previewImg.src = 'https://ui-avatars.com/api/?name=User&size=180&background=111113&color=f5f5f7&rounded=true&bold=true';
+                if (btnRemoveAvatarEdit) btnRemoveAvatarEdit.style.display = 'none';
+                removeAvatarModalEdit.style.display = 'none';
+            })
+            .finally(function () {
+                confirmRemoveAvatarEdit.disabled = false;
+                confirmRemoveAvatarEdit.textContent = 'Remove';
+            });
+        });
+    }
+
+    // Close Modals on Backdrop Click or Escape
+    [removeCoverModalEdit, removeAvatarModalEdit].forEach(function (m) {
+        if (!m) return;
+        m.addEventListener('click', function (e) {
+            if (e.target === m) m.style.display = 'none';
+        });
+    });
+
     // Global Escape Key Handler
     document.addEventListener('keydown', function (e) {
         if (e.key === 'Escape' || e.key === 'Esc') {
             if (avatarModal && avatarModal.style.display === 'flex') closeAvatarModal();
             if (coverModal && coverModal.style.display === 'flex') closeCoverModal();
+            if (removeCoverModalEdit && removeCoverModalEdit.style.display === 'flex') removeCoverModalEdit.style.display = 'none';
+            if (removeAvatarModalEdit && removeAvatarModalEdit.style.display === 'flex') removeAvatarModalEdit.style.display = 'none';
         }
     });
 }());

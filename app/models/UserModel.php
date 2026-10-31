@@ -195,7 +195,7 @@ class UserModel
      * @param  string $filename  The stored filename (e.g. "abc123.jpg").
      * @return bool              true on success, false on DB failure.
      */
-    public function updateProfileImage(int $id, string $filename): bool
+    public function updateProfileImage(int $id, ?string $filename): bool
     {
         try {
             $sql = 'UPDATE users
