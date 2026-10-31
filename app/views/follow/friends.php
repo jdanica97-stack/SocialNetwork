@@ -166,7 +166,7 @@ $currentUserId = (int) $_SESSION['user_id'];
                                 </div>
 
                                 <!-- Right: Actions (Send Message & Following/Unfollow) -->
-                                <div class="d-flex align-items-center gap-2 flex-shrink-0 align-self-end align-self-sm-center">
+                                <div class="d-flex align-items-center gap-2 flex-shrink-0 align-self-end align-self-sm-center friend-entry-actions">
                                     <!-- Send Message Button -->
                                     <a
                                         href="<?= htmlspecialchars($messageUrl, ENT_QUOTES, 'UTF-8') ?>"

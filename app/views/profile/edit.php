@@ -140,12 +140,12 @@ if (!empty($user['profile_image'])) {
 
 <!-- ── Avatar Cropper Modal ─────────────────────────────────────────── -->
 <div id="avatarCropModal" style="display:none;position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,0.75);align-items:center;justify-content:center;" role="dialog" aria-modal="true" aria-label="Crop profile picture">
-    <div style="background:var(--surface-card);border-radius:16px;padding:24px;max-width:520px;width:95%;max-height:90vh;overflow:auto;box-shadow:0 12px 32px rgba(0,0,0,0.35);border:1px solid var(--border);">
+    <div class="cropper-modal-dialog" style="background:var(--surface-card);border-radius:16px;padding:24px;max-width:520px;width:95%;max-height:90vh;overflow:auto;box-shadow:0 12px 32px rgba(0,0,0,0.35);border:1px solid var(--border);">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
             <h3 style="margin:0;font-size:1.05rem;font-weight:600;color:var(--fg);">Crop Profile Picture</h3>
             <button type="button" id="avatarCropClose" style="background:none;border:none;cursor:pointer;color:var(--fg-muted);font-size:1.3rem;line-height:1;" aria-label="Close">&times;</button>
         </div>
-        <div style="max-height:380px;overflow:hidden;border-radius:8px;background:#000;">
+        <div class="crop-image-container" style="max-height:380px;overflow:hidden;border-radius:8px;background:#000;">
             <img id="avatarCropImage" src="" alt="Profile picture to crop" style="max-width:100%;display:block;">
         </div>
         <div style="display:flex;gap:10px;margin-top:16px;justify-content:flex-end;">

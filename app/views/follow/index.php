@@ -173,7 +173,7 @@ $activeTab = ($tab === 'followers') ? 'followers' : 'following';
                                     </div>
 
                                     <!-- Action Buttons -->
-                                    <div class="d-flex align-items-center gap-2 flex-shrink-0">
+                                    <div class="d-flex align-items-center gap-2 flex-shrink-0 friend-entry-actions">
                                         <?php if (!$isSelf): ?>
                                             <!-- Follow / Unfollow Button -->
                                             <button
@@ -263,7 +263,7 @@ $activeTab = ($tab === 'followers') ? 'followers' : 'following';
                                     </div>
 
                                     <!-- Action Buttons -->
-                                    <div class="d-flex align-items-center gap-2 flex-shrink-0">
+                                    <div class="d-flex align-items-center gap-2 flex-shrink-0 friend-entry-actions">
                                         <?php if (!$isSelf): ?>
                                             <!-- Follow / Unfollow Button -->
                                             <button

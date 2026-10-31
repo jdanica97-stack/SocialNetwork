@@ -236,10 +236,10 @@
                             <div class="card-body">
 
                                 <!-- Post Header: Author info, Timestamp, and Owner Options (Three-dot Menu) -->
-                                <div class="d-flex align-items-center justify-content-between mb-3">
-                                    <div class="d-flex align-items-center gap-2">
+                                <div class="d-flex align-items-center justify-content-between mb-3 post-header">
+                                    <div class="d-flex align-items-center gap-2 min-w-0">
                                         <!-- Clickable avatar → author profile -->
-                                        <a href="<?= htmlspecialchars($profileUrl, ENT_QUOTES, 'UTF-8') ?>" title="View <?= htmlspecialchars($post['full_name'], ENT_QUOTES, 'UTF-8') ?>'s profile">
+                                        <a href="<?= htmlspecialchars($profileUrl, ENT_QUOTES, 'UTF-8') ?>" title="View <?= htmlspecialchars($post['full_name'], ENT_QUOTES, 'UTF-8') ?>'s profile" class="flex-shrink-0">
                                             <img
                                                 src="<?= htmlspecialchars($postAvatar, ENT_QUOTES, 'UTF-8') ?>"
                                                 alt="<?= htmlspecialchars($post['full_name'], ENT_QUOTES, 'UTF-8') ?>"
@@ -247,12 +247,12 @@
                                                 loading="lazy"
                                             >
                                         </a>
-                                        <div>
+                                        <div class="min-w-0">
                                             <!-- Clickable name → author profile -->
-                                            <a href="<?= htmlspecialchars($profileUrl, ENT_QUOTES, 'UTF-8') ?>" style="font-weight: 600; font-size: 0.92rem; color: var(--fg); text-decoration: none;" class="post-author-link">
+                                            <a href="<?= htmlspecialchars($profileUrl, ENT_QUOTES, 'UTF-8') ?>" style="font-weight: 600; font-size: 0.92rem; color: var(--fg); text-decoration: none;" class="post-author-link text-truncate d-block">
                                                 <?= htmlspecialchars($post['full_name'], ENT_QUOTES, 'UTF-8') ?>
                                             </a>
-                                            <div style="font-size: 0.75rem; color: var(--fg-faint);">
+                                            <div style="font-size: 0.75rem; color: var(--fg-faint);" class="text-truncate">
                                                 @<?= htmlspecialchars($post['username'], ENT_QUOTES, 'UTF-8') ?> &bull;
                                                 <time datetime="<?= htmlspecialchars($post['created_at'], ENT_QUOTES, 'UTF-8') ?>" title="<?= htmlspecialchars($formattedDate, ENT_QUOTES, 'UTF-8') ?>">
                                                     <?= htmlspecialchars($relativeTime, ENT_QUOTES, 'UTF-8') ?>
