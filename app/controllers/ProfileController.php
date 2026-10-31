@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 
 /**
  * app/controllers/ProfileController.php
@@ -255,6 +255,27 @@ class ProfileController
             }
         }
 
+        // ── Handle cover photo upload (optional) ──────────────────────────────
+        $newCoverFilename = null; // will stay null if no cover was chosen
+
+        $croppedCoverData = trim($_POST['cover_photo_data'] ?? '');
+        if (!empty($croppedCoverData)) {
+            $cropCoverResult = $this->handleBase64ImageUpload($croppedCoverData, 10485760);
+            if ($cropCoverResult['success']) {
+                $newCoverFilename = $cropCoverResult['filename'];
+            } else {
+                $errors = array_merge($errors, $cropCoverResult['errors']);
+            }
+        } elseif (!empty($_FILES['cover_photo']['name'])) {
+            $uploadCoverResult = $this->handleImageUpload($_FILES['cover_photo']);
+
+            if ($uploadCoverResult['success']) {
+                $newCoverFilename = $uploadCoverResult['filename'];
+            } else {
+                $errors = array_merge($errors, $uploadCoverResult['errors']);
+            }
+        }
+
         // ── Re-display form if validation failed ──────────────────────────────
         if (!empty($errors)) {
             $pageTitle = 'Edit Profile — Mini Social Network';
@@ -265,7 +286,7 @@ class ProfileController
         // ── Persist bio ───────────────────────────────────────────────────────
         $textUpdated = $this->userModel->updateBio($userId, $bio);
 
-        // ── Persist new image (only if one was successfully uploaded) ─────────
+        // ── Persist new profile image (if one was uploaded) ───────────────────
         $imgUpdated = true;
         if ($newImageFilename !== null) {
             // Delete the old image file to avoid orphaned files accumulating
@@ -278,7 +299,20 @@ class ProfileController
             $imgUpdated = $this->userModel->updateProfileImage($userId, $newImageFilename);
         }
 
-        if (!$textUpdated || !$imgUpdated) {
+        // ── Persist new cover photo (if one was uploaded) ─────────────────────
+        $coverUpdated = true;
+        if ($newCoverFilename !== null) {
+            // Delete the old cover photo file to avoid orphaned files accumulating
+            if (!empty($user['cover_photo'])) {
+                $oldCoverFile = $this->uploadDir . $user['cover_photo'];
+                if (file_exists($oldCoverFile)) {
+                    @unlink($oldCoverFile);
+                }
+            }
+            $coverUpdated = $this->userModel->updateCoverPhoto($userId, $newCoverFilename);
+        }
+
+        if (!$textUpdated || !$imgUpdated || !$coverUpdated) {
             http_response_code(500);
             $errors[] = 'An unexpected database error occurred while updating your profile. Please try again.';
             $pageTitle = 'Edit Profile — Mini Social Network';

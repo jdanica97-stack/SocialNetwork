@@ -73,11 +73,13 @@ if (!empty($user['cover_photo']) && file_exists(BASE_PATH . '/public/assets/imag
 
                 <!-- Avatar & Edit Button Row -->
                 <div class="profile-avatar-wrap">
-                    <img
-                        src="<?= htmlspecialchars($avatarSrc, ENT_QUOTES, 'UTF-8') ?>"
-                        alt="Profile picture of <?= htmlspecialchars($user['full_name'], ENT_QUOTES, 'UTF-8') ?>"
-                        class="profile-avatar"
-                    >
+                    <div class="profile-avatar-container">
+                        <img
+                            src="<?= htmlspecialchars($avatarSrc, ENT_QUOTES, 'UTF-8') ?>"
+                            alt="Profile picture of <?= htmlspecialchars($user['full_name'], ENT_QUOTES, 'UTF-8') ?>"
+                            class="profile-avatar"
+                        >
+                    </div>
 
                     <?php if (!empty($isOwnProfile)): ?>
                         <div class="d-flex gap-2 align-items-center flex-wrap">
@@ -759,26 +761,46 @@ document.addEventListener('DOMContentLoaded', function () {
 
 <?php if (!empty($isOwnProfile)): ?>
 <!-- ── Cover Photo Cropper Modal ─────────────────────────────────────── -->
-<div id="coverCropModal" style="display:none;position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,0.75);align-items:center;justify-content:center;" role="dialog" aria-modal="true" aria-label="Crop cover photo">
-    <div class="cropper-modal-dialog" style="background:var(--surface-card);border-radius:16px;padding:24px;max-width:700px;width:95%;max-height:90vh;overflow:auto;">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
-            <h3 style="margin:0;font-size:1rem;font-weight:600;color:var(--fg);">Crop Cover Photo</h3>
-            <button type="button" id="coverCropClose" style="background:none;border:none;cursor:pointer;color:var(--fg-muted);font-size:1.3rem;line-height:1;" aria-label="Close">&times;</button>
+<div id="coverCropModal" style="display:none;position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,0.78);align-items:center;justify-content:center;backdrop-filter:blur(6px);" role="dialog" aria-modal="true" aria-label="Crop cover photo">
+    <div class="cropper-modal-dialog" style="background:var(--surface-card);border-radius:18px;padding:22px;max-width:720px;width:95%;max-height:92vh;overflow:auto;box-shadow:0 18px 48px rgba(0,0,0,0.45);border:1px solid var(--border);">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+            <div class="d-flex align-items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--fg);"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                <h3 style="margin:0;font-size:1.05rem;font-weight:600;color:var(--fg);">Crop Cover Photo</h3>
+            </div>
+            <button type="button" id="coverCropClose" style="background:none;border:none;cursor:pointer;color:var(--fg-muted);font-size:1.4rem;line-height:1;" aria-label="Close">&times;</button>
         </div>
-        <div class="crop-image-container" style="max-height:400px;overflow:hidden;border-radius:8px;background:#000;">
+        <div class="crop-image-container" style="max-height:380px;overflow:hidden;border-radius:10px;background:#0d0d10;">
             <img id="coverCropImage" src="" alt="Cover photo to crop" style="max-width:100%;display:block;">
         </div>
+
+        <!-- Zoom & Positioning Toolbar -->
+        <div class="cropper-toolbar">
+            <button type="button" class="cropper-tool-btn" id="coverZoomIn" title="Zoom In">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+                Zoom In
+            </button>
+            <button type="button" class="cropper-tool-btn" id="coverZoomOut" title="Zoom Out">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+                Zoom Out
+            </button>
+            <button type="button" class="cropper-tool-btn" id="coverReset" title="Reset Crop">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+                Reset
+            </button>
+        </div>
+
         <div style="display:flex;gap:10px;margin-top:16px;justify-content:flex-end;">
-            <button type="button" id="coverCropCancel" class="btn btn-ghost btn-sm">Cancel</button>
-            <button type="button" id="coverCropApply" class="btn btn-primary btn-sm">Apply &amp; Upload</button>
+            <button type="button" id="coverCropCancel" class="btn btn-ghost btn-sm px-3">Cancel</button>
+            <button type="button" id="coverCropApply" class="btn btn-primary btn-sm px-4">Apply &amp; Upload</button>
         </div>
         <p id="coverCropStatus" style="font-size:0.8rem;color:var(--fg-muted);margin-top:8px;text-align:center;min-height:1em;"></p>
     </div>
 </div>
 
-<!-- Cropper.js CDN -->
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css" integrity="sha512-hvNR0F/e2J7zPPfLC9auFe3/zuAVFs9mTeKgMNyHOKa74hjFO3UfqYEDCGKOgSK0E4QQgmXX2REkEAqMBzqMQ==" crossorigin="anonymous">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js" integrity="sha512-9KkIqdfN7ipEW6B6k+Aq20PV31bjODg4AA52W+tYtAE0jE0kMx49bjJ3WyfVF09uAuXNcqe+AHKnicS5GuFNQ==" crossorigin="anonymous"></script>
+<!-- Local Cropper.js Stylesheet & Script -->
+<link rel="stylesheet" href="/SocialNetwork/public/assets/css/cropper.min.css">
+<script src="/SocialNetwork/public/assets/js/cropper.min.js"></script>
 
 <script>
 (function () {
@@ -839,9 +861,9 @@ document.addEventListener('DOMContentLoaded', function () {
                 // Destroy previous cropper instance
                 if (cropper) { cropper.destroy(); cropper = null; }
 
-                // Init Cropper.js: 16:9 aspect ratio for cover photo
+                // Init Cropper.js: 16:7 aspect ratio for cover photo
                 cropper = new Cropper(cropImage, {
-                    aspectRatio: 16 / 9,
+                    aspectRatio: 16 / 7,
                     viewMode: 1,
                     autoCropArea: 1,
                     movable: true,
@@ -849,9 +871,30 @@ document.addEventListener('DOMContentLoaded', function () {
                     rotatable: false,
                     scalable: true,
                     cropBoxResizable: true,
+                    dragMode: 'move'
                 });
             };
             reader.readAsDataURL(file);
+        });
+    }
+
+    var zoomInBtn  = document.getElementById('coverZoomIn');
+    var zoomOutBtn = document.getElementById('coverZoomOut');
+    var resetBtn   = document.getElementById('coverReset');
+
+    if (zoomInBtn) {
+        zoomInBtn.addEventListener('click', function () {
+            if (cropper) cropper.zoom(0.1);
+        });
+    }
+    if (zoomOutBtn) {
+        zoomOutBtn.addEventListener('click', function () {
+            if (cropper) cropper.zoom(-0.1);
+        });
+    }
+    if (resetBtn) {
+        resetBtn.addEventListener('click', function () {
+            if (cropper) cropper.reset();
         });
     }
 
@@ -867,7 +910,7 @@ document.addEventListener('DOMContentLoaded', function () {
             if (statusEl) statusEl.textContent = '';
 
             // Get cropped canvas and convert to base64
-            var canvas = cropper.getCroppedCanvas({ maxWidth: 1200, maxHeight: 675 });
+            var canvas = cropper.getCroppedCanvas({ maxWidth: 1200, maxHeight: 525 });
             if (!canvas) {
                 if (statusEl) statusEl.textContent = 'Failed to crop image.';
                 applyBtn.disabled = false;
