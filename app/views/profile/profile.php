@@ -79,8 +79,12 @@ if (!empty($user['cover_photo']) && file_exists(BASE_PATH . '/public/assets/imag
                                 <span class="cover-btn-label">Edit Cover Photo</span>
                             </button>
                             <div class="cover-dropdown-menu" id="coverDropdownMenu" role="menu">
+                                <div class="sheet-header">
+                                    <div class="sheet-handle"></div>
+                                    <span class="sheet-title">Cover Photo</span>
+                                </div>
                                 <button type="button" class="cover-dropdown-item" id="btnUploadCover" role="menuitem">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
                                     <span id="coverUploadActionText"><?= $coverPhotoSrc ? 'Change Cover Photo' : 'Upload Cover Photo' ?></span>
                                 </button>
                                 <button
@@ -90,9 +94,10 @@ if (!empty($user['cover_photo']) && file_exists(BASE_PATH . '/public/assets/imag
                                     role="menuitem"
                                     style="display: <?= $coverPhotoSrc ? 'flex' : 'none' ?>;"
                                 >
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
                                     <span>Remove Cover Photo</span>
                                 </button>
+                                <button type="button" class="sheet-cancel-btn" id="cancelCoverSheetBtn">Cancel</button>
                             </div>
                         </div>
                         <input type="file" id="coverPhotoInput" accept="image/jpeg,image/png,image/gif,image/webp" class="d-none" aria-label="Upload cover photo">
@@ -125,8 +130,12 @@ if (!empty($user['cover_photo']) && file_exists(BASE_PATH . '/public/assets/imag
                                     <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
                                 </button>
                                 <div class="avatar-dropdown-menu" id="avatarDropdownMenu" role="menu">
+                                    <div class="sheet-header">
+                                        <div class="sheet-handle"></div>
+                                        <span class="sheet-title">Profile Picture</span>
+                                    </div>
                                     <button type="button" class="avatar-dropdown-item" id="btnChangeAvatar" role="menuitem">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
                                         <span id="avatarChangeActionText"><?= !empty($user['profile_image']) ? 'Change Profile Picture' : 'Upload Profile Picture' ?></span>
                                     </button>
                                     <button
@@ -136,9 +145,10 @@ if (!empty($user['cover_photo']) && file_exists(BASE_PATH . '/public/assets/imag
                                         role="menuitem"
                                         style="display: <?= !empty($user['profile_image']) ? 'flex' : 'none' ?>;"
                                     >
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
                                         <span>Remove Profile Picture</span>
                                     </button>
+                                    <button type="button" class="sheet-cancel-btn" id="cancelAvatarSheetBtn">Cancel</button>
                                 </div>
                             </div>
                             <input type="file" id="avatarPhotoInput" accept="image/jpeg,image/png,image/gif,image/webp" class="d-none" aria-label="Upload profile picture">
@@ -146,7 +156,7 @@ if (!empty($user['cover_photo']) && file_exists(BASE_PATH . '/public/assets/imag
                     </div>
 
                     <?php if (!empty($isOwnProfile)): ?>
-                        <div class="d-flex gap-2 align-items-center flex-wrap">
+                        <div class="profile-actions-wrap d-flex gap-2 align-items-center flex-wrap">
                             <a href="/SocialNetwork/public/?url=profile/edit" class="btn btn-ghost btn-sm" id="editProfileBtn">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                                 Edit Profile
@@ -157,7 +167,7 @@ if (!empty($user['cover_photo']) && file_exists(BASE_PATH . '/public/assets/imag
                             </button>
                         </div>
                     <?php else: ?>
-                        <div class="d-flex gap-2 align-items-center flex-wrap">
+                        <div class="profile-actions-wrap d-flex gap-2 align-items-center flex-wrap">
                             <!-- Follow / Unfollow Button -->
                             <button
                                 type="button"
@@ -938,6 +948,7 @@ document.addEventListener('DOMContentLoaded', function () {
         </div>
     </div>
 </div>
+<div class="mobile-action-sheet-backdrop" id="actionSheetBackdrop"></div>
 <?php endif; ?>
 <!-- Local Cropper.js Stylesheet & Script -->
 <link rel="stylesheet" href="/SocialNetwork/public/assets/css/cropper.min.css">
@@ -971,17 +982,21 @@ document.addEventListener('DOMContentLoaded', function () {
         }, 3200);
     }
 
-    // ── Dropdown Menus ────────────────────────────────────────────────────────
-    var coverDropdownBtn  = document.getElementById('editCoverDropdownBtn');
-    var coverDropdownMenu = document.getElementById('coverDropdownMenu');
-    var avatarDropdownBtn = document.getElementById('editAvatarDropdownBtn');
-    var avatarDropdownMenu = document.getElementById('avatarDropdownMenu');
+    // ── Dropdown Menus & Mobile Action Sheet ───────────────────────────────────
+    var coverDropdownBtn    = document.getElementById('editCoverDropdownBtn');
+    var coverDropdownMenu   = document.getElementById('coverDropdownMenu');
+    var avatarDropdownBtn   = document.getElementById('editAvatarDropdownBtn');
+    var avatarDropdownMenu  = document.getElementById('avatarDropdownMenu');
+    var actionSheetBackdrop = document.getElementById('actionSheetBackdrop');
+    var cancelCoverSheetBtn = document.getElementById('cancelCoverSheetBtn');
+    var cancelAvatarSheetBtn = document.getElementById('cancelAvatarSheetBtn');
 
     function closeAllDropdowns() {
         if (coverDropdownMenu) coverDropdownMenu.classList.remove('show');
         if (coverDropdownBtn) coverDropdownBtn.setAttribute('aria-expanded', 'false');
         if (avatarDropdownMenu) avatarDropdownMenu.classList.remove('show');
         if (avatarDropdownBtn) avatarDropdownBtn.setAttribute('aria-expanded', 'false');
+        if (actionSheetBackdrop) actionSheetBackdrop.classList.remove('show');
     }
 
     if (coverDropdownBtn && coverDropdownMenu) {
@@ -992,6 +1007,7 @@ document.addEventListener('DOMContentLoaded', function () {
             if (!isOpen) {
                 coverDropdownMenu.classList.add('show');
                 coverDropdownBtn.setAttribute('aria-expanded', 'true');
+                if (actionSheetBackdrop) actionSheetBackdrop.classList.add('show');
             }
         });
     }
@@ -1004,7 +1020,28 @@ document.addEventListener('DOMContentLoaded', function () {
             if (!isOpen) {
                 avatarDropdownMenu.classList.add('show');
                 avatarDropdownBtn.setAttribute('aria-expanded', 'true');
+                if (actionSheetBackdrop) actionSheetBackdrop.classList.add('show');
             }
+        });
+    }
+
+    if (actionSheetBackdrop) {
+        actionSheetBackdrop.addEventListener('click', function () {
+            closeAllDropdowns();
+        });
+    }
+
+    if (cancelCoverSheetBtn) {
+        cancelCoverSheetBtn.addEventListener('click', function (e) {
+            e.stopPropagation();
+            closeAllDropdowns();
+        });
+    }
+
+    if (cancelAvatarSheetBtn) {
+        cancelAvatarSheetBtn.addEventListener('click', function (e) {
+            e.stopPropagation();
+            closeAllDropdowns();
         });
     }
 
@@ -1016,6 +1053,9 @@ document.addEventListener('DOMContentLoaded', function () {
         if (avatarDropdownMenu && !avatarDropdownMenu.contains(e.target) && e.target !== avatarDropdownBtn) {
             avatarDropdownMenu.classList.remove('show');
             if (avatarDropdownBtn) avatarDropdownBtn.setAttribute('aria-expanded', 'false');
+        }
+        if (actionSheetBackdrop && !coverDropdownMenu.classList.contains('show') && !avatarDropdownMenu.classList.contains('show')) {
+            actionSheetBackdrop.classList.remove('show');
         }
     });
 

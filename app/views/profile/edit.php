@@ -136,7 +136,7 @@ if (!empty($user['cover_photo']) && file_exists(BASE_PATH . '/public/assets/imag
                             Your avatar image is displayed next to your posts, comments, and profile.
                         </p>
 
-                        <div class="d-flex align-items-center gap-3 mb-2">
+                        <div class="d-flex align-items-center gap-3 mb-2 flex-wrap flex-sm-nowrap">
                             <!-- Preview avatar -->
                             <img
                                 id="imagePreview"
