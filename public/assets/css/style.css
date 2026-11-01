@@ -1,6 +1,6 @@
 /* ============================================================
    public/assets/css/style.css
-   Mini Social Network — Design System
+   Mini Social Network â€” Design System
    ============================================================
 
    TABLE OF CONTENTS
@@ -25,7 +25,7 @@
    ============================================================ */
 
 
-/* ── 1. Design Tokens ──────────────────────────────────────── */
+/* â”€â”€ 1. Design Tokens â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 :root {
   --bg:              #E9E9EB;
   --bg-alt:          #DDDDE0;
@@ -80,7 +80,7 @@
 }
 
 
-/* ── 2. Reset & Base ───────────────────────────────────────── */
+/* â”€â”€ 2. Reset & Base â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 html {
@@ -121,7 +121,7 @@ img, svg { display: block; }
 .text-muted { color: var(--fg-muted) !important; }
 
 
-/* ── 3. Background Blobs ───────────────────────────────────── */
+/* â”€â”€ 3. Background Blobs â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .bg-blobs {
   position: fixed;
   inset: 0;
@@ -153,7 +153,7 @@ img, svg { display: block; }
 }
 
 
-/* ── 4. Glass Utility ──────────────────────────────────────── */
+/* â”€â”€ 4. Glass Utility â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .glass {
   background: var(--surface);
   backdrop-filter: blur(28px) saturate(160%);
@@ -167,7 +167,7 @@ img, svg { display: block; }
 .glass:hover { background: var(--surface-hover); }
 
 
-/* ── 5. Layout & Container ─────────────────────────────────── */
+/* â”€â”€ 5. Layout & Container â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 main.container {
   flex: 1;
   position: relative;
@@ -180,7 +180,7 @@ main.container {
 .row.justify-content-center { position: relative; z-index: auto; }
 
 
-/* ── 6. Navigation ─────────────────────────────────────────── */
+/* â”€â”€ 6. Navigation â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .halo-nav-wrapper {
   position: fixed;
   top: 0;
@@ -221,7 +221,7 @@ main.container {
   flex-shrink: 0;
 }
 
-/* ── Clickable Logo with Light/Dark Mode ─────────────────────── */
+/* â”€â”€ Clickable Logo with Light/Dark Mode â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .logo-panel-btn {
   display: inline-flex;
   align-items: center;
@@ -317,7 +317,7 @@ main.container {
   }
 }
 
-/* ── Top Navigation Profile Dropdown Menu ─────────────────────── */
+/* â”€â”€ Top Navigation Profile Dropdown Menu â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .profile-dropdown-wrapper {
   position: relative;
   display: inline-flex;
@@ -505,7 +505,7 @@ main.container {
   color: #ef4444 !important;
 }
 
-/* Theme toggle inside profile dropdown — ensure it looks like a normal menu item */
+/* Theme toggle inside profile dropdown â€” ensure it looks like a normal menu item */
 button.profile-dropdown-link {
   cursor: pointer;
   appearance: none;
@@ -574,11 +574,11 @@ button.profile-dropdown-link:hover {
 [data-theme="dark"] .icon-sun  { display: inline; }
 [data-theme="dark"] .icon-moon { display: none; }
 
-/* Hide the Bootstrap navbar — we use halo-nav instead */
+/* Hide the Bootstrap navbar â€” we use halo-nav instead */
 nav.navbar { display: none !important; }
 
 
-/* ── 7. Buttons ────────────────────────────────────────────── */
+/* â”€â”€ 7. Buttons â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .btn, button[type="submit"], .halo-btn {
   display: inline-flex;
   align-items: center;
@@ -646,7 +646,7 @@ button[type="submit"].btn-primary,
 .d-grid .btn { width: 100%; }
 
 
-/* ── 8. Form Elements ──────────────────────────────────────── */
+/* â”€â”€ 8. Form Elements â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .card.shadow-sm,
 .card {
   background: var(--surface) !important;
@@ -721,7 +721,7 @@ input[type="file"].form-control {
 }
 
 
-/* ── 9. Alert / Flash Messages ─────────────────────────────── */
+/* â”€â”€ 9. Alert / Flash Messages â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .alert {
   border-radius: 16px !important;
   border: 1px solid var(--border-strong) !important;
@@ -744,14 +744,14 @@ input[type="file"].form-control {
 [data-theme="dark"] .alert .btn-close { filter: invert(1); }
 
 
-/* ── 10. Cards ─────────────────────────────────────────────── */
+/* â”€â”€ 10. Cards â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .post-card {
   border-radius: var(--radius-card) !important;
   margin-bottom: 16px;
 }
 
 
-/* ── 11. Auth Pages ────────────────────────────────────────── */
+/* â”€â”€ 11. Auth Pages â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .auth-wrap {
   display: flex;
   flex-direction: column;
@@ -908,7 +908,7 @@ input[type="file"].form-control {
 }
 
 
-/* ── 12. Home Page ─────────────────────────────────────────── */
+/* â”€â”€ 12. Home Page â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .home-greeting {
   font-size: 2rem;
   font-weight: 600;
@@ -981,7 +981,7 @@ input[type="file"].form-control {
 }
 
 
-/* ── 13. Profile Page ──────────────────────────────────────── */
+/* â”€â”€ 13. Profile Page â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .profile-banner {
   height: 200px;
   background: var(--surface-hover);
@@ -1042,7 +1042,7 @@ input[type="file"].form-control {
   flex-wrap: wrap;
 }
 
-/* ── Cropper UI Components & Circular Guides ───────────────────────── */
+/* â”€â”€ Cropper UI Components & Circular Guides â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .cropper-circular .cropper-view-box,
 .cropper-circular .cropper-face {
   border-radius: 50% !important;
@@ -1124,7 +1124,7 @@ input[type="file"].form-control {
 }
 
 
-/* ── 14. Edit Profile Page ─────────────────────────────────── */
+/* â”€â”€ 14. Edit Profile Page â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .edit-header {
   display: flex;
   align-items: center;
@@ -1160,7 +1160,7 @@ input[type="file"].form-control {
 }
 
 
-/* ── 15. Footer ────────────────────────────────────────────── */
+/* â”€â”€ 15. Footer â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 footer.footer.bg-primary { display: none !important; }
 
 .halo-footer {
@@ -1174,7 +1174,7 @@ footer.footer.bg-primary { display: none !important; }
 }
 
 
-/* ── 16. Animations & Transitions ──────────────────────────── */
+/* â”€â”€ 16. Animations & Transitions â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .fade-up {
   opacity: 0;
   transform: translateY(20px);
@@ -1205,7 +1205,7 @@ footer.footer.bg-primary { display: none !important; }
 }
 
 
-/* ── 17. Accessibility ─────────────────────────────────────── */
+/* â”€â”€ 17. Accessibility â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .skip-link {
   position: absolute;
   top: -100%;
@@ -1221,7 +1221,7 @@ footer.footer.bg-primary { display: none !important; }
 .skip-link:focus { top: 16px; }
 
 
-/* ── 18. Responsive ────────────────────────────────────────── */
+/* â”€â”€ 18. Responsive â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 @media (max-width: 600px) {
   main.container {
     padding-top: 80px;
@@ -1259,7 +1259,7 @@ footer.footer.bg-primary { display: none !important; }
 }
 
 
-/* ── 19. Comments (Step 8) ─────────────────────────────────── */
+/* â”€â”€ 19. Comments (Step 8) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .comments-section {
   border-top: 1px solid var(--border);
   padding: 16px 20px 20px;
@@ -1352,7 +1352,7 @@ footer.footer.bg-primary { display: none !important; }
 }
 
 
-/* ── 20. Likes (Step 9) ────────────────────────────────────── */
+/* â”€â”€ 20. Likes (Step 9) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .post-interactions {
   display: flex;
   align-items: center;
@@ -1428,7 +1428,7 @@ footer.footer.bg-primary { display: none !important; }
 }
 
 
-/* ── 21. Newsfeed Responsive Enhancements (Step 10) ────────── */
+/* â”€â”€ 21. Newsfeed Responsive Enhancements (Step 10) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .posts-stream {
   display: flex;
   flex-direction: column;
@@ -1492,7 +1492,7 @@ footer.footer.bg-primary { display: none !important; }
 }
 
 
-/* ── 22. Post Options Dropdown Menu (Three-dot) ────────────── */
+/* â”€â”€ 22. Post Options Dropdown Menu (Three-dot) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .post-menu-wrap {
   position: relative;
   display: inline-block;
@@ -1770,7 +1770,7 @@ footer.footer.bg-primary { display: none !important; }
 }
 
 
-/* Modal — Bootstrap 5 overlay fix */
+/* Modal â€” Bootstrap 5 overlay fix */
 /* The modal element itself must never intercept pointer events while hidden.
    Bootstrap adds/removes .show; we reset pointer-events cleanly here. */
 .modal {
@@ -1829,7 +1829,7 @@ footer.footer.bg-primary { display: none !important; }
   pointer-events: none !important;
 }
 
-/* ── 24. Comment Kebab Menu ─────────────────────────────────── */
+/* â”€â”€ 24. Comment Kebab Menu â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .comment-menu-wrap {
   position: relative;
   flex-shrink: 0;
@@ -1915,7 +1915,7 @@ footer.footer.bg-primary { display: none !important; }
   color: #dc2626 !important;
 }
 
-/* ── 25. Comments Expand Toggle ─────────────────────────────── */
+/* â”€â”€ 25. Comments Expand Toggle â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .comments-expand-row {
   padding: 4px 0 6px;
 }
@@ -1935,7 +1935,7 @@ footer.footer.bg-primary { display: none !important; }
   color: var(--fg);
 }
 
-/* ── 26. Compact Comment Input & Send Button ────────────────── */
+/* â”€â”€ 26. Compact Comment Input & Send Button â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .comment-input {
   border-radius: 20px !important;
   font-size: 0.85rem !important;
@@ -1957,7 +1957,7 @@ footer.footer.bg-primary { display: none !important; }
   justify-content: center;
 }
 
-/* ── 27. Clickable Author Links ─────────────────────────────── */
+/* â”€â”€ 27. Clickable Author Links â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .post-author-link:hover,
 .comment-author-link:hover {
   opacity: 0.75;
@@ -1971,7 +1971,7 @@ footer.footer.bg-primary { display: none !important; }
   display: inline;
 }
 
-/* ── 28. Simplified Comment Item (override heavy styling above) ── */
+/* â”€â”€ 28. Simplified Comment Item (override heavy styling above) â”€â”€ */
 .comment-item {
   padding: 6px 0 !important;
   background: transparent !important;
@@ -2011,9 +2011,9 @@ footer.footer.bg-primary { display: none !important; }
   margin-top: 8px;
 }
 
-/* ═══════════════════════════════════════════════════════════════════════
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    21. Redesigned Post Composer Card (Unified Greeting + Form)
-   ═══════════════════════════════════════════════════════════════════════ */
+   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 .composer-card {
   border-radius: var(--radius-card);
   border: 1px solid var(--border);
@@ -2145,9 +2145,9 @@ footer.footer.bg-primary { display: none !important; }
   color: var(--fg) !important;
 }
 
-/* ═══════════════════════════════════════════════════════════════════════
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    22. Top Navigation Search Bar
-   ═══════════════════════════════════════════════════════════════════════ */
+   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 .halo-nav-search {
   flex: 1 1 260px;
   max-width: 320px;
@@ -2198,9 +2198,9 @@ footer.footer.bg-primary { display: none !important; }
   opacity: 0.8;
 }
 
-/* ═══════════════════════════════════════════════════════════════════════
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    23. Password Toggles (profile page & auth forms)
-   ═══════════════════════════════════════════════════════════════════════ */
+   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 .toggle-password-btn {
   background: var(--surface-input) !important;
   border: 1px solid var(--border) !important;
@@ -2217,7 +2217,7 @@ footer.footer.bg-primary { display: none !important; }
   background: var(--surface-hover) !important;
 }
 
-/* ── Expandable Account Settings Drawer ──────────────────────────────── */
+/* â”€â”€ Expandable Account Settings Drawer â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .account-settings-drawer {
   border-top: 1px solid var(--border);
   border-bottom: 1px solid var(--border);
@@ -2294,7 +2294,7 @@ footer.footer.bg-primary { display: none !important; }
   background: var(--surface-hover) !important;
 }
 
-/* ── Nav Badge Pill ─────────────────────────────────────────────────── */
+/* â”€â”€ Nav Badge Pill â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .nav-badge-pill {
   position: absolute;
   top: -4px;
@@ -2309,7 +2309,7 @@ footer.footer.bg-primary { display: none !important; }
   box-shadow: 0 1px 4px rgba(0,0,0,0.25);
 }
 
-/* ── Messages & Chat UI ─────────────────────────────────────────────── */
+/* â”€â”€ Messages & Chat UI â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .messages-main-card {
   border-radius: var(--radius-card);
   overflow: hidden;
@@ -2318,7 +2318,7 @@ footer.footer.bg-primary { display: none !important; }
   border: 1px solid var(--border) !important;
 }
 
-/* ── Messages layout: desktop two-column, mobile stacked panels ── */
+/* â”€â”€ Messages layout: desktop two-column, mobile stacked panels â”€â”€ */
 .messages-layout {
   min-height: 0;
 }
@@ -2398,7 +2398,7 @@ footer.footer.bg-primary { display: none !important; }
     transform: translateX(0);
   }
 
-  /* Wrapper height in mobile mode — fit the viewport below nav */
+  /* Wrapper height in mobile mode â€” fit the viewport below nav */
   .messages-layout {
     height: calc(100dvh - 140px);
     min-height: 520px;
@@ -2425,7 +2425,7 @@ footer.footer.bg-primary { display: none !important; }
   display: none;
 }
 
-/* ── Conversations sidebar scrollable list ── */
+/* â”€â”€ Conversations sidebar scrollable list â”€â”€ */
 .conversation-item {
   border-bottom: 1px solid var(--border);
   transition: background var(--transition);
@@ -2445,7 +2445,7 @@ footer.footer.bg-primary { display: none !important; }
   border-left: 3px solid var(--fg);
 }
 
-/* ── Chat bubbles ── */
+/* â”€â”€ Chat bubbles â”€â”€ */
 .chat-bubble {
   max-width: 78%;
   padding: 10px 14px;
@@ -2488,7 +2488,7 @@ footer.footer.bg-primary { display: none !important; }
   }
 }
 
-/* ── Notifications UI ───────────────────────────────────────────────── */
+/* â”€â”€ Notifications UI â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .notifications-card {
   border-radius: var(--radius-card);
   box-shadow: var(--shadow-md);
@@ -2551,9 +2551,9 @@ footer.footer.bg-primary { display: none !important; }
   pointer-events: none;
 }
 
-/* ═══════════════════════════════════════════════════════════════════════
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    24. Multi-Image Composer & Gallery Grids
-   ═══════════════════════════════════════════════════════════════════════ */
+   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 
 /* Composer multi-thumbnail previews */
 .composer-preview-grid {
@@ -2714,9 +2714,9 @@ footer.footer.bg-primary { display: none !important; }
   text-shadow: 0 2px 6px rgba(0, 0, 0, 0.6);
 }
 
-/* ═══════════════════════════════════════════════════════════════════════
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    25. Image Gallery Lightbox Modal
-   ═══════════════════════════════════════════════════════════════════════ */
+   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 .image-lightbox-modal {
   position: fixed;
   inset: 0;
@@ -2819,12 +2819,12 @@ footer.footer.bg-primary { display: none !important; }
   transform: translateY(-50%) scale(1.06);
 }
 
-/* ═══════════════════════════════════════════════════════════════════════
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    26. Comprehensive Master Responsive Hierarchy
        Viewports tested: 320px, 375px, 430px, 768px, 1024px, 1366px, 1920px
-   ═══════════════════════════════════════════════════════════════════════ */
+   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 
-/* ── Global Viewport & Overflow Safeguards ────────────────────────────── */
+/* â”€â”€ Global Viewport & Overflow Safeguards â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 html, body {
   overflow-x: hidden;
   max-width: 100vw;
@@ -2839,7 +2839,7 @@ img, video {
   max-width: 100%;
 }
 
-/* ── Breakpoint: Tablets Landscape & Small Laptops (<= 1024px) ─────────── */
+/* â”€â”€ Breakpoint: Tablets Landscape & Small Laptops (<= 1024px) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 @media (max-width: 1024px) {
   .halo-nav {
     padding: 10px 20px;
@@ -2852,7 +2852,7 @@ img, video {
   }
 }
 
-/* ── Breakpoint: Tablets Portrait & Larger Mobile (<= 768px) ───────────── */
+/* â”€â”€ Breakpoint: Tablets Portrait & Larger Mobile (<= 768px) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 @media (max-width: 768px) {
   main.container {
     padding-top: 86px;
@@ -2909,7 +2909,7 @@ img, video {
   }
 }
 
-/* ── Breakpoint: Standard Mobile Devices (<= 576px) ────────────────────── */
+/* â”€â”€ Breakpoint: Standard Mobile Devices (<= 576px) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 @media (max-width: 576px) {
   main.container {
     padding-top: 76px;
@@ -3162,7 +3162,6 @@ img, video {
   }
 
   /* Modals, Cropper & Lightbox */
-  #coverCropModal > div,
   #avatarCropModal > div,
   .cropper-modal-dialog {
     padding: 16px !important;
@@ -3171,9 +3170,7 @@ img, video {
     max-height: 94vh !important;
   }
 
-  #coverCropModal .crop-image-container,
   #avatarCropModal .crop-image-container,
-  #coverCropModal > div > div:nth-child(2),
   #avatarCropModal > div > div:nth-child(2) {
     max-height: min(260px, 42vh) !important;
   }
@@ -3206,7 +3203,7 @@ img, video {
   }
 }
 
-/* ── Breakpoint: Small Smartphones (<= 430px) ─────────────────────────── */
+/* â”€â”€ Breakpoint: Small Smartphones (<= 430px) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 @media (max-width: 430px) {
   .halo-nav {
     padding: 6px 10px;
@@ -3254,7 +3251,7 @@ img, video {
   }
 }
 
-/* ── Breakpoint: Ultra-Compact Mobile (<= 360px & down to 320px) ───────── */
+/* â”€â”€ Breakpoint: Ultra-Compact Mobile (<= 360px & down to 320px) â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 @media (max-width: 360px) {
   main.container {
     padding-inline: 8px;
@@ -3444,7 +3441,7 @@ img, video {
 }
 
 
-/* ── 27. Profile Banner & Avatar Action Dropdowns & Mobile Action Sheet ── */
+/* â”€â”€ 27. Profile Banner & Avatar Action Dropdowns & Mobile Action Sheet â”€â”€ */
 .profile-banner {
   height: 200px;
   background: var(--surface-hover);
@@ -3473,63 +3470,7 @@ img, video {
   display: block;
 }
 
-.profile-cover-actions {
-  position: absolute;
-  bottom: 12px;
-  right: 16px;
-  z-index: 30;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  pointer-events: auto;
-}
-
-.cover-remove-btn {
-  background: rgba(239, 68, 68, 0.78) !important;
-  border-color: rgba(239, 68, 68, 0.45) !important;
-}
-
-.cover-remove-btn:hover {
-  background: rgba(220, 38, 38, 0.92) !important;
-  border-color: rgba(239, 68, 68, 0.75) !important;
-}
-
-.cover-dropdown-wrapper {
-  position: relative;
-  display: inline-block;
-}
-
-.cover-edit-btn {
-  background: rgba(18, 18, 22, 0.76) !important;
-  color: #fff !important;
-  border: 1px solid rgba(255, 255, 255, 0.2) !important;
-  border-radius: var(--radius-sm);
-  padding: 7px 14px;
-  font-size: 0.82rem;
-  font-weight: 500;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  cursor: pointer;
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
-  transition: background 0.15s ease, transform 0.15s ease, border-color 0.15s ease;
-  user-select: none;
-}
-
-.cover-edit-btn:hover {
-  background: rgba(28, 28, 34, 0.92) !important;
-  border-color: rgba(255, 255, 255, 0.35) !important;
-  transform: translateY(-1px);
-}
-
-.cover-edit-btn:active {
-  transform: scale(0.97);
-}
-
 /* Dropdown menus for cover & avatar (Desktop / Tablet default) */
-.cover-dropdown-menu,
 .avatar-dropdown-menu {
   position: absolute;
   bottom: calc(100% + 8px);
@@ -3547,17 +3488,11 @@ img, video {
   gap: 3px;
 }
 
-.cover-dropdown-menu {
-  right: 0;
-  left: auto;
-}
-
 .avatar-dropdown-menu {
   left: 0;
   right: auto;
 }
 
-.cover-dropdown-menu.show,
 .avatar-dropdown-menu.show {
   display: flex !important;
   animation: dropdownFadeIn 0.15s ease-out;
@@ -3568,7 +3503,6 @@ img, video {
   to { opacity: 1; transform: translateY(0); }
 }
 
-.cover-dropdown-item,
 .avatar-dropdown-item {
   width: 100%;
   display: flex;
@@ -3587,24 +3521,20 @@ img, video {
   text-decoration: none;
 }
 
-.cover-dropdown-item:hover,
 .avatar-dropdown-item:hover {
   background: var(--surface-hover);
   color: var(--fg);
 }
 
-.cover-dropdown-item.item-danger,
 .avatar-dropdown-item.item-danger {
   color: #f87171 !important;
 }
 
-.cover-dropdown-item.item-danger:hover,
 .avatar-dropdown-item.item-danger:hover {
   background: rgba(239, 68, 68, 0.14) !important;
   color: #ef4444 !important;
 }
 
-.cover-dropdown-divider,
 .avatar-dropdown-divider {
   height: 1px;
   background: var(--border);
@@ -3709,7 +3639,7 @@ img, video {
   }
 }
 
-/* ── Mobile Action Sheet Transformation (<= 576px) ──────────────────────── */
+/* â”€â”€ Mobile Action Sheet Transformation (<= 576px) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 @media (max-width: 576px) {
   .mobile-action-sheet-backdrop {
     display: none;
@@ -3727,7 +3657,6 @@ img, video {
     display: block !important;
   }
 
-  .cover-dropdown-menu.show,
   .avatar-dropdown-menu.show {
     position: fixed !important;
     left: 0 !important;
@@ -3780,7 +3709,6 @@ img, video {
     text-align: center;
   }
 
-  .cover-dropdown-item,
   .avatar-dropdown-item {
     min-height: 48px !important;
     padding: 12px 16px !important;
@@ -3793,7 +3721,6 @@ img, video {
     gap: 12px !important;
   }
 
-  .cover-dropdown-item.item-danger,
   .avatar-dropdown-item.item-danger {
     background: rgba(239, 68, 68, 0.12) !important;
     color: #ef4444 !important;
@@ -3817,16 +3744,6 @@ img, video {
 
   .sheet-cancel-btn:hover {
     background: var(--surface-hover) !important;
-  }
-
-  .profile-cover-actions {
-    bottom: 8px;
-    right: 10px;
-  }
-
-  .cover-edit-btn {
-    padding: 5px 10px;
-    font-size: 0.75rem;
   }
 
   .avatar-edit-badge {

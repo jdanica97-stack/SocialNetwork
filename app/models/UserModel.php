@@ -5,20 +5,20 @@
  *
  * Handles ALL database operations related to the `users` table.
  *
- * Responsibilities (Step 5 — Authentication):
+ * Responsibilities (Step 5 â€” Authentication):
  *   - Find a user by username
  *   - Check if a username already exists
  *   - Insert (register) a new user
  *
- * Responsibilities (Step 6 — Profile):
+ * Responsibilities (Step 6 â€” Profile):
  *   - Find a user by their primary-key ID
  *   - Update a user's full name and bio
  *   - Update a user's profile image path
  *
  * Rules:
- *   - No HTML output here — this is a Model, not a View.
+ *   - No HTML output here â€” this is a Model, not a View.
  *   - No business logic, validation, or session handling here
- *     — those belong in the Controller.
+ *     â€” those belong in the Controller.
  *   - Every query uses PDO prepared statements to prevent SQL injection.
  */
 
@@ -28,7 +28,7 @@ class UserModel
     private PDO $db;
 
     /**
-     * Constructor — receives the PDO connection from the controller.
+     * Constructor â€” receives the PDO connection from the controller.
      *
      * @param PDO $db  Active PDO connection from getDBConnection()
      */
@@ -37,7 +37,7 @@ class UserModel
         $this->db = $db;
     }
 
-    // ─── Read Operations ──────────────────────────────────────────────────────
+    // â”€â”€â”€ Read Operations â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     /**
      * Find and return a single user row by username.
@@ -90,13 +90,13 @@ class UserModel
         }
     }
 
-    // ─── Write Operations ─────────────────────────────────────────────────────
+    // â”€â”€â”€ Write Operations â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     /**
      * Insert a new user record into the `users` table.
      *
      * The password stored here must already be a bcrypt hash
-     * produced by password_hash() — the Model never handles raw passwords.
+     * produced by password_hash() â€” the Model never handles raw passwords.
      *
      * @param  string $username      The chosen username.
      * @param  string $passwordHash  The bcrypt hash of the user's password.
@@ -122,7 +122,7 @@ class UserModel
         }
     }
 
-    // ─── Step 6: Profile Operations ───────────────────────────────────────────
+    // â”€â”€â”€ Step 6: Profile Operations â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     /**
      * Find and return a single user row by their primary-key ID.
@@ -137,7 +137,7 @@ class UserModel
     public function findById(int $id): array|false
     {
         try {
-            // Deliberately exclude `password` — it must never appear in profile views.
+            // Deliberately exclude `password` â€” it must never appear in profile views.
             $sql = 'SELECT id, username, full_name, bio, profile_image, cover_photo, created_at
                     FROM users
                     WHERE id = :id
@@ -153,37 +153,7 @@ class UserModel
         }
     }
 
-    /**
-     * Update the user's editable profile fields (full name and bio).
-     *
-     * Called by ProfileController after successful validation.
-     * The username and password are intentionally NOT updatable here.
-     *
-     * @param  int    $id        The user's primary-key ID (from session).
-     * @param  string $fullName  Validated, trimmed full name.
-     * @param  string $bio       Validated, trimmed bio (may be empty string).
-     * @return bool              true on success, false on DB failure.
-     */
-    public function updateProfile(int $id, string $fullName, string $bio): bool
-    {
-        try {
-            $sql = 'UPDATE users
-                    SET full_name = :full_name,
-                        bio       = :bio
-                    WHERE id = :id';
 
-            $stmt = $this->db->prepare($sql);
-
-            return $stmt->execute([
-                ':full_name' => $fullName,
-                ':bio'       => $bio,
-                ':id'        => $id,
-            ]);
-        } catch (PDOException $e) {
-            error_log('UserModel::updateProfile database error: ' . $e->getMessage());
-            return false;
-        }
-    }
 
     /**
      * Update only the profile_image column for a given user.
@@ -267,7 +237,7 @@ class UserModel
         }
     }
 
-    // ─── Step 11: Search Operations ───────────────────────────────────────────
+    // â”€â”€â”€ Step 11: Search Operations â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     /**
      * Search users by username or full name.

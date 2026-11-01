@@ -17,7 +17,6 @@
  *   profile                 → ProfileController::showProfile()   [GET]
  *   profile/edit            → ProfileController::showEdit()      [GET]
  *   profile/update          → ProfileController::update()        [POST]
- *   profile/username        → ProfileController::updateUsername() [POST]
  *   profile/password        → ProfileController::updatePassword() [POST]
  *   posts/create            → PostController::create()         [POST]
  *   posts/edit              → PostController::edit()           [GET]
@@ -136,7 +135,7 @@ if ($url === 'auth/login' || $url === 'auth/register' || $url === 'auth/logout')
 
 // ── Profile Routes ────────────────────────────────────────────────────────────
 if ($url === 'profile' || $url === 'profile/edit' || $url === 'profile/update'
-    || $url === 'profile/account' || $url === 'profile/username' || $url === 'profile/password'
+    || $url === 'profile/account' || $url === 'profile/password'
     || $url === 'profile/cover' || $url === 'profile/remove-avatar' || $url === 'profile/remove-cover') {
     require_once BASE_PATH . '/app/controllers/ProfileController.php';
     $profile = new ProfileController();
@@ -165,15 +164,6 @@ if ($url === 'profile' || $url === 'profile/edit' || $url === 'profile/update'
             $profile->updateAccount();
         } else {
             $profile->showAccount();
-        }
-        exit;
-    }
-
-    if ($url === 'profile/username') {
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $profile->updateUsername();
-        } else {
-            header('Location: /SocialNetwork/public/?url=profile');
         }
         exit;
     }
