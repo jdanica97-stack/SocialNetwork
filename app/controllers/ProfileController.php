@@ -215,10 +215,19 @@ class ProfileController
             exit;
         }
 
+        $isAjax = (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest')
+            || (isset($_SERVER['HTTP_ACCEPT']) && str_contains(strtolower($_SERVER['HTTP_ACCEPT']), 'application/json'));
+
         $errors = [];
 
         // ── CSRF Check ────────────────────────────────────────────────────────
         if (!Csrf::check()) {
+            if ($isAjax) {
+                http_response_code(403);
+                header('Content-Type: application/json; charset=UTF-8');
+                echo json_encode(['success' => false, 'message' => 'Security verification failed (invalid CSRF token). Please try again.']);
+                exit;
+            }
             $errors[] = 'Security verification failed (invalid CSRF token). Please try again.';
             $pageTitle = 'Edit Profile — Mini Social Network';
             require_once BASE_PATH . '/app/views/profile/edit.php';
@@ -226,11 +235,13 @@ class ProfileController
         }
 
         // ── Collect input ─────────────────────────────────────────────────────
-        $bio = trim($_POST['bio'] ?? '');
-
-        // ── Validate bio (optional) ───────────────────────────────────────────
-        if (mb_strlen($bio) > 500) {
-            $errors[] = 'Bio must not exceed 500 characters.';
+        $bio = null;
+        if (isset($_POST['bio'])) {
+            $bio = trim($_POST['bio']);
+            // Validate bio (optional)
+            if (mb_strlen($bio) > 500) {
+                $errors[] = 'Bio must not exceed 500 characters.';
+            }
         }
 
         // ── Handle profile image upload (optional) ────────────────────────────
@@ -267,7 +278,7 @@ class ProfileController
                 $errors = array_merge($errors, $cropCoverResult['errors']);
             }
         } elseif (!empty($_FILES['cover_photo']['name'])) {
-            $uploadCoverResult = $this->handleImageUpload($_FILES['cover_photo']);
+            $uploadCoverResult = $this->handleImageUpload($_FILES['cover_photo'], 10485760);
 
             if ($uploadCoverResult['success']) {
                 $newCoverFilename = $uploadCoverResult['filename'];
@@ -278,13 +289,22 @@ class ProfileController
 
         // ── Re-display form if validation failed ──────────────────────────────
         if (!empty($errors)) {
+            if ($isAjax) {
+                http_response_code(400);
+                header('Content-Type: application/json; charset=UTF-8');
+                echo json_encode(['success' => false, 'message' => implode(' ', $errors), 'errors' => $errors]);
+                exit;
+            }
             $pageTitle = 'Edit Profile — Mini Social Network';
             require_once BASE_PATH . '/app/views/profile/edit.php';
             return;
         }
 
         // ── Persist bio ───────────────────────────────────────────────────────
-        $textUpdated = $this->userModel->updateBio($userId, $bio);
+        $textUpdated = true;
+        if ($bio !== null) {
+            $textUpdated = $this->userModel->updateBio($userId, $bio);
+        }
 
         // ── Persist new profile image or handle removal ───────────────────────
         $imgUpdated = true;
@@ -336,6 +356,11 @@ class ProfileController
 
         if (!$textUpdated || !$imgUpdated || !$coverUpdated) {
             http_response_code(500);
+            if ($isAjax) {
+                header('Content-Type: application/json; charset=UTF-8');
+                echo json_encode(['success' => false, 'message' => 'An unexpected database error occurred while updating your profile. Please try again.']);
+                exit;
+            }
             $errors[] = 'An unexpected database error occurred while updating your profile. Please try again.';
             $pageTitle = 'Edit Profile — Mini Social Network';
             require_once BASE_PATH . '/app/views/profile/edit.php';
@@ -345,6 +370,20 @@ class ProfileController
         // ── Keep the session's profile image in sync ──────────────────────────
         if ($newImageFilename !== null && $imgUpdated) {
             $_SESSION['user_profile_image'] = $newImageFilename;
+        }
+
+        // ── AJAX Response ──────────────────────────────────────────────────────
+        if ($isAjax) {
+            header('Content-Type: application/json; charset=UTF-8');
+            $avatarUrl = $newImageFilename ? $this->uploadWebPath . rawurlencode($newImageFilename) : null;
+            $coverUrl = $newCoverFilename ? $this->uploadWebPath . rawurlencode($newCoverFilename) : null;
+            echo json_encode([
+                'success'    => true,
+                'message'    => 'Your profile has been updated successfully.',
+                'avatar_url' => $avatarUrl,
+                'cover_url'  => $coverUrl
+            ]);
+            exit;
         }
 
         // ── Flash success and redirect ─────────────────────────────────────────
@@ -446,12 +485,12 @@ class ProfileController
     {
         $errors = [];
 
-        if (!preg_match('/^data:(image\/(jpeg|png|gif|webp));base64,(.+)$/i', trim($base64Data), $matches)) {
+        if (!preg_match('/^data:(image\/(jpe?g|png|gif|webp));base64,(.+)$/is', trim($base64Data), $matches)) {
             $errors[] = 'Invalid image data format.';
             return ['success' => false, 'errors' => $errors];
         }
 
-        $base64Payload = $matches[3];
+        $base64Payload = str_replace(' ', '+', trim($matches[3]));
         $imageData = base64_decode($base64Payload, true);
         if ($imageData === false) {
             $errors[] = 'Could not decode image data.';
