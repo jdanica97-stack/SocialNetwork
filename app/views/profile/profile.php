@@ -65,45 +65,6 @@ if (!empty($user['cover_photo']) && file_exists(BASE_PATH . '/public/assets/imag
 
                 <?php if (!empty($isOwnProfile)): ?>
                     <input type="hidden" id="profileCsrfToken" value="<?= htmlspecialchars(Csrf::getToken(), ENT_QUOTES, 'UTF-8') ?>">
-                    <div class="profile-cover-actions">
-                        <div class="cover-dropdown-wrapper" id="coverDropdownWrapper">
-                            <button
-                                type="button"
-                                class="cover-edit-btn"
-                                id="editCoverDropdownBtn"
-                                title="Edit cover photo"
-                                aria-expanded="false"
-                                aria-haspopup="true"
-                                aria-controls="coverDropdownMenu"
-                                data-has-cover="<?= $coverPhotoSrc ? '1' : '0' ?>"
-                            >
-                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
-                                <span class="cover-btn-label" id="coverUploadActionText"><?= $coverPhotoSrc ? 'Edit Cover Photo' : 'Upload Cover Photo' ?></span>
-                            </button>
-                            <div class="cover-dropdown-menu" id="coverDropdownMenu" role="menu">
-                                <div class="sheet-header">
-                                    <div class="sheet-handle"></div>
-                                    <span class="sheet-title">Cover Photo</span>
-                                </div>
-                                <button type="button" class="cover-dropdown-item" id="btnUploadCover" role="menuitem">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-                                    <span id="coverUploadItemText"><?= $coverPhotoSrc ? 'Change Cover Photo' : 'Upload Cover Photo' ?></span>
-                                </button>
-                                <button
-                                    type="button"
-                                    class="cover-dropdown-item item-danger"
-                                    id="btnRemoveCover"
-                                    role="menuitem"
-                                    style="display: <?= $coverPhotoSrc ? 'flex' : 'none' ?>;"
-                                >
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
-                                    <span>Remove Cover Photo</span>
-                                </button>
-                                <button type="button" class="sheet-cancel-btn" id="cancelCoverSheetBtn">Cancel</button>
-                            </div>
-                        </div>
-                        <input type="file" id="coverPhotoInput" accept="image/jpeg,image/png,image/gif,image/webp" class="d-none" aria-label="Upload cover photo">
-                    </div>
                 <?php endif; ?>
             </div>
 
@@ -566,43 +527,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
 
 <?php if (!empty($isOwnProfile)): ?>
-<!-- ── Cover Photo Cropper Modal ─────────────────────────────────────── -->
-<div id="coverCropModal" style="display:none;position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,0.78);align-items:center;justify-content:center;backdrop-filter:blur(6px);" role="dialog" aria-modal="true" aria-label="Crop cover photo">
-    <div class="cropper-modal-dialog" style="background:var(--surface-card);border-radius:18px;padding:22px;max-width:720px;width:95%;max-height:92vh;overflow:auto;box-shadow:0 18px 48px rgba(0,0,0,0.45);border:1px solid var(--border);">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
-            <div class="d-flex align-items-center gap-2">
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--fg);"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-                <h3 style="margin:0;font-size:1.05rem;font-weight:600;color:var(--fg);">Crop Cover Photo</h3>
-            </div>
-            <button type="button" id="coverCropClose" style="background:none;border:none;cursor:pointer;color:var(--fg-muted);font-size:1.4rem;line-height:1;" aria-label="Close">&times;</button>
-        </div>
-        <div class="crop-image-container" style="max-height:380px;overflow:hidden;border-radius:10px;background:#0d0d10;">
-            <img id="coverCropImage" src="" alt="Cover photo to crop" style="max-width:100%;display:block;">
-        </div>
-
-        <!-- Zoom & Positioning Toolbar -->
-        <div class="cropper-toolbar">
-            <button type="button" class="cropper-tool-btn" id="coverZoomIn" title="Zoom In">
-                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
-                Zoom In
-            </button>
-            <button type="button" class="cropper-tool-btn" id="coverZoomOut" title="Zoom Out">
-                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
-                Zoom Out
-            </button>
-            <button type="button" class="cropper-tool-btn" id="coverReset" title="Reset Crop">
-                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
-                Reset
-            </button>
-        </div>
-
-        <div style="display:flex;gap:10px;margin-top:16px;justify-content:flex-end;">
-            <button type="button" id="coverCropCancel" class="btn btn-ghost btn-sm px-3">Cancel</button>
-            <button type="button" id="coverCropApply" class="btn btn-primary btn-sm px-4">Apply &amp; Upload</button>
-        </div>
-        <p id="coverCropStatus" style="font-size:0.8rem;color:var(--fg-muted);margin-top:8px;text-align:center;min-height:1em;"></p>
-    </div>
-</div>
 
 <!-- ── Avatar Cropper Modal (Direct on Profile) ────────────────────────── -->
 <div id="avatarCropModal" style="display:none;position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,0.78);align-items:center;justify-content:center;backdrop-filter:blur(6px);" role="dialog" aria-modal="true" aria-label="Crop profile picture">
@@ -643,24 +567,7 @@ document.addEventListener('DOMContentLoaded', function () {
     </div>
 </div>
 
-<!-- ── Confirmation Modal: Remove Cover Photo ────────────────────────── -->
-<div id="confirmRemoveCoverModal" class="custom-confirm-modal" role="dialog" aria-modal="true" aria-labelledby="removeCoverModalTitle">
-    <div class="confirm-modal-dialog">
-        <div class="d-flex align-items-center gap-2 mb-2">
-            <div style="width:34px;height:34px;border-radius:10px;background:rgba(239,68,68,0.12);color:#ef4444;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-                <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
-            </div>
-            <h4 id="removeCoverModalTitle" style="margin:0;font-size:1.05rem;font-weight:600;color:var(--fg);">Remove Cover Photo?</h4>
-        </div>
-        <p style="font-size:0.85rem;color:var(--fg-muted);margin-bottom:20px;line-height:1.5;">
-            Are you sure you want to remove your cover photo? Your profile will revert to the default background theme.
-        </p>
-        <div class="d-flex justify-content-end gap-2">
-            <button type="button" class="btn btn-ghost btn-sm px-3" id="cancelRemoveCoverBtn">Cancel</button>
-            <button type="button" class="btn btn-danger btn-sm px-4" id="confirmRemoveCoverBtn">Remove</button>
-        </div>
-    </div>
-</div>
+
 
 <!-- ── Confirmation Modal: Remove Profile Picture ───────────────────── -->
 <div id="confirmRemoveAvatarModal" class="custom-confirm-modal" role="dialog" aria-modal="true" aria-labelledby="removeAvatarModalTitle">
@@ -717,22 +624,6 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     // ── Dropdown Menus & Element References ──────────────────────────────────
-    var coverInput           = document.getElementById('coverPhotoInput');
-    var coverDropdownBtn     = document.getElementById('editCoverDropdownBtn');
-    var coverDropdownMenu    = document.getElementById('coverDropdownMenu');
-    var btnUploadCover       = document.getElementById('btnUploadCover');
-    var btnRemoveCover       = document.getElementById('btnRemoveCover');
-    var coverActionText      = document.getElementById('coverUploadActionText');
-    var coverUploadItemText  = document.getElementById('coverUploadItemText');
-    var coverMediaWrap       = document.getElementById('coverPhotoMedia');
-    var coverCropModal       = document.getElementById('coverCropModal');
-    var coverCropImage       = document.getElementById('coverCropImage');
-    var coverCropClose       = document.getElementById('coverCropClose');
-    var coverCropCancel      = document.getElementById('coverCropCancel');
-    var coverCropApply       = document.getElementById('coverCropApply');
-    var coverCropStatus      = document.getElementById('coverCropStatus');
-    var coverCropper         = null;
-
     var avatarInput          = document.getElementById('avatarPhotoInput');
     var avatarDropdownBtn    = document.getElementById('editAvatarDropdownBtn');
     var avatarDropdownMenu   = document.getElementById('avatarDropdownMenu');
@@ -749,52 +640,16 @@ document.addEventListener('DOMContentLoaded', function () {
     var avatarCropper        = null;
 
     var actionSheetBackdrop  = document.getElementById('actionSheetBackdrop');
-    var cancelCoverSheetBtn  = document.getElementById('cancelCoverSheetBtn');
     var cancelAvatarSheetBtn = document.getElementById('cancelAvatarSheetBtn');
-
-    var removeCoverModal     = document.getElementById('confirmRemoveCoverModal');
-    var cancelRemoveCover    = document.getElementById('cancelRemoveCoverBtn');
-    var confirmRemoveCover   = document.getElementById('confirmRemoveCoverBtn');
 
     var removeAvatarModal    = document.getElementById('confirmRemoveAvatarModal');
     var cancelRemoveAvatar   = document.getElementById('cancelRemoveAvatarBtn');
     var confirmRemoveAvatar  = document.getElementById('confirmRemoveAvatarBtn');
 
     function closeAllDropdowns() {
-        if (coverDropdownMenu) coverDropdownMenu.classList.remove('show');
-        if (coverDropdownBtn) coverDropdownBtn.setAttribute('aria-expanded', 'false');
         if (avatarDropdownMenu) avatarDropdownMenu.classList.remove('show');
         if (avatarDropdownBtn) avatarDropdownBtn.setAttribute('aria-expanded', 'false');
         if (actionSheetBackdrop) actionSheetBackdrop.classList.remove('show');
-    }
-
-    // Toggle Cover Dropdown — or directly open file picker if no cover exists
-    if (coverDropdownBtn) {
-        coverDropdownBtn.addEventListener('click', function (e) {
-            e.preventDefault();
-            e.stopPropagation();
-
-            var hasCover = coverDropdownBtn.getAttribute('data-has-cover') === '1'
-                || !!(coverMediaWrap && coverMediaWrap.querySelector('img#coverPhotoImg'));
-
-            if (hasCover && coverDropdownMenu) {
-                // Has a cover: show the dropdown (Change / Remove options)
-                var isOpen = coverDropdownMenu.classList.contains('show');
-                closeAllDropdowns();
-                if (!isOpen) {
-                    coverDropdownMenu.classList.add('show');
-                    coverDropdownBtn.setAttribute('aria-expanded', 'true');
-                    if (actionSheetBackdrop) actionSheetBackdrop.classList.add('show');
-                }
-            } else {
-                // No cover: directly open the file picker
-                closeAllDropdowns();
-                if (coverInput) {
-                    coverInput.value = '';
-                    coverInput.click();
-                }
-            }
-        });
     }
 
     // Toggle Avatar Dropdown — or directly open file picker if no avatar exists
@@ -827,19 +682,13 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Click outside to close dropdowns
     document.addEventListener('click', function (e) {
-        if (coverDropdownMenu && coverDropdownMenu.classList.contains('show')) {
-            if (!coverDropdownMenu.contains(e.target) && (!coverDropdownBtn || !coverDropdownBtn.contains(e.target))) {
-                coverDropdownMenu.classList.remove('show');
-                if (coverDropdownBtn) coverDropdownBtn.setAttribute('aria-expanded', 'false');
-            }
-        }
         if (avatarDropdownMenu && avatarDropdownMenu.classList.contains('show')) {
             if (!avatarDropdownMenu.contains(e.target) && (!avatarDropdownBtn || !avatarDropdownBtn.contains(e.target))) {
                 avatarDropdownMenu.classList.remove('show');
                 if (avatarDropdownBtn) avatarDropdownBtn.setAttribute('aria-expanded', 'false');
             }
         }
-        if (actionSheetBackdrop && (!coverDropdownMenu || !coverDropdownMenu.classList.contains('show')) && (!avatarDropdownMenu || !avatarDropdownMenu.classList.contains('show'))) {
+        if (actionSheetBackdrop && (!avatarDropdownMenu || !avatarDropdownMenu.classList.contains('show'))) {
             actionSheetBackdrop.classList.remove('show');
         }
     });
@@ -851,234 +700,11 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    if (cancelCoverSheetBtn) {
-        cancelCoverSheetBtn.addEventListener('click', function (e) {
-            e.preventDefault();
-            e.stopPropagation();
-            closeAllDropdowns();
-        });
-    }
-
     if (cancelAvatarSheetBtn) {
         cancelAvatarSheetBtn.addEventListener('click', function (e) {
             e.preventDefault();
             e.stopPropagation();
             closeAllDropdowns();
-        });
-    }
-
-    // ── 1. Cover Photo Upload & Crop ──────────────────────────────────────────
-    if (btnUploadCover && coverInput) {
-        btnUploadCover.addEventListener('click', function (e) {
-            e.preventDefault();
-            e.stopPropagation();
-            closeAllDropdowns();
-            coverInput.value = '';
-            coverInput.click();
-        });
-    }
-
-    function initCoverCropper() {
-        if (coverCropper) {
-            try { coverCropper.destroy(); } catch (err) {}
-            coverCropper = null;
-        }
-        if (window.Cropper && coverCropImage) {
-            try {
-                coverCropper = new Cropper(coverCropImage, {
-                    aspectRatio: 16 / 7,
-                    viewMode: 1,
-                    autoCropArea: 1,
-                    movable: true,
-                    zoomable: true,
-                    rotatable: false,
-                    scalable: true,
-                    cropBoxResizable: true,
-                    dragMode: 'move'
-                });
-            } catch (err) {
-                console.error('Cropper cover init error:', err);
-            }
-        }
-    }
-
-    if (coverInput) {
-        coverInput.addEventListener('change', function () {
-            var file = this.files && this.files[0];
-            if (!file) return;
-
-            var allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-            var ext = (file.name.split('.').pop() || '').toLowerCase();
-            var allowedExts = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
-            if (!allowedTypes.includes(file.type) && !allowedExts.includes(ext)) {
-                alert('Only JPEG, PNG, GIF, and WebP images are allowed.');
-                this.value = '';
-                return;
-            }
-            if (file.size > 10 * 1024 * 1024) {
-                alert('Image must be 10 MB or smaller.');
-                this.value = '';
-                return;
-            }
-
-            var reader = new FileReader();
-            reader.onload = function (e) {
-                if (coverCropImage) {
-                    coverCropImage.src = e.target.result;
-                }
-                if (coverCropModal) {
-                    coverCropModal.style.display = 'flex';
-                    if (coverCropStatus) coverCropStatus.textContent = '';
-                }
-                setTimeout(initCoverCropper, 60);
-            };
-            reader.readAsDataURL(file);
-        });
-    }
-
-    function closeCoverModal() {
-        if (coverCropModal) coverCropModal.style.display = 'none';
-        if (coverCropper) { try { coverCropper.destroy(); } catch (e) {} coverCropper = null; }
-        if (coverCropImage) coverCropImage.src = '';
-        if (coverInput) coverInput.value = '';
-    }
-
-    if (coverCropClose) coverCropClose.addEventListener('click', closeCoverModal);
-    if (coverCropCancel) coverCropCancel.addEventListener('click', closeCoverModal);
-
-    var coverZoomIn  = document.getElementById('coverZoomIn');
-    var coverZoomOut = document.getElementById('coverZoomOut');
-    var coverReset   = document.getElementById('coverReset');
-
-    if (coverZoomIn)  coverZoomIn.addEventListener('click', function () { if (coverCropper) coverCropper.zoom(0.1); });
-    if (coverZoomOut) coverZoomOut.addEventListener('click', function () { if (coverCropper) coverCropper.zoom(-0.1); });
-    if (coverReset)   coverReset.addEventListener('click', function () { if (coverCropper) coverCropper.reset(); });
-
-    if (coverCropApply) {
-        coverCropApply.addEventListener('click', function () {
-            coverCropApply.disabled = true;
-            coverCropApply.textContent = 'Uploading…';
-            if (coverCropStatus) coverCropStatus.textContent = '';
-
-            var base64Data = '';
-            if (coverCropper) {
-                try {
-                    var canvas = coverCropper.getCroppedCanvas({ maxWidth: 1600, maxHeight: 700 });
-                    if (canvas) {
-                        base64Data = canvas.toDataURL('image/jpeg', 0.90);
-                    }
-                } catch (err) {}
-            }
-
-            var token = getCsrfToken();
-            var formData = new FormData();
-            formData.append('csrf_token', token);
-
-            if (base64Data) {
-                formData.append('cover_photo_data', base64Data);
-            } else if (coverInput && coverInput.files && coverInput.files[0]) {
-                formData.append('cover_photo', coverInput.files[0]);
-            } else {
-                if (coverCropStatus) coverCropStatus.textContent = 'Please choose a valid image.';
-                coverCropApply.disabled = false;
-                coverCropApply.textContent = 'Apply & Upload';
-                return;
-            }
-
-            fetch('/SocialNetwork/public/?url=profile/cover', {
-                method: 'POST',
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'Accept': 'application/json',
-                    'X-CSRF-Token': token
-                },
-                body: formData
-            })
-            .then(function (res) { return res.json(); })
-            .then(function (data) {
-                if (data.success) {
-                    if (coverMediaWrap) {
-                        coverMediaWrap.innerHTML = '<img src="' + data.cover_url + '" alt="Cover photo" id="coverPhotoImg">';
-                    }
-                    if (btnRemoveCover) btnRemoveCover.style.display = 'flex';
-                    if (coverActionText) coverActionText.textContent = 'Edit Cover Photo';
-                    if (coverUploadItemText) coverUploadItemText.textContent = 'Change Cover Photo';
-                    if (coverDropdownBtn) coverDropdownBtn.setAttribute('data-has-cover', '1');
-                    closeCoverModal();
-                    showToast('Cover photo updated successfully!', 'success');
-                } else {
-                    if (coverCropStatus) coverCropStatus.textContent = data.message || 'Upload failed.';
-                }
-            })
-            .catch(function () {
-                if (coverCropStatus) coverCropStatus.textContent = 'Network error. Please try again.';
-            })
-            .finally(function () {
-                coverCropApply.disabled = false;
-                coverCropApply.textContent = 'Apply & Upload';
-            });
-        });
-    }
-
-    // ── 2. Remove Cover Photo ────────────────────────────────────────────────
-    if (btnRemoveCover && removeCoverModal) {
-        btnRemoveCover.addEventListener('click', function (e) {
-            e.preventDefault();
-            e.stopPropagation();
-            closeAllDropdowns();
-            removeCoverModal.style.display = 'flex';
-        });
-    }
-
-    if (cancelRemoveCover && removeCoverModal) {
-        cancelRemoveCover.addEventListener('click', function (e) {
-            e.preventDefault();
-            removeCoverModal.style.display = 'none';
-        });
-    }
-
-    if (confirmRemoveCover && removeCoverModal) {
-        confirmRemoveCover.addEventListener('click', function (e) {
-            e.preventDefault();
-            confirmRemoveCover.disabled = true;
-            confirmRemoveCover.textContent = 'Removing…';
-
-            var token = getCsrfToken();
-            var formData = new FormData();
-            formData.append('csrf_token', token);
-
-            fetch('/SocialNetwork/public/?url=profile/remove-cover', {
-                method: 'POST',
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'Accept': 'application/json',
-                    'X-CSRF-Token': token
-                },
-                body: formData
-            })
-            .then(function (res) { return res.json(); })
-            .then(function (data) {
-                if (data.success) {
-                    if (coverMediaWrap) {
-                        coverMediaWrap.innerHTML = '';
-                    }
-                    if (btnRemoveCover) btnRemoveCover.style.display = 'none';
-                    if (coverActionText) coverActionText.textContent = 'Upload Cover Photo';
-                    if (coverUploadItemText) coverUploadItemText.textContent = 'Upload Cover Photo';
-                    if (coverDropdownBtn) coverDropdownBtn.setAttribute('data-has-cover', '0');
-                    removeCoverModal.style.display = 'none';
-                    showToast('Cover photo removed successfully.', 'success');
-                } else {
-                    alert(data.message || 'Failed to remove cover photo.');
-                }
-            })
-            .catch(function () {
-                alert('Network error. Please try again.');
-            })
-            .finally(function () {
-                confirmRemoveCover.disabled = false;
-                confirmRemoveCover.textContent = 'Remove';
-            });
         });
     }
 
@@ -1299,12 +925,11 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     // ── 5. Modal Backdrops and Keyboard Controls ──────────────────────────────
-    [coverCropModal, avatarCropModal, removeCoverModal, removeAvatarModal].forEach(function (m) {
+    [avatarCropModal, removeAvatarModal].forEach(function (m) {
         if (!m) return;
         m.addEventListener('click', function (e) {
             if (e.target === m) {
                 m.style.display = 'none';
-                if (m === coverCropModal && coverCropper) { try { coverCropper.destroy(); } catch (err) {} coverCropper = null; }
                 if (m === avatarCropModal && avatarCropper) { try { avatarCropper.destroy(); } catch (err) {} avatarCropper = null; }
             }
         });
@@ -1313,9 +938,7 @@ document.addEventListener('DOMContentLoaded', function () {
     document.addEventListener('keydown', function (e) {
         if (e.key === 'Escape' || e.key === 'Esc') {
             closeAllDropdowns();
-            if (coverCropModal && coverCropModal.style.display === 'flex') closeCoverModal();
             if (avatarCropModal && avatarCropModal.style.display === 'flex') closeAvatarModal();
-            if (removeCoverModal && removeCoverModal.style.display === 'flex') removeCoverModal.style.display = 'none';
             if (removeAvatarModal && removeAvatarModal.style.display === 'flex') removeAvatarModal.style.display = 'none';
         }
     });
