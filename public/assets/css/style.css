@@ -3477,7 +3477,21 @@ img, video {
   position: absolute;
   bottom: 12px;
   right: 16px;
-  z-index: 25;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  pointer-events: auto;
+}
+
+.cover-remove-btn {
+  background: rgba(239, 68, 68, 0.78) !important;
+  border-color: rgba(239, 68, 68, 0.45) !important;
+}
+
+.cover-remove-btn:hover {
+  background: rgba(220, 38, 38, 0.92) !important;
+  border-color: rgba(239, 68, 68, 0.75) !important;
 }
 
 .cover-dropdown-wrapper {

@@ -24,6 +24,7 @@ CREATE TABLE IF NOT EXISTS users (
     full_name     VARCHAR(100) NOT NULL,
     bio           TEXT,
     profile_image VARCHAR(255) DEFAULT NULL,
+    cover_photo   VARCHAR(255) DEFAULT NULL,
     created_at    TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (id),
     UNIQUE KEY uq_username (username)
@@ -165,6 +166,31 @@ CREATE TABLE IF NOT EXISTS notifications (
         ON DELETE CASCADE,
     CONSTRAINT fk_notifications_actor
         FOREIGN KEY (actor_id) REFERENCES users (id)
+        ON DELETE CASCADE
+) ENGINE=InnoDB
+  DEFAULT CHARSET=utf8mb4
+  COLLATE=utf8mb4_unicode_ci;
+
+-- ─── 8. follows ──────────────────────────────────────────────────────────────
+-- Stores follow relationships between users.
+-- Relationships:
+--   follower_id  → users.id (the user who follows, ON DELETE CASCADE)
+--   following_id → users.id (the user being followed, ON DELETE CASCADE)
+
+CREATE TABLE IF NOT EXISTS follows (
+    id           INT UNSIGNED NOT NULL AUTO_INCREMENT,
+    follower_id  INT          NOT NULL,
+    following_id INT          NOT NULL,
+    created_at   TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (id),
+    UNIQUE KEY uq_follow (follower_id, following_id),
+    KEY idx_follower (follower_id),
+    KEY idx_following (following_id),
+    CONSTRAINT fk_follows_follower
+        FOREIGN KEY (follower_id) REFERENCES users (id)
+        ON DELETE CASCADE,
+    CONSTRAINT fk_follows_following
+        FOREIGN KEY (following_id) REFERENCES users (id)
         ON DELETE CASCADE
 ) ENGINE=InnoDB
   DEFAULT CHARSET=utf8mb4

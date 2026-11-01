@@ -371,7 +371,7 @@ class ProfileController
      * @param  array $file  One element of $_FILES (e.g. $_FILES['profile_image'])
      * @return array
      */
-    private function handleImageUpload(array $file): array
+    private function handleImageUpload(array $file, int $maxBytes = 2097152): array
     {
         $errors = [];
 
@@ -382,8 +382,8 @@ class ProfileController
         }
 
         // 2. File size check (before reading content)
-        if ($file['size'] > $this->maxFileSize) {
-            $errors[] = 'Profile image must not exceed 2 MB.';
+        if ($file['size'] > $maxBytes) {
+            $errors[] = 'Image size must not exceed ' . round($maxBytes / 1048576, 1) . ' MB.';
             return ['success' => false, 'errors' => $errors];
         }
 
@@ -718,8 +718,8 @@ class ProfileController
 
         $user = $this->userModel->findById($userId);
         if (!$user) {
-            header('Location: /SocialNetwork/public/');
-            exit;
+            $this->respondError($isAjax, 'User account not found.');
+            return;
         }
 
         $newFilename = null;
@@ -735,8 +735,8 @@ class ProfileController
                 return;
             }
         } elseif (!empty($_FILES['cover_photo']['name'])) {
-            // Standard file upload fallback
-            $uploadResult = $this->handleImageUpload($_FILES['cover_photo']);
+            // Standard file upload fallback (allow up to 10 MB for cover photos)
+            $uploadResult = $this->handleImageUpload($_FILES['cover_photo'], 10485760);
             if ($uploadResult['success']) {
                 $newFilename = $uploadResult['filename'];
             } else {

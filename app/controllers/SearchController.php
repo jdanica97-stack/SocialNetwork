@@ -7,10 +7,9 @@
  *   - index() — Process keyword searches across people and posts with Content Type, Post Type, and Date Posted filters.
  *
  * Content Type filters:
- *   - 'all'           — Searches both people and community posts
- *   - 'posts'         — Searches only posts
- *   - 'people'        — Searches only users/people (supports 'users' as alias)
- *   - 'announcements' — Announcements content type (reports limitation if not configured)
+ *   - 'all'    — Searches both people and community posts
+ *   - 'posts'  — Searches only posts
+ *   - 'people' — Searches only users/people (supports 'users' as alias)
  *
  * Post Type filters:
  *   - 'all'   — All posts
@@ -18,10 +17,10 @@
  *   - 'photo' — Photo posts only (contains one or more images)
  *
  * Date Posted filters:
- *   - 'any'   — Any time
- *   - 'today' — Posts created today
- *   - 'week'  — Posts created this week
- *   - 'month' — Posts created this month
+ *   - 'any' / 'anytime' — Any time (no date restriction)
+ *   - 'today'           — Posts created today (calendar day)
+ *   - 'week'            — Posts created this week (calendar week)
+ *   - 'month'           — Posts created this month (calendar month)
  *
  * Security contract:
  *   - Validates and sanitizes input (trim, length limit, parameter whitelist).
@@ -82,12 +81,12 @@ class SearchController
             $keyword = mb_substr($keyword, 0, 200);
         }
 
-        // 2. Content Type filter: all, posts, people, announcements
+        // 2. Content Type filter: all, posts, people
         $rawType = strtolower(trim($_GET['type'] ?? 'all'));
         if ($rawType === 'users') {
             $rawType = 'people';
         }
-        $allowedTypes = ['all', 'posts', 'people', 'announcements'];
+        $allowedTypes = ['all', 'posts', 'people'];
         $type = in_array($rawType, $allowedTypes, true) ? $rawType : 'all';
 
         // 3. Post Type filter: all, text, photo
@@ -95,8 +94,11 @@ class SearchController
         $allowedPostTypes = ['all', 'text', 'photo'];
         $postType = in_array($rawPostType, $allowedPostTypes, true) ? $rawPostType : 'all';
 
-        // 4. Date Posted filter: any, today, week, month
+        // 4. Date Posted filter: any / anytime, today, week, month
         $rawDate = strtolower(trim($_GET['date'] ?? 'any'));
+        if ($rawDate === 'anytime') {
+            $rawDate = 'any';
+        }
         $allowedDates = ['any', 'today', 'week', 'month'];
         $dateRange = in_array($rawDate, $allowedDates, true) ? $rawDate : 'any';
 
@@ -104,27 +106,19 @@ class SearchController
         $hasSearched = isset($_GET['q']) ||
             (isset($_GET['type']) && $_GET['type'] !== 'all') ||
             (isset($_GET['post_type']) && $_GET['post_type'] !== 'all') ||
-            (isset($_GET['date']) && $_GET['date'] !== 'any');
+            (isset($_GET['date']) && $rawDate !== 'any');
 
         $emptyQuery = ($hasSearched && $keyword === '' && $postType === 'all' && $dateRange === 'any' && $type === 'all');
 
-        $users                  = [];
-        $posts                  = [];
-        $announcements          = [];
-        $announcementsSupported = false;
-        $commentsByPost         = [];
-        $hasLikedByPost         = [];
+        $users          = [];
+        $posts          = [];
+        $commentsByPost = [];
+        $hasLikedByPost = [];
 
         $currentUserId = isset($_SESSION['user_id']) ? (int) $_SESSION['user_id'] : null;
 
         try {
             if ($hasSearched && !$emptyQuery) {
-                // Announcements handling: check if announcements type requested
-                if ($type === 'announcements') {
-                    $announcementsSupported = false;
-                    $announcements = [];
-                }
-
                 // 1. Search People (by username or full_name)
                 if (($type === 'all' || $type === 'people') && $keyword !== '') {
                     $users = $this->userModel->searchUsers($keyword);
@@ -150,7 +144,6 @@ class SearchController
             }
         } catch (\Throwable $e) {
             error_log('[SearchController::index] Exception: ' . $e->getMessage());
-            $flashError = 'Search service is temporarily unavailable. Please try again.';
         }
 
         $pageTitle = $hasSearched && $keyword !== ''

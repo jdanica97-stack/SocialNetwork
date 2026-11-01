@@ -65,41 +65,27 @@ if (!empty($user['cover_photo']) && file_exists(BASE_PATH . '/public/assets/imag
 
                 <?php if (!empty($isOwnProfile)): ?>
                     <div class="profile-cover-actions">
-                        <div class="cover-dropdown-wrapper" id="coverDropdownWrapper">
-                            <button
-                                type="button"
-                                class="cover-edit-btn"
-                                id="editCoverDropdownBtn"
-                                aria-expanded="false"
-                                aria-haspopup="true"
-                                aria-controls="coverDropdownMenu"
-                                title="Edit cover photo"
-                            >
-                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
-                                <span class="cover-btn-label">Edit Cover Photo</span>
-                            </button>
-                            <div class="cover-dropdown-menu" id="coverDropdownMenu" role="menu">
-                                <div class="sheet-header">
-                                    <div class="sheet-handle"></div>
-                                    <span class="sheet-title">Cover Photo</span>
-                                </div>
-                                <button type="button" class="cover-dropdown-item" id="btnUploadCover" role="menuitem">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-                                    <span id="coverUploadActionText"><?= $coverPhotoSrc ? 'Change Cover Photo' : 'Upload Cover Photo' ?></span>
-                                </button>
-                                <button
-                                    type="button"
-                                    class="cover-dropdown-item item-danger"
-                                    id="btnRemoveCover"
-                                    role="menuitem"
-                                    style="display: <?= $coverPhotoSrc ? 'flex' : 'none' ?>;"
-                                >
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
-                                    <span>Remove Cover Photo</span>
-                                </button>
-                                <button type="button" class="sheet-cancel-btn" id="cancelCoverSheetBtn">Cancel</button>
-                            </div>
-                        </div>
+                        <button
+                            type="button"
+                            class="cover-edit-btn"
+                            id="editCoverDropdownBtn"
+                            title="Edit cover photo"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                            <span class="cover-btn-label" id="coverUploadActionText"><?= $coverPhotoSrc ? 'Edit Cover Photo' : 'Upload Cover Photo' ?></span>
+                        </button>
+                        <button
+                            type="button"
+                            class="cover-edit-btn cover-remove-btn"
+                            id="btnRemoveCover"
+                            style="display: <?= $coverPhotoSrc ? 'inline-flex' : 'none' ?>;"
+                            title="Remove cover photo"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+                            <span>Remove</span>
+                        </button>
+                        <button type="button" id="btnUploadCover" class="d-none" aria-hidden="true"></button>
+                        <div class="cover-dropdown-menu d-none" id="coverDropdownMenu" role="menu"></div>
                         <input type="file" id="coverPhotoInput" accept="image/jpeg,image/png,image/gif,image/webp" class="d-none" aria-label="Upload cover photo">
                     </div>
                 <?php endif; ?>
@@ -728,16 +714,12 @@ document.addEventListener('DOMContentLoaded', function () {
         if (actionSheetBackdrop) actionSheetBackdrop.classList.remove('show');
     }
 
-    if (coverDropdownBtn && coverDropdownMenu) {
+    if (coverDropdownBtn && coverInput) {
         coverDropdownBtn.addEventListener('click', function (e) {
+            e.preventDefault();
             e.stopPropagation();
-            var isOpen = coverDropdownMenu.classList.contains('show');
             closeAllDropdowns();
-            if (!isOpen) {
-                coverDropdownMenu.classList.add('show');
-                coverDropdownBtn.setAttribute('aria-expanded', 'true');
-                if (actionSheetBackdrop) actionSheetBackdrop.classList.add('show');
-            }
+            coverInput.click();
         });
     }
 
@@ -871,24 +853,31 @@ document.addEventListener('DOMContentLoaded', function () {
 
     if (coverCropApply) {
         coverCropApply.addEventListener('click', function () {
-            if (!coverCropper) return;
-
             coverCropApply.disabled = true;
             coverCropApply.textContent = 'Uploading…';
             if (coverCropStatus) coverCropStatus.textContent = '';
 
-            var canvas = coverCropper.getCroppedCanvas({ maxWidth: 1200, maxHeight: 525 });
-            if (!canvas) {
-                if (coverCropStatus) coverCropStatus.textContent = 'Failed to crop image.';
+            var base64Data = '';
+            if (coverCropper) {
+                var canvas = coverCropper.getCroppedCanvas({ maxWidth: 1600, maxHeight: 700 });
+                if (canvas) {
+                    base64Data = canvas.toDataURL('image/jpeg', 0.88);
+                }
+            }
+
+            var formData = new FormData();
+            formData.append('csrf_token', getCsrfToken());
+
+            if (base64Data) {
+                formData.append('cover_photo_data', base64Data);
+            } else if (coverInput && coverInput.files && coverInput.files[0]) {
+                formData.append('cover_photo', coverInput.files[0]);
+            } else {
+                if (coverCropStatus) coverCropStatus.textContent = 'No valid image data to upload.';
                 coverCropApply.disabled = false;
                 coverCropApply.textContent = 'Apply & Upload';
                 return;
             }
-
-            var base64Data = canvas.toDataURL('image/jpeg', 0.85);
-            var formData = new FormData();
-            formData.append('csrf_token', getCsrfToken());
-            formData.append('cover_photo_data', base64Data);
 
             fetch('/SocialNetwork/public/?url=profile/cover', {
                 method: 'POST',
@@ -901,8 +890,8 @@ document.addEventListener('DOMContentLoaded', function () {
                     if (coverMediaWrap) {
                         coverMediaWrap.innerHTML = '<img src="' + data.cover_url + '" alt="Cover photo" id="coverPhotoImg">';
                     }
-                    if (btnRemoveCover) btnRemoveCover.style.display = 'flex';
-                    if (coverActionText) coverActionText.textContent = 'Change Cover Photo';
+                    if (btnRemoveCover) btnRemoveCover.style.display = 'inline-flex';
+                    if (coverActionText) coverActionText.textContent = 'Edit Cover Photo';
                     closeCoverModal();
                     showToast('Cover photo updated successfully!', 'success');
                 } else {

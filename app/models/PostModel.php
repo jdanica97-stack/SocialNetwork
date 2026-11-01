@@ -538,13 +538,13 @@ class PostModel
                 $where[] = "((p.image IS NOT NULL AND p.image != '') OR EXISTS (SELECT 1 FROM post_images pi WHERE pi.post_id = p.id))";
             }
 
-            // Date posted filter: today, week, month
+            // Date posted filter: today, week, month (with precise start & end boundaries)
             if ($datePosted === 'today') {
-                $where[] = 'p.created_at >= CURDATE()';
+                $where[] = 'p.created_at >= CURDATE() AND p.created_at < (CURDATE() + INTERVAL 1 DAY)';
             } elseif ($datePosted === 'week') {
-                $where[] = 'p.created_at >= DATE_SUB(CURDATE(), INTERVAL WEEKDAY(CURDATE()) DAY)';
+                $where[] = 'p.created_at >= DATE_SUB(CURDATE(), INTERVAL WEEKDAY(CURDATE()) DAY) AND p.created_at < DATE_ADD(DATE_SUB(CURDATE(), INTERVAL WEEKDAY(CURDATE()) DAY), INTERVAL 7 DAY)';
             } elseif ($datePosted === 'month') {
-                $where[] = 'p.created_at >= DATE_FORMAT(CURDATE(), \'%Y-%m-01 00:00:00\')';
+                $where[] = 'p.created_at >= DATE_FORMAT(CURDATE(), \'%Y-%m-01 00:00:00\') AND p.created_at < DATE_ADD(DATE_FORMAT(CURDATE(), \'%Y-%m-01 00:00:00\'), INTERVAL 1 MONTH)';
             }
 
             if ($dateFrom !== '') {
@@ -656,13 +656,13 @@ class PostModel
                 $where[] = "((p.image IS NOT NULL AND p.image != '') OR EXISTS (SELECT 1 FROM post_images pi WHERE pi.post_id = p.id))";
             }
 
-            // Date posted filter: today, week, month
+            // Date posted filter: today, week, month (with precise start & end boundaries)
             if ($datePosted === 'today') {
-                $where[] = 'p.created_at >= CURDATE()';
+                $where[] = 'p.created_at >= CURDATE() AND p.created_at < (CURDATE() + INTERVAL 1 DAY)';
             } elseif ($datePosted === 'week') {
-                $where[] = 'p.created_at >= DATE_SUB(CURDATE(), INTERVAL WEEKDAY(CURDATE()) DAY)';
+                $where[] = 'p.created_at >= DATE_SUB(CURDATE(), INTERVAL WEEKDAY(CURDATE()) DAY) AND p.created_at < DATE_ADD(DATE_SUB(CURDATE(), INTERVAL WEEKDAY(CURDATE()) DAY), INTERVAL 7 DAY)';
             } elseif ($datePosted === 'month') {
-                $where[] = 'p.created_at >= DATE_FORMAT(CURDATE(), \'%Y-%m-01 00:00:00\')';
+                $where[] = 'p.created_at >= DATE_FORMAT(CURDATE(), \'%Y-%m-01 00:00:00\') AND p.created_at < DATE_ADD(DATE_FORMAT(CURDATE(), \'%Y-%m-01 00:00:00\'), INTERVAL 1 MONTH)';
             }
 
             if ($dateFrom !== '') {

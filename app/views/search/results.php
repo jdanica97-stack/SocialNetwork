@@ -6,13 +6,11 @@
  *
  * Variables passed from SearchController::index():
  *   - $keyword: string
- *   - $type: string ('all', 'posts', 'people', 'announcements')
+ *   - $type: string ('all', 'posts', 'people')
  *   - $postType: string ('all', 'text', 'photo')
  *   - $dateRange: string ('any', 'today', 'week', 'month')
  *   - $users: array of matched users
  *   - $posts: array of matched posts with comment_count and like_count
- *   - $announcements: array
- *   - $announcementsSupported: bool
  *   - $commentsByPost: array of comments indexed by post_id
  *   - $hasLikedByPost: array of like booleans indexed by post_id
  *   - $emptyQuery: bool
@@ -55,7 +53,7 @@ $isFiltered = ($type !== 'all') || ($postType !== 'all') || ($dateRange !== 'any
                         </p>
                     </div>
 
-                    <!-- Content Type Filter Tabs: All, Posts, People, Announcements -->
+                    <!-- Content Type Filter Tabs: All, Posts, People -->
                     <div class="search-category-tabs" role="tablist" aria-label="Search content types">
                         <button
                             type="button"
@@ -96,16 +94,6 @@ $isFiltered = ($type !== 'all') || ($postType !== 'all') || ($dateRange !== 'any
                                 <span class="category-tab-badge"><?= $userCount ?></span>
                             <?php endif; ?>
                         </button>
-                        <button
-                            type="button"
-                            class="category-tab-btn <?= $type === 'announcements' ? 'active' : '' ?>"
-                            onclick="setCategory('announcements')"
-                            role="tab"
-                            aria-selected="<?= $type === 'announcements' ? 'true' : 'false' ?>"
-                            id="tab-announcements"
-                        >
-                            <span>Announcements</span>
-                        </button>
                     </div>
                 </div>
 
@@ -135,7 +123,7 @@ $isFiltered = ($type !== 'all') || ($postType !== 'all') || ($dateRange !== 'any
                     <!-- Clean Filter Bar: Post Type & Date Posted on left, Actions on right -->
                     <div class="search-subfilters-bar">
                         <div class="search-filters-group">
-                            <?php if ($type !== 'people' && $type !== 'announcements'): ?>
+                            <?php if ($type !== 'people'): ?>
                                 <!-- 1. Post Type Filter (All, Text Posts, Photo Posts) -->
                                 <select
                                     name="post_type"
@@ -149,7 +137,7 @@ $isFiltered = ($type !== 'all') || ($postType !== 'all') || ($dateRange !== 'any
                                     <option value="photo" <?= $postType === 'photo' ? 'selected' : '' ?>>Photo Posts</option>
                                 </select>
 
-                                <!-- 2. Date Posted Filter (Any Time, Today, This Week, This Month) -->
+                                <!-- 2. Date Posted Filter (Anytime, Today, This Week, This Month) -->
                                 <select
                                     name="date"
                                     id="filterDate"
@@ -157,7 +145,7 @@ $isFiltered = ($type !== 'all') || ($postType !== 'all') || ($dateRange !== 'any
                                     aria-label="Filter by date posted"
                                     onchange="document.getElementById('searchForm').submit()"
                                 >
-                                    <option value="any" <?= $dateRange === 'any' ? 'selected' : '' ?>>Any Time</option>
+                                    <option value="any" <?= ($dateRange === 'any' || $dateRange === 'anytime') ? 'selected' : '' ?>>Anytime</option>
                                     <option value="today" <?= $dateRange === 'today' ? 'selected' : '' ?>>Today</option>
                                     <option value="week" <?= $dateRange === 'week' ? 'selected' : '' ?>>This Week</option>
                                     <option value="month" <?= $dateRange === 'month' ? 'selected' : '' ?>>This Month</option>
@@ -183,24 +171,7 @@ $isFiltered = ($type !== 'all') || ($postType !== 'all') || ($dateRange !== 'any
                 <div class="search-card-divider"></div>
 
                 <div class="search-results-container">
-                    <?php if ($type === 'announcements'): ?>
-                        <!-- Announcements limitation notice (not currently configured) -->
-                        <div class="text-center py-5 px-3">
-                            <div class="stat-icon-wrap mx-auto mb-3" style="width: 48px; height: 48px; border-radius: 14px; background: var(--surface-input); display: inline-flex; align-items: center; justify-content: center; color: var(--accent);">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 11 18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/></svg>
-                            </div>
-                            <h2 class="h6 mb-2" style="font-weight: 600; color: var(--fg);">Announcements Not Configured</h2>
-                            <p class="small text-muted mb-3" style="max-width: 440px; margin-inline: auto;">
-                                Announcements are not currently configured as a separate searchable content type in this network. Community updates will appear in the main feed.
-                            </p>
-                            <div>
-                                <a href="/SocialNetwork/public/?url=search&type=all" class="btn btn-ghost btn-sm">
-                                    Return to All Search
-                                </a>
-                            </div>
-                        </div>
-
-                    <?php elseif ($emptyQuery): ?>
+                    <?php if ($emptyQuery): ?>
                         <!-- Empty Keyword Warning -->
                         <div class="text-center py-4 px-3 text-muted">
                             <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="mx-auto mb-2 text-warning"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
