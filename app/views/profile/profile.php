@@ -75,6 +75,7 @@ if (!empty($user['cover_photo']) && file_exists(BASE_PATH . '/public/assets/imag
                                 aria-expanded="false"
                                 aria-haspopup="true"
                                 aria-controls="coverDropdownMenu"
+                                data-has-cover="<?= $coverPhotoSrc ? '1' : '0' ?>"
                             >
                                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
                                 <span class="cover-btn-label" id="coverUploadActionText"><?= $coverPhotoSrc ? 'Edit Cover Photo' : 'Upload Cover Photo' ?></span>
@@ -766,17 +767,31 @@ document.addEventListener('DOMContentLoaded', function () {
         if (actionSheetBackdrop) actionSheetBackdrop.classList.remove('show');
     }
 
-    // Toggle Cover Dropdown
-    if (coverDropdownBtn && coverDropdownMenu) {
+    // Toggle Cover Dropdown — or directly open file picker if no cover exists
+    if (coverDropdownBtn) {
         coverDropdownBtn.addEventListener('click', function (e) {
             e.preventDefault();
             e.stopPropagation();
-            var isOpen = coverDropdownMenu.classList.contains('show');
-            closeAllDropdowns();
-            if (!isOpen) {
-                coverDropdownMenu.classList.add('show');
-                coverDropdownBtn.setAttribute('aria-expanded', 'true');
-                if (actionSheetBackdrop) actionSheetBackdrop.classList.add('show');
+
+            var hasCover = coverDropdownBtn.getAttribute('data-has-cover') === '1'
+                || !!(coverMediaWrap && coverMediaWrap.querySelector('img#coverPhotoImg'));
+
+            if (hasCover && coverDropdownMenu) {
+                // Has a cover: show the dropdown (Change / Remove options)
+                var isOpen = coverDropdownMenu.classList.contains('show');
+                closeAllDropdowns();
+                if (!isOpen) {
+                    coverDropdownMenu.classList.add('show');
+                    coverDropdownBtn.setAttribute('aria-expanded', 'true');
+                    if (actionSheetBackdrop) actionSheetBackdrop.classList.add('show');
+                }
+            } else {
+                // No cover: directly open the file picker
+                closeAllDropdowns();
+                if (coverInput) {
+                    coverInput.value = '';
+                    coverInput.click();
+                }
             }
         });
     }
@@ -974,6 +989,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     if (btnRemoveCover) btnRemoveCover.style.display = 'flex';
                     if (coverActionText) coverActionText.textContent = 'Edit Cover Photo';
                     if (coverUploadItemText) coverUploadItemText.textContent = 'Change Cover Photo';
+                    if (coverDropdownBtn) coverDropdownBtn.setAttribute('data-has-cover', '1');
                     closeCoverModal();
                     showToast('Cover photo updated successfully!', 'success');
                 } else {
@@ -1035,6 +1051,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     if (btnRemoveCover) btnRemoveCover.style.display = 'none';
                     if (coverActionText) coverActionText.textContent = 'Upload Cover Photo';
                     if (coverUploadItemText) coverUploadItemText.textContent = 'Upload Cover Photo';
+                    if (coverDropdownBtn) coverDropdownBtn.setAttribute('data-has-cover', '0');
                     removeCoverModal.style.display = 'none';
                     showToast('Cover photo removed successfully.', 'success');
                 } else {
