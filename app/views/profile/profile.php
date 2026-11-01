@@ -128,6 +128,7 @@ if (!empty($user['cover_photo']) && file_exists(BASE_PATH . '/public/assets/imag
                                     aria-expanded="false"
                                     aria-haspopup="true"
                                     aria-controls="avatarDropdownMenu"
+                                    data-has-avatar="<?= !empty($user['profile_image']) ? '1' : '0' ?>"
                                 >
                                     <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
                                 </button>
@@ -796,17 +797,30 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // Toggle Avatar Dropdown
-    if (avatarDropdownBtn && avatarDropdownMenu) {
+    // Toggle Avatar Dropdown — or directly open file picker if no avatar exists
+    if (avatarDropdownBtn) {
         avatarDropdownBtn.addEventListener('click', function (e) {
             e.preventDefault();
             e.stopPropagation();
-            var isOpen = avatarDropdownMenu.classList.contains('show');
-            closeAllDropdowns();
-            if (!isOpen) {
-                avatarDropdownMenu.classList.add('show');
-                avatarDropdownBtn.setAttribute('aria-expanded', 'true');
-                if (actionSheetBackdrop) actionSheetBackdrop.classList.add('show');
+
+            var hasAvatar = avatarDropdownBtn.getAttribute('data-has-avatar') === '1';
+
+            if (hasAvatar && avatarDropdownMenu) {
+                // Has an avatar: show the dropdown (Change / Remove options)
+                var isOpen = avatarDropdownMenu.classList.contains('show');
+                closeAllDropdowns();
+                if (!isOpen) {
+                    avatarDropdownMenu.classList.add('show');
+                    avatarDropdownBtn.setAttribute('aria-expanded', 'true');
+                    if (actionSheetBackdrop) actionSheetBackdrop.classList.add('show');
+                }
+            } else {
+                // No avatar: directly open the file picker
+                closeAllDropdowns();
+                if (avatarInput) {
+                    avatarInput.value = '';
+                    avatarInput.click();
+                }
             }
         });
     }
@@ -1204,6 +1218,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     navAvatars.forEach(function (el) { el.src = newAvatarSrc; });
                     if (btnRemoveAvatar) btnRemoveAvatar.style.display = 'flex';
                     if (avatarChangeText) avatarChangeText.textContent = 'Change Profile Picture';
+                    if (avatarDropdownBtn) avatarDropdownBtn.setAttribute('data-has-avatar', '1');
                     closeAvatarModal();
                     showToast('Profile picture updated successfully!', 'success');
                 } else {
@@ -1266,6 +1281,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     navAvatars.forEach(function (el) { el.src = data.avatar_url; });
                     if (btnRemoveAvatar) btnRemoveAvatar.style.display = 'none';
                     if (avatarChangeText) avatarChangeText.textContent = 'Upload Profile Picture';
+                    if (avatarDropdownBtn) avatarDropdownBtn.setAttribute('data-has-avatar', '0');
                     removeAvatarModal.style.display = 'none';
                     showToast('Profile picture removed successfully.', 'success');
                 } else {

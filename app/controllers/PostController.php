@@ -459,7 +459,8 @@ class PostController
             $_SESSION['flash_error'] = 'Could not delete post due to a server error.';
         }
 
-        header('Location: /SocialNetwork/public/');
+        $redirect = !empty($_SERVER['HTTP_REFERER']) ? $_SERVER['HTTP_REFERER'] : '/SocialNetwork/public/';
+        header('Location: ' . $redirect);
         exit;
     }
 

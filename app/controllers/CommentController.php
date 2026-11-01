@@ -385,7 +385,8 @@ class CommentController
             $_SESSION['flash_error'] = 'Could not delete the comment. Please try again.';
         }
 
-        header('Location: /SocialNetwork/public/#post-' . $postId);
+        $redirect = !empty($_SERVER['HTTP_REFERER']) ? $_SERVER['HTTP_REFERER'] : ('/SocialNetwork/public/#post-' . $postId);
+        header('Location: ' . $redirect);
         exit;
     }
 

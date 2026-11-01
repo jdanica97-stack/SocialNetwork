@@ -459,6 +459,12 @@ if (!empty($user['cover_photo']) && file_exists(BASE_PATH . '/public/assets/imag
             if (headerAvatarThumb) {
                 headerAvatarThumb.src = base64Data;
             }
+            if (removeAvatarFlag) {
+                removeAvatarFlag.value = '0';
+            }
+            if (btnRemoveAvatarEdit) {
+                btnRemoveAvatarEdit.style.display = 'inline-flex';
+            }
 
             closeAvatarModal();
         });
@@ -582,6 +588,12 @@ if (!empty($user['cover_photo']) && file_exists(BASE_PATH . '/public/assets/imag
             if (coverPlaceholder) {
                 coverPlaceholder.style.setProperty('display', 'none', 'important');
             }
+            if (removeCoverFlag) {
+                removeCoverFlag.value = '0';
+            }
+            if (btnRemoveCoverEdit) {
+                btnRemoveCoverEdit.style.display = 'inline-flex';
+            }
 
             closeCoverModal();
         });
@@ -702,7 +714,10 @@ if (!empty($user['cover_photo']) && file_exists(BASE_PATH . '/public/assets/imag
                 if (data.success) {
                     if (removeAvatarFlag) removeAvatarFlag.value = '1';
                     if (avatarDataInput) avatarDataInput.value = '';
-                    if (previewImg) previewImg.src = data.avatar_url || 'https://ui-avatars.com/api/?name=User&size=180&background=111113&color=f5f5f7&rounded=true&bold=true';
+                    if (avatarInput) avatarInput.value = '';
+                    var defaultAvatar = data.avatar_url || 'https://ui-avatars.com/api/?name=User&size=180&background=111113&color=f5f5f7&rounded=true&bold=true';
+                    if (avatarPreview) avatarPreview.src = defaultAvatar;
+                    if (headerAvatarThumb) headerAvatarThumb.src = defaultAvatar;
                     if (btnRemoveAvatarEdit) btnRemoveAvatarEdit.style.display = 'none';
                     removeAvatarModalEdit.style.display = 'none';
                 } else {
@@ -712,7 +727,11 @@ if (!empty($user['cover_photo']) && file_exists(BASE_PATH . '/public/assets/imag
             .catch(function () {
                 // Fallback: set form flag
                 if (removeAvatarFlag) removeAvatarFlag.value = '1';
-                if (previewImg) previewImg.src = 'https://ui-avatars.com/api/?name=User&size=180&background=111113&color=f5f5f7&rounded=true&bold=true';
+                if (avatarDataInput) avatarDataInput.value = '';
+                if (avatarInput) avatarInput.value = '';
+                var fallbackAvatar = 'https://ui-avatars.com/api/?name=User&size=180&background=111113&color=f5f5f7&rounded=true&bold=true';
+                if (avatarPreview) avatarPreview.src = fallbackAvatar;
+                if (headerAvatarThumb) headerAvatarThumb.src = fallbackAvatar;
                 if (btnRemoveAvatarEdit) btnRemoveAvatarEdit.style.display = 'none';
                 removeAvatarModalEdit.style.display = 'none';
             })
@@ -720,6 +739,25 @@ if (!empty($user['cover_photo']) && file_exists(BASE_PATH . '/public/assets/imag
                 confirmRemoveAvatarEdit.disabled = false;
                 confirmRemoveAvatarEdit.textContent = 'Remove';
             });
+        });
+    }
+
+    // ── Form Submission & Duplicate Click Prevention ─────────────────────────
+    var profileEditForm = document.getElementById('profileEditForm');
+    var saveProfileBtn  = document.getElementById('saveProfileBtn');
+    if (profileEditForm && saveProfileBtn) {
+        profileEditForm.addEventListener('submit', function (e) {
+            if (bioTextarea && bioTextarea.value.length > 500) {
+                e.preventDefault();
+                alert('Bio must not exceed 500 characters.');
+                return;
+            }
+            if (saveProfileBtn.disabled) {
+                e.preventDefault();
+                return;
+            }
+            saveProfileBtn.disabled = true;
+            saveProfileBtn.textContent = 'Saving…';
         });
     }
 

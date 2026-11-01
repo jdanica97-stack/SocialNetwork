@@ -174,7 +174,9 @@ class FollowController
         $this->requireAuth();
         $currentUserId = (int) $_SESSION['user_id'];
 
-        $targetUserId = isset($_GET['user_id']) ? (int) $_GET['user_id'] : $currentUserId;
+        $targetUserId = isset($_GET['user_id']) && is_numeric($_GET['user_id'])
+            ? (int) $_GET['user_id']
+            : (isset($_GET['id']) && is_numeric($_GET['id']) ? (int) $_GET['id'] : $currentUserId);
         if ($targetUserId <= 0) {
             $targetUserId = $currentUserId;
         }
