@@ -378,10 +378,35 @@ class CommentController
         $postId = (int) $comment['post_id'];
         $deleted = $this->commentModel->deleteComment($commentId);
 
+        $isAjax = !empty($_SERVER['HTTP_X_REQUESTED_WITH']) &&
+                  strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
+
         if ($deleted) {
+            $newCount = $this->commentModel->countByPostId($postId);
+
+            if ($isAjax) {
+                http_response_code(200);
+                header('Content-Type: application/json; charset=UTF-8');
+                echo json_encode([
+                    'success'       => true,
+                    'message'       => 'Comment deleted successfully.',
+                    'comment_id'    => $commentId,
+                    'post_id'       => $postId,
+                    'comment_count' => $newCount,
+                ]);
+                exit;
+            }
+
             $_SESSION['flash_success'] = 'Comment deleted successfully.';
         } else {
             http_response_code(500);
+
+            if ($isAjax) {
+                header('Content-Type: application/json; charset=UTF-8');
+                echo json_encode(['success' => false, 'message' => 'Could not delete the comment. Please try again.']);
+                exit;
+            }
+
             $_SESSION['flash_error'] = 'Could not delete the comment. Please try again.';
         }
 

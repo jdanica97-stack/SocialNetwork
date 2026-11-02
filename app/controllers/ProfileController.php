@@ -168,6 +168,15 @@ class ProfileController
         $this->requireAuth();
 
         $userId = (int) $_SESSION['user_id'];
+
+        // Strict backend authorization check: Prevent accessing edit view for another user's profile
+        if (isset($_GET['id']) && (int) $_GET['id'] !== $userId) {
+            $_SESSION['flash_error'] = 'You are not authorized to edit another user\'s profile.';
+            http_response_code(403);
+            header('Location: /SocialNetwork/public/?url=profile&id=' . (int) $_GET['id']);
+            exit;
+        }
+
         $user   = $this->userModel->findById($userId);
 
         if ($user === false) {
@@ -216,6 +225,19 @@ class ProfileController
 
         $isAjax = (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest')
             || (isset($_SERVER['HTTP_ACCEPT']) && str_contains(strtolower($_SERVER['HTTP_ACCEPT']), 'application/json'));
+
+        // Strict backend authorization check: Reject any tampering attempt with user_id or id
+        if ((isset($_POST['user_id']) && (int) $_POST['user_id'] !== $userId) || (isset($_GET['id']) && (int) $_GET['id'] !== $userId)) {
+            http_response_code(403);
+            if ($isAjax) {
+                header('Content-Type: application/json; charset=UTF-8');
+                echo json_encode(['success' => false, 'message' => 'Unauthorized: You cannot modify another user\'s profile.']);
+                exit;
+            }
+            $_SESSION['flash_error'] = 'Unauthorized: You cannot modify another user\'s profile.';
+            header('Location: /SocialNetwork/public/?url=profile');
+            exit;
+        }
 
         $errors = [];
 
@@ -569,6 +591,14 @@ class ProfileController
     {
         $this->requireAuth();
         $userId = (int) $_SESSION['user_id'];
+
+        if (isset($_GET['id']) && (int) $_GET['id'] !== $userId) {
+            $_SESSION['flash_error'] = 'You are not authorized to access another user\'s account settings.';
+            http_response_code(403);
+            header('Location: /SocialNetwork/public/?url=profile&id=' . (int) $_GET['id']);
+            exit;
+        }
+
         $user   = $this->userModel->findById($userId);
 
         if ($user === false) {
@@ -596,6 +626,13 @@ class ProfileController
         $userId = (int) $_SESSION['user_id'];
 
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: /SocialNetwork/public/?url=profile/account');
+            exit;
+        }
+
+        if ((isset($_POST['user_id']) && (int) $_POST['user_id'] !== $userId) || (isset($_GET['id']) && (int) $_GET['id'] !== $userId)) {
+            $_SESSION['flash_error'] = 'Unauthorized: You cannot modify another user\'s account.';
+            http_response_code(403);
             header('Location: /SocialNetwork/public/?url=profile/account');
             exit;
         }
@@ -673,6 +710,12 @@ class ProfileController
 
         $isAjax = (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest')
             || (isset($_SERVER['HTTP_ACCEPT']) && str_contains(strtolower($_SERVER['HTTP_ACCEPT']), 'application/json'));
+
+        // Strict backend authorization check
+        if ((isset($_POST['user_id']) && (int) $_POST['user_id'] !== $userId) || (isset($_GET['id']) && (int) $_GET['id'] !== $userId)) {
+            $this->respondError($isAjax, 'Unauthorized: You cannot modify another user\'s cover photo.');
+            return;
+        }
 
         if (!Csrf::check()) {
             if ($isAjax) {
@@ -783,6 +826,12 @@ class ProfileController
         $isAjax = (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest')
             || (isset($_SERVER['HTTP_ACCEPT']) && str_contains(strtolower($_SERVER['HTTP_ACCEPT']), 'application/json'));
 
+        // Strict backend authorization check
+        if ((isset($_POST['user_id']) && (int) $_POST['user_id'] !== $userId) || (isset($_GET['id']) && (int) $_GET['id'] !== $userId)) {
+            $this->respondError($isAjax, 'Unauthorized: You cannot modify another user\'s profile picture.');
+            return;
+        }
+
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             $this->respondError($isAjax, 'Invalid request method.');
             return;
@@ -850,6 +899,12 @@ class ProfileController
         $isAjax = (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest')
             || (isset($_SERVER['HTTP_ACCEPT']) && str_contains(strtolower($_SERVER['HTTP_ACCEPT']), 'application/json'));
 
+        // Strict backend authorization check
+        if ((isset($_POST['user_id']) && (int) $_POST['user_id'] !== $userId) || (isset($_GET['id']) && (int) $_GET['id'] !== $userId)) {
+            $this->respondError($isAjax, 'Unauthorized: You cannot modify another user\'s cover photo.');
+            return;
+        }
+
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             $this->respondError($isAjax, 'Invalid request method.');
             return;
@@ -910,6 +965,13 @@ class ProfileController
         $userId = (int) $_SESSION['user_id'];
 
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: /SocialNetwork/public/?url=profile/account');
+            exit;
+        }
+
+        if ((isset($_POST['user_id']) && (int) $_POST['user_id'] !== $userId) || (isset($_GET['id']) && (int) $_GET['id'] !== $userId)) {
+            $_SESSION['flash_error'] = 'Unauthorized: You cannot modify another user\'s password.';
+            http_response_code(403);
             header('Location: /SocialNetwork/public/?url=profile/account');
             exit;
         }

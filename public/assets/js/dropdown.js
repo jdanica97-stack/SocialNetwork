@@ -1,4 +1,4 @@
-/**
+﻿/**
  * public/assets/js/dropdown.js
  *
  * Handles three-dot dropdown menus for:
@@ -12,13 +12,13 @@
 (function () {
   'use strict';
 
-  /* ── CSRF token helper ── */
+  /* â”€â”€ CSRF token helper â”€â”€ */
   function getCsrfToken() {
     var meta = document.querySelector('meta[name="csrf-token"]');
     return meta ? meta.getAttribute('content') : '';
   }
 
-  /* ── Close utilities ── */
+  /* â”€â”€ Close utilities â”€â”€ */
   function closeAllPostMenus() {
     document.querySelectorAll('.post-menu-dropdown.show').forEach(function (el) {
       el.classList.remove('show');
@@ -37,7 +37,7 @@
     });
   }
 
-  /* ── Single unified click handler via event delegation ── */
+  /* â”€â”€ Single unified click handler via event delegation â”€â”€ */
   document.addEventListener('click', function (e) {
 
     // 1. "View all N comments" expand / collapse button
@@ -87,17 +87,17 @@
       return;
     }
 
-    // 4. Click inside an open dropdown — allow links and form buttons to proceed
+    // 4. Click inside an open dropdown â€” allow links and form buttons to proceed
     if (e.target.closest('.post-menu-dropdown') || e.target.closest('.comment-menu-dropdown')) {
       return;
     }
 
-    // 5. Click outside any menu — close all open dropdowns
+    // 5. Click outside any menu â€” close all open dropdowns
     closeAllPostMenus();
     closeAllCommentMenus();
   });
 
-  /* ── Escape key closes all dropdown menus ── */
+  /* â”€â”€ Escape key closes all dropdown menus â”€â”€ */
   document.addEventListener('keydown', function (e) {
     if (e.key === 'Escape' || e.key === 'Esc') {
       closeAllPostMenus();
@@ -105,7 +105,7 @@
     }
   });
 
-  /* ── Handle View all / Show fewer comments toggle ── */
+  /* â”€â”€ Handle View all / Show fewer comments toggle â”€â”€ */
   function handleCommentsToggle(toggleBtn, e) {
     e.preventDefault();
 
@@ -122,7 +122,7 @@
     }
 
     if (isExpanded) {
-      // ── Collapse: restore original 2-comment view ──
+      // â”€â”€ Collapse: restore original 2-comment view â”€â”€
       var initialHtml = list.getAttribute('data-initial-html');
       if (initialHtml !== null) {
         list.innerHTML = initialHtml;
@@ -132,8 +132,8 @@
       return;
     }
 
-    // ── Expand: fetch all comments via AJAX ──
-    toggleBtn.textContent = 'Loading…';
+    // â”€â”€ Expand: fetch all comments via AJAX â”€â”€
+    toggleBtn.textContent = 'Loadingâ€¦';
     toggleBtn.disabled = true;
 
     fetch('/SocialNetwork/public/?url=comments/fetch&post_id=' + encodeURIComponent(postId), {
@@ -254,7 +254,7 @@
     return esc(s).replace(/\r?\n/g, '<br>');
   }
 
-  // ── 5. AJAX Comment Form Submission (Zero page reload, preserves scroll) ──
+  // â”€â”€ 5. AJAX Comment Form Submission (Zero page reload, preserves scroll) â”€â”€
   document.addEventListener('submit', function (e) {
     var form = e.target.closest('form[action*="comments/create"], .comment-form');
     if (!form) return;
@@ -370,7 +370,42 @@
       });
   });
 
-  // ── 6. Post Composer: Textarea auto-expand and Multi-Image Preview ──
+
+  // -- 5b. AJAX Comment Delete (Zero page reload) --
+  document.addEventListener('submit', function (e) {
+    var form = e.target.closest('form[action*="comments/delete"]');
+    if (!form) return;
+    e.preventDefault();
+    if (!confirm('Delete this comment?')) return;
+    var commentIdInput = form.querySelector('input[name="id"]');
+    if (!commentIdInput) return;
+    var commentId = commentIdInput.value;
+    var formData = new FormData(form);
+    var deleteBtn = form.querySelector('button[type="submit"]');
+    if (deleteBtn) deleteBtn.disabled = true;
+    fetch('/SocialNetwork/public/?url=comments/delete', {
+      method: 'POST',
+      headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' },
+      body: formData
+    })
+      .then(function (res) { return res.json().then(function (d) { return { ok: res.ok, data: d }; }); })
+      .then(function (res) {
+        if (!res.ok || !res.data || !res.data.success) throw new Error((res.data && res.data.message) || 'Could not delete comment.');
+        var postId = res.data.post_id; var newCount = res.data.comment_count;
+        var el = document.getElementById('comment-' + commentId); if (el) el.remove();
+        document.querySelectorAll('#post-comment-count-' + postId).forEach(function (e) {
+          e.textContent = newCount + ' ' + (newCount === 1 ? 'comment' : 'comments');
+        });
+        var postCard = document.getElementById('post-' + postId);
+        if (postCard) {
+          var tb = postCard.querySelector('.comments-toggle-btn');
+          if (tb) { tb.setAttribute('data-total', newCount); if (newCount <= 2) { var er = postCard.querySelector('.comments-expand-row'); if (er) er.remove(); } else if (tb.getAttribute('aria-expanded') !== 'true') { tb.textContent = 'View all ' + newCount + ' comments'; } }
+        }
+      })
+      .catch(function (err) { alert(err.message || 'Error deleting comment.'); if (deleteBtn) deleteBtn.disabled = false; });
+  });
+
+  // â”€â”€ 6. Post Composer: Textarea auto-expand and Multi-Image Preview â”€â”€
   function initComposer() {
     var textarea = document.getElementById('composerTextarea');
     if (textarea) {
@@ -496,7 +531,7 @@
     }
   }
 
-  // ── 7. Image Gallery Lightbox Modal ──
+  // â”€â”€ 7. Image Gallery Lightbox Modal â”€â”€
   function initLightbox() {
     var modal = document.getElementById('imageLightboxModal');
     var lightboxImg = document.getElementById('lightboxImg');
@@ -608,7 +643,7 @@
   }
 
 
-  // ── 8. AJAX Post Composer Submission ──
+  // â”€â”€ 8. AJAX Post Composer Submission â”€â”€
   function initAjaxPostSubmit() {
     var postForm = document.getElementById('createPostForm');
     if (!postForm) return;
@@ -625,7 +660,7 @@
       // Prevent double-submit
       if (submitBtn) {
         submitBtn.disabled = true;
-        submitBtn.textContent = 'Posting…';
+        submitBtn.textContent = 'Postingâ€¦';
       }
 
       var formData = new FormData(postForm);

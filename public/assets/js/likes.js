@@ -13,7 +13,7 @@
   var SVG_HEART_FILLED  = '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.5"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>';
 
   document.addEventListener('click', function (e) {
-    // Find closest like button
+    // Find closest like button — covers .like-btn (search page) and .like-button (feed/profile)
     var btn = e.target.closest('.like-btn[data-post-id], .like-button[data-post-id]');
     if (!btn) return;
 
@@ -28,11 +28,16 @@
     var postId = btn.getAttribute('data-post-id');
     if (!postId) return;
 
-    // Temporarily disable the button
-    btn.disabled = true;
-    btn.setAttribute('data-loading', 'true');
-    btn.style.opacity = '0.6';
-    btn.style.pointerEvents = 'none';
+    // Temporarily disable ALL like buttons for this post
+    var allBtns = document.querySelectorAll(
+      '.like-btn[data-post-id="' + postId + '"], .like-button[data-post-id="' + postId + '"]'
+    );
+    allBtns.forEach(function (b) {
+      b.disabled = true;
+      b.setAttribute('data-loading', 'true');
+      b.style.opacity = '0.6';
+      b.style.pointerEvents = 'none';
+    });
 
     var csrfMeta  = document.querySelector('meta[name="csrf-token"]');
     var csrfToken = csrfMeta ? csrfMeta.getAttribute('content') : '';
@@ -59,7 +64,6 @@
     })
       .then(function (response) {
         if (response.status === 401) {
-          // Unauthenticated user
           window.location.href = '/SocialNetwork/public/?url=auth/login';
           return null;
         }
@@ -69,27 +73,33 @@
         if (!data) return;
 
         if (data.success) {
-          var iconEl  = btn.querySelector('.like-icon');
-          var textEl  = btn.querySelector('.like-text');
-          var countEl = btn.querySelector('.like-count');
+          // Update ALL like buttons for this post across the page
+          var targets = document.querySelectorAll(
+            '.like-btn[data-post-id="' + postId + '"], .like-button[data-post-id="' + postId + '"]'
+          );
+          targets.forEach(function (b) {
+            var iconEl  = b.querySelector('.like-icon');
+            var textEl  = b.querySelector('.like-text');
+            var countEl = b.querySelector('.like-count');
 
-          if (data.liked) {
-            btn.classList.add('liked');
-            btn.setAttribute('data-liked', '1');
-            btn.setAttribute('title', 'Unlike this post');
-            if (iconEl) iconEl.innerHTML = SVG_HEART_FILLED;
-            if (textEl) textEl.textContent = 'Unlike';
-          } else {
-            btn.classList.remove('liked');
-            btn.setAttribute('data-liked', '0');
-            btn.setAttribute('title', 'Like this post');
-            if (iconEl) iconEl.innerHTML = SVG_HEART_OUTLINE;
-            if (textEl) textEl.textContent = 'Like';
-          }
+            if (data.liked) {
+              b.classList.add('liked');
+              b.setAttribute('data-liked', '1');
+              b.setAttribute('title', 'Unlike this post');
+              if (iconEl) iconEl.innerHTML = SVG_HEART_FILLED;
+              if (textEl) textEl.textContent = 'Unlike';
+            } else {
+              b.classList.remove('liked');
+              b.setAttribute('data-liked', '0');
+              b.setAttribute('title', 'Like this post');
+              if (iconEl) iconEl.innerHTML = SVG_HEART_OUTLINE;
+              if (textEl) textEl.textContent = 'Like';
+            }
 
-          if (countEl) {
-            countEl.textContent = data.count;
-          }
+            if (countEl) {
+              countEl.textContent = data.count;
+            }
+          });
         } else {
           showLikeError(data.message || 'Unable to update like. Please try again.');
         }
@@ -98,11 +108,16 @@
         showLikeError('Unable to update like. Please check your connection and try again.');
       })
       .finally(function () {
-        // Re-enable button after response without changing scroll position
-        btn.disabled = false;
-        btn.removeAttribute('data-loading');
-        btn.style.opacity = '';
-        btn.style.pointerEvents = '';
+        // Re-enable all buttons for this post
+        var targets = document.querySelectorAll(
+          '.like-btn[data-post-id="' + postId + '"], .like-button[data-post-id="' + postId + '"]'
+        );
+        targets.forEach(function (b) {
+          b.disabled = false;
+          b.removeAttribute('data-loading');
+          b.style.opacity = '';
+          b.style.pointerEvents = '';
+        });
       });
   });
 

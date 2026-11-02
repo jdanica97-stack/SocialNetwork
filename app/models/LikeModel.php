@@ -44,11 +44,11 @@ class LikeModel
     {
         // Application-level duplicate check
         if ($this->hasLiked($postId, $userId)) {
-            return false;
+            return true;
         }
 
         try {
-            $sql = 'INSERT INTO likes (post_id, user_id) VALUES (:post_id, :user_id)';
+            $sql = 'INSERT IGNORE INTO likes (post_id, user_id) VALUES (:post_id, :user_id)';
             $stmt = $this->db->prepare($sql);
 
             return $stmt->execute([
@@ -74,12 +74,10 @@ class LikeModel
         try {
             $sql = 'DELETE FROM likes WHERE post_id = :post_id AND user_id = :user_id';
             $stmt = $this->db->prepare($sql);
-            $stmt->execute([
+            return $stmt->execute([
                 ':post_id' => $postId,
                 ':user_id' => $userId,
             ]);
-
-            return $stmt->rowCount() > 0;
         } catch (PDOException $e) {
             error_log('LikeModel::removeLike database error: ' . $e->getMessage());
             return false;

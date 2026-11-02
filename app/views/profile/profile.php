@@ -17,8 +17,8 @@ require_once BASE_PATH . '/app/views/layouts/header.php';
 // Helper: image URL or initials fallback
 $profileImageWebPath = '/SocialNetwork/public/assets/images/profiles/';
 
-if (!empty($user['profile_image'])) {
-    $avatarSrc = $profileImageWebPath . rawurlencode($user['profile_image']);
+if (!empty($user['profile_image']) && file_exists(BASE_PATH . '/public/assets/images/profiles/' . basename($user['profile_image']))) {
+    $avatarSrc = $profileImageWebPath . rawurlencode(basename($user['profile_image']));
 } else {
     $initials  = rawurlencode($user['full_name']);
     $avatarSrc = 'https://ui-avatars.com/api/?name=' . $initials
@@ -171,8 +171,10 @@ if (!empty($user['cover_photo']) && file_exists(BASE_PATH . '/public/assets/imag
                 <div class="profile-bio">
                     <?php if (!empty($user['bio'])): ?>
                         <p class="mb-0"><?= nl2br(htmlspecialchars($user['bio'], ENT_QUOTES, 'UTF-8')) ?></p>
-                    <?php else: ?>
+                    <?php elseif (!empty($isOwnProfile)): ?>
                         <p class="mb-0 text-muted fst-italic">No bio yet. <a href="/SocialNetwork/public/?url=profile/edit">Add one?</a></p>
+                    <?php else: ?>
+                        <p class="mb-0 text-muted fst-italic">No bio yet.</p>
                     <?php endif; ?>
                 </div>
 
@@ -226,8 +228,8 @@ if (!empty($user['cover_photo']) && file_exists(BASE_PATH . '/public/assets/imag
                         $isPostOwner  = isset($_SESSION['user_id']) && ((int) $_SESSION['user_id'] === $postAuthorId);
 
                         // Author avatar with fallback
-                        if (!empty($post['profile_image'])) {
-                            $postAvatar = '/SocialNetwork/public/assets/images/profiles/' . rawurlencode($post['profile_image']);
+                        if (!empty($post['profile_image']) && file_exists(BASE_PATH . '/public/assets/images/profiles/' . basename($post['profile_image']))) {
+                            $postAvatar = '/SocialNetwork/public/assets/images/profiles/' . rawurlencode(basename($post['profile_image']));
                         } else {
                             $postAvatar = 'https://ui-avatars.com/api/?name=' . rawurlencode($post['full_name']) . '&size=80&background=111113&color=f5f5f7&rounded=true&bold=true';
                         }
@@ -356,8 +358,8 @@ if (!empty($user['cover_photo']) && file_exists(BASE_PATH . '/public/assets/imag
                                             $commentAuthorId = (int) ($comment['author_id'] ?? $comment['user_id']);
                                             $isCommentOwner  = isset($_SESSION['user_id']) && ((int) $_SESSION['user_id'] === (int) $comment['user_id']);
 
-                                            if (!empty($comment['profile_image'])) {
-                                                $commenterAvatar = '/SocialNetwork/public/assets/images/profiles/' . rawurlencode($comment['profile_image']);
+                                            if (!empty($comment['profile_image']) && file_exists(BASE_PATH . '/public/assets/images/profiles/' . basename($comment['profile_image']))) {
+                                                $commenterAvatar = '/SocialNetwork/public/assets/images/profiles/' . rawurlencode(basename($comment['profile_image']));
                                             } else {
                                                 $commenterAvatar = 'https://ui-avatars.com/api/?name=' . rawurlencode($comment['full_name']) . '&size=64&background=111113&color=f5f5f7&rounded=true&bold=true';
                                             }

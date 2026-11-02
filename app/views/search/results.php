@@ -245,27 +245,36 @@ $isFiltered = ($type !== 'all') || ($postType !== 'all') || ($dateRange !== 'any
                                 <div class="d-flex flex-column gap-2">
                                     <?php foreach ($users as $u): ?>
                                         <?php
-                                        if (!empty($u['profile_image'])) {
-                                            $uAvatar = '/SocialNetwork/public/assets/images/profiles/' . rawurlencode($u['profile_image']);
+                                        if (!empty($u['profile_image']) && file_exists(BASE_PATH . '/public/assets/images/profiles/' . basename($u['profile_image']))) {
+                                            $uAvatar = '/SocialNetwork/public/assets/images/profiles/' . rawurlencode(basename($u['profile_image']));
                                         } else {
                                             $uAvatar = 'https://ui-avatars.com/api/?name=' . rawurlencode($u['full_name']) . '&size=80&background=111113&color=f5f5f7&rounded=true&bold=true';
                                         }
+                                        $userProfileUrl = (isset($_SESSION['user_id']) && (int)$_SESSION['user_id'] === (int)$u['id'])
+                                            ? '/SocialNetwork/public/?url=profile'
+                                            : ('/SocialNetwork/public/?url=profile&id=' . (int)$u['id']);
                                         ?>
                                         <div class="search-item-card p-3">
                                             <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
                                                 <div class="d-flex align-items-center gap-3">
-                                                    <img
-                                                        src="<?= htmlspecialchars($uAvatar, ENT_QUOTES, 'UTF-8') ?>"
-                                                        alt="<?= htmlspecialchars($u['full_name'], ENT_QUOTES, 'UTF-8') ?>"
-                                                        style="width: 44px; height: 44px; border-radius: 50%; object-fit: cover; border: 1px solid var(--border);"
-                                                        loading="lazy"
-                                                    >
+                                                    <a href="<?= htmlspecialchars($userProfileUrl, ENT_QUOTES, 'UTF-8') ?>" class="text-decoration-none flex-shrink-0" title="View <?= htmlspecialchars($u['full_name'], ENT_QUOTES, 'UTF-8') ?>'s profile">
+                                                        <img
+                                                            src="<?= htmlspecialchars($uAvatar, ENT_QUOTES, 'UTF-8') ?>"
+                                                            alt="<?= htmlspecialchars($u['full_name'], ENT_QUOTES, 'UTF-8') ?>"
+                                                            style="width: 44px; height: 44px; border-radius: 50%; object-fit: cover; border: 1px solid var(--border); display: block;"
+                                                            loading="lazy"
+                                                        >
+                                                    </a>
                                                     <div>
-                                                        <div style="font-weight: 600; font-size: 0.95rem; color: var(--fg);">
-                                                            <?= htmlspecialchars($u['full_name'], ENT_QUOTES, 'UTF-8') ?>
+                                                        <div style="font-weight: 600; font-size: 0.95rem;">
+                                                            <a href="<?= htmlspecialchars($userProfileUrl, ENT_QUOTES, 'UTF-8') ?>" style="color: var(--fg); text-decoration: none;" class="post-author-link">
+                                                                <?= htmlspecialchars($u['full_name'], ENT_QUOTES, 'UTF-8') ?>
+                                                            </a>
                                                         </div>
                                                         <div style="font-size: 0.8rem; color: var(--fg-faint);">
-                                                            @<?= htmlspecialchars($u['username'], ENT_QUOTES, 'UTF-8') ?>
+                                                            <a href="<?= htmlspecialchars($userProfileUrl, ENT_QUOTES, 'UTF-8') ?>" style="color: inherit; text-decoration: none;">
+                                                                @<?= htmlspecialchars($u['username'], ENT_QUOTES, 'UTF-8') ?>
+                                                            </a>
                                                         </div>
                                                         <?php if (!empty($u['bio'])): ?>
                                                             <div class="mt-1 small text-muted" style="max-width: 480px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
@@ -312,7 +321,7 @@ $isFiltered = ($type !== 'all') || ($postType !== 'all') || ($dateRange !== 'any
                                         $isPostOwner  = isset($_SESSION['user_id']) && ((int) $_SESSION['user_id'] === (int) $post['user_id']);
 
                                         // Author avatar & name — PRESERVED
-                                        if (!empty($post['profile_image'])) {
+                                        if (!empty($post['profile_image']) && file_exists(BASE_PATH . '/public/assets/images/profiles/' . $post['profile_image'])) {
                                             $postAvatar = '/SocialNetwork/public/assets/images/profiles/' . rawurlencode($post['profile_image']);
                                         } else {
                                             $postAvatar = 'https://ui-avatars.com/api/?name=' . rawurlencode($post['full_name']) . '&size=80&background=111113&color=f5f5f7&rounded=true&bold=true';
@@ -361,29 +370,27 @@ $isFiltered = ($type !== 'all') || ($postType !== 'all') || ($dateRange !== 'any
                                                                 type="button"
                                                                 class="post-menu-btn"
                                                                 aria-label="Post options"
-                                                                onclick="togglePostMenu(event, <?= $postId ?>)"
+                                                                aria-expanded="false"
+                                                                title="More options"
                                                             >
-                                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
+                                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="1.75"/><circle cx="12" cy="12" r="1.75"/><circle cx="12" cy="19" r="1.75"/></svg>
                                                             </button>
-                                                            <div class="post-dropdown-menu" id="menu-<?= $postId ?>">
-                                                                <button
-                                                                    type="button"
-                                                                    class="post-dropdown-item"
-                                                                    onclick="startEditPost(<?= $postId ?>)"
-                                                                >
-                                                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                                                                    Edit Post
-                                                                </button>
+                                                            <div class="post-menu-dropdown glass" role="menu">
+                                                                <a href="/SocialNetwork/public/?url=posts/edit&id=<?= $postId ?>" class="post-menu-item" role="menuitem">
+                                                                    <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                                                                    <span>Edit Post</span>
+                                                                </a>
                                                                 <form
-                                                                    action="/SocialNetwork/public/?url=post/delete"
+                                                                    action="/SocialNetwork/public/?url=posts/delete"
                                                                     method="POST"
-                                                                    onsubmit="return confirm('Delete this post permanently?');"
+                                                                    class="m-0 p-0"
+                                                                    onsubmit="return confirm('Are you sure you want to delete this post?');"
                                                                 >
                                                                     <?= \Csrf::field() ?>
                                                                     <input type="hidden" name="id" value="<?= $postId ?>">
-                                                                    <button type="submit" class="post-dropdown-item text-danger">
-                                                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-                                                                        Delete Post
+                                                                    <button type="submit" class="post-menu-item delete-item w-100 border-0 bg-transparent text-start" role="menuitem">
+                                                                        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                                                                        <span>Delete Post</span>
                                                                     </button>
                                                                 </form>
                                                             </div>
@@ -398,98 +405,159 @@ $isFiltered = ($type !== 'all') || ($postType !== 'all') || ($dateRange !== 'any
                                                     </p>
                                                 </div>
 
-                                                <!-- Post Images -->
-                                                <?php
-                                                $allImages = !empty($post['images']) ? $post['images'] : (!empty($post['image']) ? [$post['image']] : []);
-                                                ?>
-                                                <?php if (!empty($allImages)): ?>
-                                                    <div class="post-images-grid mb-3 count-<?= min(count($allImages), 4) ?>">
-                                                        <?php foreach ($allImages as $img): ?>
-                                                            <div class="post-image-item">
-                                                                <img
-                                                                    src="/SocialNetwork/public/assets/images/<?= rawurlencode($img) ?>"
-                                                                    alt="Post image"
-                                                                    class="post-image rounded-2"
-                                                                    loading="lazy"
-                                                                    onclick="openLightbox(this.src)"
-                                                                >
+                                                <!-- Post Images Gallery -->
+                                                <?php require BASE_PATH . '/app/views/posts/_gallery.php'; ?>
+
+                                                <!-- Post Interactions (AJAX Like button + Like count + Comment count) -->
+                                                <div class="post-interactions">
+                                                    <button
+                                                        type="button"
+                                                        class="like-btn like-button <?= $hasLiked ? 'liked' : '' ?>"
+                                                        data-post-id="<?= $postId ?>"
+                                                        data-liked="<?= $hasLiked ? '1' : '0' ?>"
+                                                        title="<?= $hasLiked ? 'Unlike this post' : 'Like this post' ?>"
+                                                    >
+                                                        <span class="like-icon" aria-hidden="true">
+                                                            <?php if ($hasLiked): ?>
+                                                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.5"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+                                                            <?php else: ?>
+                                                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+                                                            <?php endif; ?>
+                                                        </span>
+                                                        <span class="like-text"><?= $hasLiked ? 'Unlike' : 'Like' ?></span>
+                                                        <span class="like-count"><?= $likeCount ?></span>
+                                                    </button>
+
+                                                    <span class="d-inline-flex align-items-center gap-1 text-muted" style="font-size: 0.82rem;">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                                                        <span class="post-comment-count-text" id="post-comment-count-<?= $postId ?>"><?= $commentCount ?> <?= $commentCount === 1 ? 'comment' : 'comments' ?></span>
+                                                    </span>
+                                                </div>
+
+                                            </div><!-- /.card-body -->
+
+                                            <!-- ── Comments Section ────────────────────────── -->
+                                            <section class="comments-section" aria-label="Comments on post <?= $postId ?>">
+
+                                                <!-- Existing Comments List (preview: first 2) -->
+                                                <?php if ($commentCount > 0): ?>
+                                                    <?php if ($commentCount > 2): ?>
+                                                        <div class="comments-expand-row">
+                                                            <button
+                                                                type="button"
+                                                                class="comments-toggle-btn"
+                                                                data-post-id="<?= $postId ?>"
+                                                                data-total="<?= $commentCount ?>"
+                                                                aria-expanded="false"
+                                                            >
+                                                                View all <?= $commentCount ?> comments
+                                                            </button>
+                                                        </div>
+                                                    <?php endif; ?>
+
+                                                    <div class="comments-list" id="comments-list-<?= $postId ?>">
+                                                        <?php
+                                                        $commentsToRender = $commentCount > 2 ? array_slice($postComments, 0, 2) : $postComments;
+                                                        foreach ($commentsToRender as $comment):
+                                                            $commentId       = (int) $comment['id'];
+                                                            $commentAuthorId = (int) ($comment['author_id'] ?? $comment['user_id']);
+                                                            $isCommentOwner  = isset($_SESSION['user_id']) && ((int) $_SESSION['user_id'] === (int) $comment['user_id']);
+
+                                                            if (!empty($comment['profile_image']) && file_exists(BASE_PATH . '/public/assets/images/profiles/' . $comment['profile_image'])) {
+                                                                $commenterAvatar = '/SocialNetwork/public/assets/images/profiles/' . rawurlencode($comment['profile_image']);
+                                                            } else {
+                                                                $commenterAvatar = 'https://ui-avatars.com/api/?name=' . rawurlencode($comment['full_name']) . '&size=64&background=111113&color=f5f5f7&rounded=true&bold=true';
+                                                            }
+
+                                                            $commentRelativeTime = PostController::timeAgo($comment['created_at']);
+                                                            $commentFullDate     = date('M j, Y \a\t g:i A', strtotime($comment['created_at']));
+                                                            $commenterProfileUrl = '/SocialNetwork/public/?url=profile&id=' . $commentAuthorId;
+                                                        ?>
+                                                            <div class="comment-item" id="comment-<?= $commentId ?>">
+                                                                <div class="d-flex align-items-start gap-2">
+                                                                    <a href="<?= htmlspecialchars($commenterProfileUrl, ENT_QUOTES, 'UTF-8') ?>" title="View profile">
+                                                                        <img
+                                                                            src="<?= htmlspecialchars($commenterAvatar, ENT_QUOTES, 'UTF-8') ?>"
+                                                                            alt="<?= htmlspecialchars($comment['full_name'], ENT_QUOTES, 'UTF-8') ?>"
+                                                                            class="comment-avatar"
+                                                                            loading="lazy"
+                                                                        >
+                                                                    </a>
+                                                                    <div class="flex-grow-1 min-w-0">
+                                                                        <div class="d-flex align-items-start justify-content-between gap-1">
+                                                                            <div class="min-w-0">
+                                                                                <a href="<?= htmlspecialchars($commenterProfileUrl, ENT_QUOTES, 'UTF-8') ?>" class="comment-author-link">
+                                                                                    <?= htmlspecialchars($comment['full_name'], ENT_QUOTES, 'UTF-8') ?>
+                                                                                </a>
+                                                                                <span class="comment-username">@<?= htmlspecialchars($comment['username'], ENT_QUOTES, 'UTF-8') ?></span>
+                                                                                <span class="comment-time" title="<?= htmlspecialchars($commentFullDate, ENT_QUOTES, 'UTF-8') ?>">
+                                                                                    &bull; <?= htmlspecialchars($commentRelativeTime, ENT_QUOTES, 'UTF-8') ?>
+                                                                                </span>
+                                                                                <div class="comment-content" style="word-break: break-word; overflow-wrap: anywhere;">
+                                                                                    <?= nl2br(htmlspecialchars($comment['content'], ENT_QUOTES, 'UTF-8')) ?>
+                                                                                </div>
+                                                                            </div>
+
+                                                                            <?php if ($isCommentOwner): ?>
+                                                                                <div class="comment-menu-wrap">
+                                                                                    <button
+                                                                                        type="button"
+                                                                                        class="comment-menu-btn"
+                                                                                        aria-label="Comment options"
+                                                                                        aria-expanded="false"
+                                                                                        title="More options"
+                                                                                    >
+                                                                                        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                                                                                            <circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/>
+                                                                                        </svg>
+                                                                                    </button>
+                                                                                    <div class="comment-menu-dropdown" role="menu">
+                                                                                        <a href="/SocialNetwork/public/?url=comments/edit&id=<?= $commentId ?>" class="comment-menu-item" role="menuitem">
+                                                                                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                                                                                            Edit
+                                                                                        </a>
+                                                                                        <form method="POST" action="/SocialNetwork/public/?url=comments/delete" class="m-0 p-0" onsubmit="return confirm('Delete this comment?');">
+                                                                                            <?= \Csrf::field() ?>
+                                                                                            <input type="hidden" name="id" value="<?= $commentId ?>">
+                                                                                            <button type="submit" class="comment-menu-item comment-menu-delete w-100 border-0 bg-transparent text-start" role="menuitem">
+                                                                                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                                                                                                Delete
+                                                                                            </button>
+                                                                                        </form>
+                                                                                    </div>
+                                                                                </div>
+                                                                            <?php endif; ?>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
                                                             </div>
                                                         <?php endforeach; ?>
                                                     </div>
                                                 <?php endif; ?>
 
-                                                <!-- Post Action Buttons (Like & Comment) -->
-                                                <div class="post-actions d-flex align-items-center gap-3 pt-2 border-top" style="border-color: var(--border) !important;">
-                                                    <button
-                                                        type="button"
-                                                        class="btn-like <?= $hasLiked ? 'liked' : '' ?>"
-                                                        data-post-id="<?= $postId ?>"
-                                                        aria-label="<?= $hasLiked ? 'Unlike post' : 'Like post' ?>"
-                                                    >
-                                                        <svg class="heart-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="<?= $hasLiked ? 'currentColor' : 'none' ?>" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
-                                                        <span class="like-count" id="like-count-<?= $postId ?>"><?= $likeCount ?></span>
-                                                    </button>
-
-                                                    <button
-                                                        type="button"
-                                                        class="btn-comment-toggle"
-                                                        onclick="toggleCommentSection(<?= $postId ?>)"
-                                                        aria-label="Toggle comments"
-                                                    >
-                                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-                                                        <span class="comment-count" id="comment-count-<?= $postId ?>"><?= $commentCount ?></span>
-                                                    </button>
+                                                <!-- Create Comment Form (CREATE) -->
+                                                <div class="comment-form-wrap">
+                                                    <form method="POST" action="/SocialNetwork/public/?url=comments/create">
+                                                        <?= \Csrf::field() ?>
+                                                        <input type="hidden" name="post_id" value="<?= $postId ?>">
+                                                        <div class="d-flex gap-2 align-items-center">
+                                                            <textarea
+                                                                name="content"
+                                                                class="form-control comment-input"
+                                                                rows="1"
+                                                                placeholder="Write a comment..."
+                                                                maxlength="1000"
+                                                                required
+                                                            ></textarea>
+                                                            <button type="submit" class="btn btn-ghost btn-sm comment-submit-btn">
+                                                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                                                                <span class="visually-hidden">Post comment</span>
+                                                            </button>
+                                                        </div>
+                                                    </form>
                                                 </div>
 
-                                                <!-- Comments List Accordion -->
-                                                <?php if (!empty($postComments)): ?>
-                                                    <details class="post-comments-details mt-3" id="comments-detail-<?= $postId ?>">
-                                                        <summary class="small text-muted mb-2" style="cursor: pointer;">
-                                                            View all <?= count($postComments) ?> <?= count($postComments) === 1 ? 'comment' : 'comments' ?>
-                                                        </summary>
-                                                        <div class="comments-list ps-2 border-start" style="border-color: var(--border) !important;">
-                                                            <?php foreach ($postComments as $comment): ?>
-                                                                <?php
-                                                                $commentId = (int) $comment['id'];
-                                                                if (!empty($comment['profile_image'])) {
-                                                                    $cAvatar = '/SocialNetwork/public/assets/images/profiles/' . rawurlencode($comment['profile_image']);
-                                                                } else {
-                                                                    $cAvatar = 'https://ui-avatars.com/api/?name=' . rawurlencode($comment['full_name']) . '&size=60&background=111113&color=f5f5f7&rounded=true&bold=true';
-                                                                }
-                                                                $cTime = PostController::timeAgo($comment['created_at']);
-                                                                ?>
-                                                                <div class="comment-item mb-2" id="comment-<?= $commentId ?>">
-                                                                    <div class="d-flex align-items-start gap-2">
-                                                                        <img
-                                                                            src="<?= htmlspecialchars($cAvatar, ENT_QUOTES, 'UTF-8') ?>"
-                                                                            alt="<?= htmlspecialchars($comment['full_name'], ENT_QUOTES, 'UTF-8') ?>"
-                                                                            class="comment-avatar"
-                                                                            loading="lazy"
-                                                                        >
-                                                                        <div class="flex-grow-1 min-w-0">
-                                                                            <div class="d-flex align-items-center justify-content-between flex-wrap gap-1 mb-1">
-                                                                                <div>
-                                                                                    <span class="comment-author">
-                                                                                        <?= htmlspecialchars($comment['full_name'], ENT_QUOTES, 'UTF-8') ?>
-                                                                                    </span>
-                                                                                    <span class="comment-username">
-                                                                                        @<?= htmlspecialchars($comment['username'], ENT_QUOTES, 'UTF-8') ?>
-                                                                                    </span>
-                                                                                    <span class="comment-time ms-1">
-                                                                                        &bull; <?= htmlspecialchars($cTime, ENT_QUOTES, 'UTF-8') ?>
-                                                                                    </span>
-                                                                                </div>
-                                                                            </div>
-                                                                            <div class="comment-content">
-                                                                                <?= nl2br(htmlspecialchars($comment['content'], ENT_QUOTES, 'UTF-8')) ?>
-                                                                            </div>
-                                                                        </div>
-                                                                    </div>
-                                                                </div>
-                                                            <?php endforeach; ?>
-                                                        </div>
-                                                    </details>
-                                                <?php endif; ?>
+                                            </section><!-- /.comments-section -->
 
                                             </div>
                                         </article>
@@ -532,39 +600,4 @@ function setCategory(cat) {
     // Submit form immediately
     document.getElementById('searchForm').submit();
 }
-
-/**
- * Toggle post options dropdown menu
- */
-function togglePostMenu(event, postId) {
-    event.stopPropagation();
-    var menu = document.getElementById('menu-' + postId);
-    if (!menu) return;
-    var isShown = menu.classList.contains('show');
-    document.querySelectorAll('.post-dropdown-menu.show').forEach(function(m) {
-        m.classList.remove('show');
-    });
-    if (!isShown) {
-        menu.classList.add('show');
-    }
-}
-
-/**
- * Toggle comments section details open/close
- */
-function toggleCommentSection(postId) {
-    var details = document.getElementById('comments-detail-<?= isset($postId) ? $postId : 0 ?>') || document.getElementById('comments-detail-' + postId);
-    if (details) {
-        details.open = !details.open;
-    }
-}
-
-// Global click to close post menus
-document.addEventListener('click', function(e) {
-    if (!e.target.closest('.post-menu-wrap')) {
-        document.querySelectorAll('.post-dropdown-menu.show').forEach(function(m) {
-            m.classList.remove('show');
-        });
-    }
-});
 </script>
