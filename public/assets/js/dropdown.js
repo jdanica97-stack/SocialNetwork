@@ -1,4 +1,4 @@
-﻿/**
+/**
  * public/assets/js/dropdown.js
  *
  * Handles three-dot dropdown menus for:
@@ -273,6 +273,13 @@
     var formData = new FormData(form);
 
     // Loading state & avoid duplicate submissions
+    if (submitBtn && (submitBtn.disabled || submitBtn.classList.contains('loading'))) {
+      return;
+    }
+    if (input && input.disabled) {
+      return;
+    }
+
     if (submitBtn) {
       submitBtn.disabled = true;
       submitBtn.classList.add('loading');
@@ -299,7 +306,10 @@
         }
 
         // Clear input only on success
-        if (input) input.value = '';
+        if (input) {
+          input.value = '';
+          input.style.height = '';
+        }
 
         var commentData = res.data.comment;
         var newTotal = res.data.comment_count;
@@ -370,6 +380,61 @@
       });
   });
 
+  // ── 5a. Comment Input: Enter to Submit, Shift+Enter for New Line ───────────
+  document.addEventListener('keydown', function (e) {
+    if (e.key !== 'Enter') return;
+
+    var input = e.target;
+    if (!input) return;
+
+    // Match comment textarea or input: class .comment-input or named "content" inside comment create form
+    var isCommentInput = input.classList && input.classList.contains('comment-input');
+    var form = input.closest ? input.closest('form[action*="comments/create"], .comment-form') : null;
+
+    if (!isCommentInput && (!form || input.name !== 'content')) {
+      return;
+    }
+
+    // Shift + Enter: allow default behavior to insert a newline in multiline input
+    if (e.shiftKey) {
+      return;
+    }
+
+    // Avoid submitting while composing characters with an IME
+    if (e.isComposing || e.keyCode === 229) {
+      return;
+    }
+
+    // Prevent default Enter key behavior (prevents inserting newline)
+    e.preventDefault();
+
+    if (!form) return;
+
+    // Do not submit empty comments or comments containing only whitespace
+    var content = input.value ? input.value.trim() : '';
+    if (!content) {
+      return;
+    }
+
+    var submitBtn = form.querySelector('button[type="submit"], .comment-submit-btn');
+
+    // Prevent duplicate submissions if already submitting or disabled
+    if ((submitBtn && (submitBtn.disabled || submitBtn.classList.contains('loading'))) || input.disabled) {
+      return;
+    }
+
+    // Trigger existing form submission logic so it flows through the standard AJAX submit handler
+    if (typeof form.requestSubmit === 'function') {
+      if (submitBtn && submitBtn.form === form) {
+        form.requestSubmit(submitBtn);
+      } else {
+        form.requestSubmit();
+      }
+    } else {
+      var submitEvent = new Event('submit', { bubbles: true, cancelable: true });
+      form.dispatchEvent(submitEvent);
+    }
+  });
 
   // -- 5b. AJAX Comment Delete (Zero page reload) --
   document.addEventListener('submit', function (e) {
